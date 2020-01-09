@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,7 +24,7 @@
  */
 
 #ifndef AUTH_SRP_H
-# define AUTH_SRP_H
+#define AUTH_SRP_H
 
 #include <gnutls_auth.h>
 
@@ -47,15 +48,15 @@ typedef struct gnutls_srp_server_credentials_st
 /* these structures should not use allocated data */
 typedef struct srp_server_auth_info_st
 {
-  char username[MAX_SRP_USERNAME + 1];
+  char username[MAX_USERNAME_SIZE + 1];
 } *srp_server_auth_info_t;
 
 #ifdef ENABLE_SRP
 
 int _gnutls_proc_srp_server_hello (gnutls_session_t state,
-				   const opaque * data, size_t data_size);
+                                   const opaque * data, size_t data_size);
 int _gnutls_gen_srp_server_hello (gnutls_session_t state, opaque * data,
-				  size_t data_size);
+                                  size_t data_size);
 
 int _gnutls_gen_srp_server_kx (gnutls_session_t, opaque **);
 int _gnutls_gen_srp_client_kx (gnutls_session_t, opaque **);

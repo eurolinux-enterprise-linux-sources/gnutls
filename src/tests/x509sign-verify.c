@@ -1,29 +1,30 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos, Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Parts copied from GnuTLS example programs. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -36,6 +37,7 @@
 #include <unistd.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
+#include <gnutls/abstract.h>
 
 #include "utils.h"
 
@@ -44,6 +46,13 @@ const gnutls_datum_t hash_data = {
   (void *)
     "\xaa\xf4\xc6\x1d\xdc\xc5\xe8\xa2\xda\xbe"
     "\xde\x0f\x3b\x48\x2c\xd9\xae\xa9\x43\x4d",
+  20
+};
+
+const gnutls_datum_t invalid_hash_data = {
+  (void *)
+    "\xaa\xf4\xc6\x1d\xdc\xca\xe8\xa2\xda\xbe"
+    "\xde\x0f\x3b\x48\x2c\xb9\xae\xa9\x43\x4d",
   20
 };
 
@@ -65,8 +74,7 @@ static char pem1_cert[] =
   "+62SbuYGpFYsouHAUyfI8pUwCwYJKoZIhvcNAQEFA4GBALujmBJVZnvaTXr9cFRJ\n"
   "jpfc/3X7sLUsMvumcDE01ls/cG5mIatmiyEU9qI3jbgUf82z23ON/acwJf875D3/\n"
   "U7jyOsBJ44SEQITbin2yUeJMIm1tievvdNXBDfW95AM507ShzP12sfiJkJfjjdhy\n"
-  "dc8Siq5JojruiMizAf0pA7in\n"
-  "-----END CERTIFICATE-----\n";
+  "dc8Siq5JojruiMizAf0pA7in\n" "-----END CERTIFICATE-----\n";
 
 static char pem1_key[] =
   "-----BEGIN RSA PRIVATE KEY-----\n"
@@ -105,8 +113,7 @@ static char pem2_cert[] =
   "HPutkm7mBqRWLKLhwFMnyPKVMAsGCSqGSIb3DQEBBQOBgQBCsrnfD1xzh8/Eih1f\n"
   "x+M0lPoX1Re5L2ElHI6DJpHYOBPwf9glwxnet2+avzgUQDUFwUSxOhodpyeaACXD\n"
   "o0gGVpcH8sOBTQ+aTdM37hGkPxoXjtIkR/LgG5nP2H2JRd5TkW8l13JdM4MJFB4W\n"
-  "QcDzQ8REwidsfh9uKAluk1c/KQ==\n"
-  "-----END CERTIFICATE-----\n";
+  "QcDzQ8REwidsfh9uKAluk1c/KQ==\n" "-----END CERTIFICATE-----\n";
 
 static char pem2_key[] =
   "-----BEGIN DSA PRIVATE KEY-----\n"
@@ -119,17 +126,18 @@ static char pem2_key[] =
   "jsY+OpcCgYAPiodX8tHC3KzfS4sPi7op9+ED5FX6spgH1v0SsYC89bq0UNR/oA5D\n"
   "55/JeBFf5eQMLGtqpDXcvVTlYDaaMdGKWW5rHLq9LrrrfIfv2sjdoeukg+aLrfr6\n"
   "jlvXN8gyPpbCPvRD2n2RAg+3vPjvj/dBAF6W3w8IltzqsukGgq/SLwIUS5/r/2ya\n"
-  "AoNBXjeBjgCGMei2m8E=\n"
-  "-----END DSA PRIVATE KEY-----\n";
+  "AoNBXjeBjgCGMei2m8E=\n" "-----END DSA PRIVATE KEY-----\n";
 
 const gnutls_datum_t cert_dat[] = {
-  { pem1_cert, sizeof (pem1_cert) },
-  { pem2_cert, sizeof (pem2_cert) }
+  {pem1_cert, sizeof (pem1_cert)}
+  ,
+  {pem2_cert, sizeof (pem2_cert)}
 };
 
 const gnutls_datum_t key_dat[] = {
-  { pem1_key, sizeof (pem1_key) },
-  { pem2_key, sizeof (pem2_key) }
+  {pem1_key, sizeof (pem1_key)}
+  ,
+  {pem2_key, sizeof (pem2_key)}
 };
 
 void
@@ -137,10 +145,11 @@ doit (void)
 {
   gnutls_x509_privkey_t key;
   gnutls_x509_crt_t crt;
+  gnutls_pubkey_t pubkey;
+  gnutls_privkey_t privkey;
   gnutls_digest_algorithm_t hash_algo;
-  unsigned char _signature[128];
-  size_t _signature_size = sizeof (_signature);
-  gnutls_datum signature;
+  gnutls_datum_t signature;
+  gnutls_datum_t signature2;
   int ret;
   size_t i;
 
@@ -148,42 +157,83 @@ doit (void)
 
   for (i = 0; i < sizeof (key_dat) / sizeof (key_dat[0]); i++)
     {
-      success ("loop %d\n", i);
+      if (debug)
+        success ("loop %d\n", (int) i);
 
       ret = gnutls_x509_privkey_init (&key);
       if (ret < 0)
-	fail ("gnutls_x509_privkey_init\n");
+        fail ("gnutls_x509_privkey_init\n");
 
-      ret = gnutls_x509_privkey_import (key, &key_dat[i], GNUTLS_X509_FMT_PEM);
+      ret =
+        gnutls_x509_privkey_import (key, &key_dat[i], GNUTLS_X509_FMT_PEM);
       if (ret < 0)
-	fail ("gnutls_x509_privkey_import\n");
+        fail ("gnutls_x509_privkey_import\n");
 
-      ret = gnutls_x509_privkey_sign_data (key, GNUTLS_DIG_SHA1, 0, &raw_data,
-					   _signature, &_signature_size);
+      ret = gnutls_pubkey_init (&pubkey);
       if (ret < 0)
-	fail ("gnutls_x509_privkey_sign_hash\n");
+        fail ("gnutls_privkey_init\n");
+
+      ret = gnutls_privkey_init (&privkey);
+      if (ret < 0)
+        fail ("gnutls_pubkey_init\n");
+
+      ret = gnutls_privkey_import_x509 (privkey, key, 0);
+      if (ret < 0)
+        fail ("gnutls_privkey_import_x509\n");
+
+      ret = gnutls_privkey_sign_hash (privkey, GNUTLS_DIG_SHA1, 0,
+				      &hash_data, &signature2);
+      if (ret < 0)
+        fail ("gnutls_privkey_sign_hash\n");
+
+      ret = gnutls_privkey_sign_data (privkey, GNUTLS_DIG_SHA1, 0,
+				      &raw_data, &signature);
+      if (ret < 0)
+        fail ("gnutls_x509_privkey_sign_hash\n");
 
       ret = gnutls_x509_crt_init (&crt);
       if (ret < 0)
-	fail ("gnutls_x509_crt_init\n");
+        fail ("gnutls_x509_crt_init\n");
 
       ret = gnutls_x509_crt_import (crt, &cert_dat[i], GNUTLS_X509_FMT_PEM);
       if (ret < 0)
-	fail ("gnutls_x509_crt_import\n");
+        fail ("gnutls_x509_crt_import\n");
 
-      signature.data = _signature;
-      signature.size = _signature_size;
-
-      ret = gnutls_x509_crt_get_verify_algorithm (crt, &signature, &hash_algo);
-      if (ret < 0 || hash_algo != GNUTLS_DIG_SHA1)
-	fail ("gnutls_x509_crt_get_verify_algorithm\n");
-
-      ret = gnutls_x509_crt_verify_hash (crt, 0, &hash_data, &signature);
+      ret =
+        gnutls_pubkey_import_x509 (pubkey, crt, 0);
       if (ret < 0)
-	fail ("gnutls_x509_privkey_verify_hash\n");
+        fail ("gnutls_x509_pubkey_import\n");
 
+      ret =
+        gnutls_pubkey_get_verify_algorithm (pubkey, &signature, &hash_algo);
+      if (ret < 0 || hash_algo != GNUTLS_DIG_SHA1)
+        fail ("gnutls_x509_crt_get_verify_algorithm\n");
+
+      ret = gnutls_pubkey_verify_hash (pubkey, 0, &hash_data, &signature);
+      if (ret < 0)
+        fail ("gnutls_x509_privkey_verify_hash\n");
+
+      ret =
+        gnutls_pubkey_get_verify_algorithm (pubkey, &signature2, &hash_algo);
+      if (ret < 0 || hash_algo != GNUTLS_DIG_SHA1)
+        fail ("gnutls_x509_crt_get_verify_algorithm (hashed data)\n");
+
+      ret = gnutls_pubkey_verify_hash (pubkey, 0, &hash_data, &signature2);
+      if (ret < 0)
+        fail ("gnutls_x509_privkey_verify_hash (hashed data)\n");
+
+      /* should fail */
+      ret = gnutls_pubkey_verify_hash (pubkey, 0, &invalid_hash_data, &signature2);
+      if (ret != GNUTLS_E_PK_SIG_VERIFY_FAILED)
+        fail ("gnutls_x509_privkey_verify_hash (hashed data)\n");
+
+
+      gnutls_free(signature.data);
+      gnutls_free(signature2.data);
       gnutls_x509_privkey_deinit (key);
       gnutls_x509_crt_deinit (crt);
+      gnutls_privkey_deinit (privkey);
+      gnutls_pubkey_deinit (pubkey);
     }
 
   gnutls_global_deinit ();

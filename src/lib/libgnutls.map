@@ -1,22 +1,23 @@
 # libgnutls.map -- libgnutls linker version script.           -*- ld-script -*-
-# Copyright (C) 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+# Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software
+# Foundation, Inc.
 #
 # Author: Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
-# The GNUTLS library is free software; you can redistribute it and/or
+# The GnuTLS is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
 # as published by the Free Software Foundation; either version 2.1 of
 # the License, or (at your option) any later version.
 #
-# The GNUTLS library is distributed in the hope that it will be
+# The GnuTLS is distributed in the hope that it will be
 #useful, but WITHOUT ANY WARRANTY; without even the implied warranty
 #of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 #Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with the GNUTLS library; if not, write to the Free
+# License along with GnuTLS; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA
 
@@ -454,6 +455,7 @@ GNUTLS_1_4
     gnutls_x509_crt_get_issuer_dn;
     gnutls_x509_crt_get_issuer_dn_by_oid;
     gnutls_x509_crt_get_issuer_dn_oid;
+    gnutls_x509_crt_get_issuer_unique_id;
     gnutls_x509_crt_get_key_id;
     gnutls_x509_crt_get_key_purpose_oid;
     gnutls_x509_crt_get_key_usage;
@@ -471,6 +473,7 @@ GNUTLS_1_4
     gnutls_x509_crt_get_subject_alt_name;
     gnutls_x509_crt_get_subject_alt_othername_oid;
     gnutls_x509_crt_get_subject_key_id;
+    gnutls_x509_crt_get_subject_unique_id;
     gnutls_x509_crt_get_version;
     gnutls_x509_crt_import;
     gnutls_x509_crt_init;
@@ -565,7 +568,133 @@ GNUTLS_2_8
     gnutls_x509_crt_get_verify_algorithm;
     gnutls_x509_crt_set_crq_extensions;
     gnutls_x509_crt_verify_hash;
+    gnutls_session_ticket_key_generate;
+    gnutls_session_ticket_enable_client;
+    gnutls_session_ticket_enable_server;
 } GNUTLS_1_4;
+
+GNUTLS_2_10
+{
+  global:
+    gnutls_x509_crt_get_issuer_alt_name2;
+    gnutls_x509_crt_get_issuer_alt_name;
+    gnutls_x509_crt_get_issuer_alt_othername_oid;
+    gnutls_sign_algorithm_get_requested;
+    gnutls_cipher_init;
+    gnutls_cipher_encrypt;
+    gnutls_cipher_decrypt;
+    gnutls_cipher_deinit;
+    gnutls_cipher_get_block_size;
+    gnutls_hash_init;
+    gnutls_hash_get_len;
+    gnutls_hash;
+    gnutls_hash_fast;
+    gnutls_hash_deinit;
+    gnutls_hash_output;
+    gnutls_hmac_init;
+    gnutls_hmac_get_len;
+    gnutls_hmac;
+    gnutls_hmac_fast;
+    gnutls_hmac_deinit;
+    gnutls_hmac_output;
+    gnutls_certificate_set_verify_function;
+    gnutls_safe_renegotiation_status;
+} GNUTLS_2_8;
+
+GNUTLS_2_12
+{
+  global:
+	gnutls_certificate_set_retrieve_function;
+        gnutls_pkcs11_init;
+        gnutls_pkcs11_deinit;
+        gnutls_pkcs11_set_pin_function;
+	gnutls_pkcs11_set_token_function;
+        gnutls_pkcs11_add_provider;
+        gnutls_pkcs11_obj_init;
+        gnutls_pkcs11_obj_import_url;
+        gnutls_pkcs11_obj_export_url;
+        gnutls_pkcs11_obj_deinit;
+        gnutls_pkcs11_obj_list_import_url;
+        gnutls_x509_crt_import_pkcs11;
+        gnutls_pkcs11_obj_get_type;
+        gnutls_x509_crt_list_import_pkcs11;
+	gnutls_x509_crt_import_pkcs11_url;
+	gnutls_pkcs11_obj_get_info;
+	gnutls_pkcs11_token_get_info;
+	gnutls_pkcs11_token_get_url;
+	gnutls_pkcs11_privkey_init;
+	gnutls_pkcs11_privkey_deinit;
+	gnutls_pkcs11_privkey_get_pk_algorithm;
+	gnutls_pkcs11_privkey_get_info;
+	gnutls_pkcs11_privkey_import_url;
+	gnutls_pkcs11_obj_export;
+	gnutls_pkcs11_type_get_name;
+
+	gnutls_privkey_init;
+	gnutls_privkey_deinit;
+	gnutls_privkey_get_pk_algorithm;
+	gnutls_privkey_get_type;
+	gnutls_privkey_import_pkcs11;
+	gnutls_privkey_import_x509;
+	gnutls_privkey_import_openpgp;
+	gnutls_privkey_decrypt_data;
+	gnutls_pkcs11_privkey_export_url;
+	gnutls_x509_crq_privkey_sign;
+	gnutls_x509_crl_privkey_sign;
+	gnutls_x509_crt_privkey_sign;
+	gnutls_pubkey_init;
+	gnutls_pubkey_deinit;
+	gnutls_pubkey_get_pk_algorithm;
+	gnutls_pubkey_import_x509;
+	gnutls_pubkey_import_openpgp;
+	gnutls_pubkey_get_pk_rsa_raw;
+	gnutls_pubkey_get_pk_dsa_raw;
+	gnutls_pubkey_export;
+	gnutls_pubkey_get_key_id;
+	gnutls_pubkey_get_key_usage;
+	gnutls_pubkey_import_pkcs11;
+	gnutls_pubkey_import_dsa_raw;
+	gnutls_pubkey_import_rsa_raw;
+	gnutls_pubkey_import_pkcs11_url;
+	gnutls_pubkey_get_verify_algorithm;
+	gnutls_pubkey_verify_hash;
+	gnutls_pkcs11_obj_export;
+	gnutls_pubkey_import;
+	gnutls_x509_crt_set_pubkey;
+	gnutls_x509_crq_set_pubkey;
+	gnutls_pkcs11_copy_x509_crt;
+	gnutls_pkcs11_copy_x509_privkey;
+	gnutls_pkcs11_delete_url;
+	gnutls_x509_privkey_export_rsa_raw2;
+	gnutls_pubkey_get_preferred_hash_algorithm;
+	gnutls_x509_crt_get_preferred_hash_algorithm;
+	gnutls_global_set_mutex;
+        gnutls_transport_set_vec_push_function;
+        gnutls_transport_set_errno_function;
+
+	gnutls_sec_param_to_pk_bits;
+	gnutls_sec_param_get_name;
+	gnutls_pk_bits_to_sec_param;
+	gnutls_rnd;
+	gnutls_cipher_encrypt2;
+	gnutls_cipher_decrypt2;
+	gnutls_openpgp_privkey_sec_param;
+	gnutls_x509_privkey_sec_param;
+	gnutls_session_channel_binding;
+	gnutls_pkcs11_copy_secret_key;
+	gnutls_pkcs11_token_init;
+	gnutls_pkcs11_token_set_pin;
+	gnutls_pkcs11_token_get_mechanism;
+	gnutls_privkey_sign_hash;
+	gnutls_privkey_sign_data;
+	gnutls_openpgp_crt_verify_hash;
+	gnutls_pubkey_import_privkey;
+	gnutls_pubkey_verify_data;
+	gnutls_certificate_get_issuer;
+	gnutls_x509_crq_verify;
+	gnutls_global_set_time_function;
+	gnutls_pkcs11_reinit;
+} GNUTLS_2_10;
 
 GNUTLS_PRIVATE {
   global:
@@ -591,9 +720,16 @@ GNUTLS_PRIVATE {
     _gnutls_hash_init;
     _gnutls_hash_deinit;
     _gnutls_hash;
+    _gnutls_ext_get_session_data;
+    _gnutls_ext_set_session_data;
+    _gnutls_ext_register;
+    _gnutls_buffer_append_prefix;
+    _gnutls_buffer_append_data_prefix;
+    _gnutls_buffer_pop_data;
+    _gnutls_buffer_pop_prefix;
 
     # Internal symbols needed by psktool:
-    _gnutls_rnd;
+
     # Internal symbols needed by gnutls-cli-debug:
     _gnutls_rsa_pms_set_version;
     _gnutls_record_set_default_version;
@@ -604,8 +740,10 @@ GNUTLS_PRIVATE {
     # Internal symbols needed by tests/mpi:
     _gnutls_mpi_ops;
     _gnutls_mpi_randomize;
-    _gnutls_dump_mpi;
+    _gnutls_mpi_log;
+    _gnutls_mpi_release;
     # Internal symbols needed by tests/pkcs12_s2k:
     _gnutls_pkcs12_string_to_key;
     _gnutls_bin2hex;
+    _gnutls_transport_set_lowat;
 };

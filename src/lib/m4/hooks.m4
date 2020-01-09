@@ -1,22 +1,22 @@
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-#    Free Software Foundation, Inc.
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+# 2009, 2010, 2011 Free Software Foundation, Inc.
 #
 # Author: Nikos Mavrogiannopoulos, Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
-# The GNUTLS library is free software; you can redistribute it and/or
+# The GnuTLS is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
 # as published by the Free Software Foundation; either version 2.1 of
 # the License, or (at your option) any later version.
 #
-# The GNUTLS library is distributed in the hope that it will be
+# The GnuTLS is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty
 # of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with the GNUTLS library; if not, write to the Free
+# License along with GnuTLS; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA
 
@@ -26,34 +26,68 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   # Interfaces changed/added/removed:   CURRENT++       REVISION=0
   # Interfaces added:                             AGE++
   # Interfaces removed:                           AGE=0
-  AC_SUBST(LT_CURRENT, 40)
-  AC_SUBST(LT_REVISION, 12)
-  AC_SUBST(LT_AGE, 14)
+  AC_SUBST(LT_CURRENT, 48)
+  AC_SUBST(LT_REVISION, 6)
+  AC_SUBST(LT_AGE, 22)
+
+  AC_SUBST(LT_SSL_CURRENT, 27)
+  AC_SUBST(LT_SSL_REVISION, 0)
+  AC_SUBST(LT_SSL_AGE, 0)
+
+  AC_SUBST(CXX_LT_CURRENT, 27)
+  AC_SUBST(CXX_LT_REVISION, 0)
+  AC_SUBST(CXX_LT_AGE, 0)
 
   # Used when creating the Windows libgnutls-XX.def files.
   DLL_VERSION=`expr ${LT_CURRENT} - ${LT_AGE}`
   AC_SUBST(DLL_VERSION)
 
-  AC_LIB_HAVE_LINKFLAGS(gcrypt,, [#include <gcrypt.h>],
-    [enum gcry_cipher_algos i = GCRY_CIPHER_CAMELLIA128])
-  if test "$ac_cv_libgcrypt" != yes; then
-    AC_MSG_ERROR([[
+  cryptolib="nettle"
+
+  AC_ARG_WITH(libgcrypt,
+    AS_HELP_STRING([--with-libgcrypt], [use libgcrypt as crypto library]),
+      libgcrypt=$withval,
+      libgcrypt=no)
+    if test "$libgcrypt" = "yes"; then
+        cryptolib=libgcrypt
+        AC_DEFINE([HAVE_GCRYPT], 1, [whether the gcrypt library is in use])
+	AC_LIB_HAVE_LINKFLAGS([gcrypt], [gpg-error], [#include <gcrypt.h>],
+                      [enum gcry_cipher_algos i = GCRY_CIPHER_CAMELLIA128])
+      if test "$ac_cv_libgcrypt" != yes; then
+        AC_MSG_ERROR([[
 ***  
-*** libgcrypt was not found. You may want to get it from
+*** Libgcrypt v1.4.0 or later was not found. You may want to get it from
 *** ftp://ftp.gnupg.org/gcrypt/libgcrypt/
 ***
     ]])
-  fi
+      fi
+    fi
+
+  AC_MSG_CHECKING([whether to use nettle])
+if test "$cryptolib" = "nettle";then
+  AC_MSG_RESULT(yes)
+    AC_LIB_HAVE_LINKFLAGS([nettle],, [#include <nettle/aes.h>],
+                          [nettle_aes_invert_key (0, 0)])
+    if test "$ac_cv_libnettle" != yes; then
+      AC_MSG_ERROR([[
+  *** 
+  *** Libnettle 2.1 was not found. 
+  ]])
+    fi
+    NETTLE_LIBS="-lgmp -lhogweed"
+else
+  AC_MSG_RESULT(no)
+fi
+    AC_SUBST(NETTLE_LIBS)
+  AM_CONDITIONAL(ENABLE_NETTLE, test "$cryptolib" = "nettle")
 
   AC_ARG_WITH(included-libtasn1,
     AS_HELP_STRING([--with-included-libtasn1], [use the included libtasn1]),
       included_libtasn1=$withval,
       included_libtasn1=no)
   if test "$included_libtasn1" = "no"; then
-    AC_LIB_HAVE_LINKFLAGS(tasn1,, [#include <libtasn1.h>],
-                          [asn1_check_version (NULL)])
-    if test "$ac_cv_libtasn1" != yes; then
-      included_libtasn1=yes
+    PKG_CHECK_MODULES(LIBTASN1, [libtasn1 >= 2.14], [], [included_libtasn1=yes])
+    if test "$included_libtasn1" = yes; then
       AC_MSG_WARN([[
   *** 
   *** Libtasn1 was not found. Will use the included one.
@@ -63,6 +97,10 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   AC_MSG_CHECKING([whether to use the included minitasn1])
   AC_MSG_RESULT($included_libtasn1)
   AM_CONDITIONAL(ENABLE_MINITASN1, test "$included_libtasn1" = "yes")
+
+  if test "$included_libtasn1" = "no"; then
+    GNUTLS_REQUIRES_PRIVATE="Requires.private: libtasn1"
+  fi
 
   AC_ARG_WITH(lzo,
     AS_HELP_STRING([--with-lzo], [use experimental LZO compression]),
@@ -174,9 +212,14 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   AM_CONDITIONAL(ENABLE_ANON, test "$ac_enable_anon" != "no")
   
   # Allow disabling Camellia
+  if test "$nettle" != "yes";then
   AC_ARG_ENABLE(camellia,
     AS_HELP_STRING([--disable-camellia], [disable Camellia cipher]),
     enable_camellia=$enableval, enable_camellia=yes)
+  else
+    enable_camellia=no
+  fi
+
   AC_MSG_CHECKING([whether to disable Camellia cipher])
   if test "$enable_camellia" != "no"; then
    AC_MSG_RESULT([no])
@@ -213,6 +256,31 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
    AC_MSG_RESULT(no)
   fi
   AM_CONDITIONAL(ENABLE_OPENPGP, test "$ac_enable_openpgp" = "yes")
+
+  AC_MSG_CHECKING([whether to disable SessionTicket extension support])
+  AC_ARG_ENABLE(session-ticket,
+    AS_HELP_STRING([--disable-session-ticket],
+                   [disable the SessionTicket extension support]),
+    ac_session_ticket=no)
+  if test x$ac_session_ticket != xno; then
+   AC_MSG_RESULT(no)
+   AC_DEFINE([ENABLE_SESSION_TICKET], 1, [enable SessionTicket extension])
+  else
+   ac_full=0
+   AC_MSG_RESULT(yes)
+  fi
+  AM_CONDITIONAL(ENABLE_SESSION_TICKET, test "$ac_enable_session_ticket" != "no")
+
+  # For cryptodev
+  AC_MSG_CHECKING([whether to add cryptodev support])
+  AC_ARG_ENABLE(cryptodev,
+    AS_HELP_STRING([--enable-cryptodev], [enable cryptodev support]),
+  enable_cryptodev=yes,enable_cryptodev=no)
+  AC_MSG_RESULT($enable_cryptodev)
+
+  if test "$enable_cryptodev" = "yes"; then
+    AC_DEFINE([ENABLE_CRYPTODEV], 1, [Enable cryptodev support])
+  fi
 
   # For storing integers in pointers without warnings
   # http://developer.gnome.org/doc/API/2.0/glib/glib-Type-Conversion-Macros.html#desc

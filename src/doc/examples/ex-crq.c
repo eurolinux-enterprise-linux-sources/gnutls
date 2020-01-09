@@ -1,7 +1,7 @@
 /* This example code is placed in the public domain. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -9,6 +9,7 @@
 #include <string.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
+#include <gnutls/abstract.h>
 #include <time.h>
 
 /* This example will generate a private key and a certificate
@@ -20,8 +21,10 @@ main (void)
 {
   gnutls_x509_crq_t crq;
   gnutls_x509_privkey_t key;
+  gnutls_privkey_t pkey; /* object used for signing */
   unsigned char buffer[10 * 1024];
   size_t buffer_size = sizeof (buffer);
+  unsigned int bits;
 
   gnutls_global_init ();
 
@@ -31,18 +34,20 @@ main (void)
   gnutls_x509_crq_init (&crq);
 
   gnutls_x509_privkey_init (&key);
+  gnutls_privkey_init (&pkey);
 
-  /* Generate a 1024 bit RSA private key.
+  /* Generate an RSA key of moderate security.
    */
-  gnutls_x509_privkey_generate (key, GNUTLS_PK_RSA, 1024, 0);
+  bits = gnutls_sec_param_to_pk_bits (GNUTLS_PK_RSA, GNUTLS_SEC_PARAM_NORMAL);
+  gnutls_x509_privkey_generate (key, GNUTLS_PK_RSA, bits, 0);
 
   /* Add stuff to the distinguished name
    */
   gnutls_x509_crq_set_dn_by_oid (crq, GNUTLS_OID_X520_COUNTRY_NAME,
-				 0, "GR", 2);
+                                 0, "GR", 2);
 
   gnutls_x509_crq_set_dn_by_oid (crq, GNUTLS_OID_X520_COMMON_NAME,
-				 0, "Nikos", strlen ("Nikos"));
+                                 0, "Nikos", strlen ("Nikos"));
 
   /* Set the request version.
    */
@@ -58,7 +63,8 @@ main (void)
 
   /* Self sign the certificate request.
    */
-  gnutls_x509_crq_sign (crq, key);
+  gnutls_privkey_import_x509( pkey, key, 0);
+  gnutls_x509_crq_privkey_sign (crq, pkey, GNUTLS_DIG_SHA1, 0);
 
   /* Export the PEM encoded certificate request, and
    * display it.

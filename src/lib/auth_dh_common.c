@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005, 2007, 2009 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2007, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -53,8 +54,8 @@ _gnutls_free_dh_info (dh_info_st * dh)
 
 int
 _gnutls_proc_dh_common_client_kx (gnutls_session_t session,
-				  opaque * data, size_t _data_size,
-				  bigint_t g, bigint_t p)
+                                  opaque * data, size_t _data_size,
+                                  bigint_t g, bigint_t p)
 {
   uint16_t n_Y;
   size_t _n_Y;
@@ -94,17 +95,17 @@ _gnutls_proc_dh_common_client_kx (gnutls_session_t session,
     {
       ret = _gnutls_mpi_dprint (session->key->KEY, &session->key->key);
     }
-  else				/* In DHE_PSK the key is set differently */
+  else                          /* In DHE_PSK the key is set differently */
     {
       gnutls_datum_t tmp_dh_key;
       ret = _gnutls_mpi_dprint (session->key->KEY, &tmp_dh_key);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  return ret;
-	}
+        {
+          gnutls_assert ();
+          return ret;
+        }
 
-      ret = _gnutls_set_psk_session_key (session, &tmp_dh_key);
+      ret = _gnutls_set_psk_session_key (session, NULL, &tmp_dh_key);
       _gnutls_free_datum (&tmp_dh_key);
 
     }
@@ -119,8 +120,13 @@ _gnutls_proc_dh_common_client_kx (gnutls_session_t session,
   return 0;
 }
 
+int _gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque** data)
+{
+  return _gnutls_gen_dh_common_client_kx_int(session, data, NULL);
+}
+
 int
-_gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque ** data)
+_gnutls_gen_dh_common_client_kx_int (gnutls_session_t session, opaque ** data, gnutls_datum_t* pskkey)
 {
   bigint_t x = NULL, X = NULL;
   size_t n_X;
@@ -129,7 +135,7 @@ _gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque ** data)
   *data = NULL;
 
   X = gnutls_calc_dh_secret (&x, session->key->client_g,
-			     session->key->client_p);
+                             session->key->client_p);
   if (X == NULL || x == NULL)
     {
       gnutls_assert ();
@@ -156,7 +162,6 @@ _gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque ** data)
   session->key->KEY =
     gnutls_calc_dh_key (session->key->client_Y, x, session->key->client_p);
 
-  _gnutls_mpi_release (&x);
   if (session->key->KEY == NULL)
     {
       gnutls_assert ();
@@ -175,19 +180,19 @@ _gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque ** data)
     {
       ret = _gnutls_mpi_dprint (session->key->KEY, &session->key->key);
     }
-  else				/* In DHE_PSK the key is set differently */
+  else                          /* In DHE_PSK the key is set differently */
     {
       gnutls_datum_t tmp_dh_key;
+
       ret = _gnutls_mpi_dprint (session->key->KEY, &tmp_dh_key);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          goto error;
+        }
 
-      ret = _gnutls_set_psk_session_key (session, &tmp_dh_key);
+      ret = _gnutls_set_psk_session_key (session, pskkey, &tmp_dh_key);
       _gnutls_free_datum (&tmp_dh_key);
-
     }
 
   _gnutls_mpi_release (&session->key->KEY);
@@ -198,19 +203,23 @@ _gnutls_gen_dh_common_client_kx (gnutls_session_t session, opaque ** data)
       goto error;
     }
 
-  return n_X + 2;
+  ret = n_X + 2;
 
 error:
   _gnutls_mpi_release (&x);
   _gnutls_mpi_release (&X);
-  gnutls_free (*data);
-  *data = NULL;
+  
+  if (ret < 0)
+    {
+      gnutls_free (*data);
+      *data = NULL;
+    }
   return ret;
 }
 
 int
 _gnutls_proc_dh_common_server_kx (gnutls_session_t session,
-				  opaque * data, size_t _data_size, int psk)
+                                  opaque * data, size_t _data_size, int psk)
 {
   uint16_t n_Y, n_g, n_p;
   size_t _n_Y, _n_g, _n_p;
@@ -291,7 +300,7 @@ _gnutls_proc_dh_common_server_kx (gnutls_session_t session,
     }
 
   _gnutls_dh_set_group (session, session->key->client_g,
-			session->key->client_p);
+                        session->key->client_p);
   _gnutls_dh_set_peer_public (session, session->key->client_Y);
 
   ret = n_Y + n_p + n_g + 6;
@@ -305,8 +314,8 @@ _gnutls_proc_dh_common_server_kx (gnutls_session_t session,
  * be inserted */
 int
 _gnutls_dh_common_print_server_kx (gnutls_session_t session,
-				   bigint_t g, bigint_t p, opaque ** data,
-				   int psk)
+                                   bigint_t g, bigint_t p, opaque ** data,
+                                   int psk)
 {
   bigint_t x, X;
   size_t n_X, n_g, n_p;
@@ -362,7 +371,12 @@ _gnutls_dh_common_print_server_kx (gnutls_session_t session,
 
   _gnutls_write_uint16 (n_X, &pdata[pos]);
 
-  ret = data_size;
+  /* do not use data_size. _gnutls_mpi_print() might
+   * have been pessimist and might have returned initially
+   * more data */
+  ret = n_g + n_p + n_X + 6;
+  if (psk != 0)
+    ret += 2;
 
   return ret;
 }

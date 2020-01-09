@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos, Timo Schulz
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -37,7 +38,7 @@
  */
 
 /**
- * gnutls_openpgp_keyring_init - initializes a #gnutls_openpgp_keyring_t structure
+ * gnutls_openpgp_keyring_init:
  * @keyring: The structure to be initialized
  *
  * This function will initialize an keyring structure.
@@ -50,13 +51,13 @@ gnutls_openpgp_keyring_init (gnutls_openpgp_keyring_t * keyring)
   *keyring = gnutls_calloc (1, sizeof (gnutls_openpgp_keyring_int));
 
   if (*keyring)
-    return 0;			/* success */
+    return 0;                   /* success */
   return GNUTLS_E_MEMORY_ERROR;
 }
 
 
 /**
- * gnutls_openpgp_keyring_deinit - deinitializes memory used by a #gnutls_openpgp_keyring_t structure
+ * gnutls_openpgp_keyring_deinit:
  * @keyring: The structure to be initialized
  *
  * This function will deinitialize a keyring structure.
@@ -77,7 +78,7 @@ gnutls_openpgp_keyring_deinit (gnutls_openpgp_keyring_t keyring)
 }
 
 /**
- * gnutls_openpgp_keyring_check_id - Check if a key id exists in the keyring
+ * gnutls_openpgp_keyring_check_id:
  * @ring: holds the keyring to check against
  * @keyid: will hold the keyid to check for.
  * @flags: unused (should be 0)
@@ -89,8 +90,8 @@ gnutls_openpgp_keyring_deinit (gnutls_openpgp_keyring_t keyring)
  **/
 int
 gnutls_openpgp_keyring_check_id (gnutls_openpgp_keyring_t ring,
-				 const gnutls_openpgp_keyid_t keyid,
-				 unsigned int flags)
+                                 const gnutls_openpgp_keyid_t keyid,
+                                 unsigned int flags)
 {
   cdk_pkt_pubkey_t pk;
   uint32_t id[2];
@@ -109,7 +110,7 @@ gnutls_openpgp_keyring_check_id (gnutls_openpgp_keyring_t ring,
 }
 
 /**
- * gnutls_openpgp_keyring_import - Import a raw- or Base64-encoded keyring
+ * gnutls_openpgp_keyring_import:
  * @keyring: The structure to store the parsed key.
  * @data: The RAW or BASE64 encoded keyring.
  * @format: One of #gnutls_openpgp_keyring_fmt elements.
@@ -122,8 +123,8 @@ gnutls_openpgp_keyring_check_id (gnutls_openpgp_keyring_t ring,
  **/
 int
 gnutls_openpgp_keyring_import (gnutls_openpgp_keyring_t keyring,
-			       const gnutls_datum_t * data,
-			       gnutls_openpgp_crt_fmt_t format)
+                               const gnutls_datum_t * data,
+                               gnutls_openpgp_crt_fmt_t format)
 {
   cdk_error_t err;
   cdk_stream_t input = NULL;
@@ -137,7 +138,7 @@ gnutls_openpgp_keyring_import (gnutls_openpgp_keyring_t keyring,
     }
 
   _gnutls_debug_log ("PGP: keyring import format '%s'\n",
-		     format == GNUTLS_OPENPGP_FMT_RAW ? "raw" : "base64");
+                     format == GNUTLS_OPENPGP_FMT_RAW ? "raw" : "base64");
 
   /* Create a new stream from the given data, decode it, and import
    * the raw database. This to avoid using opencdk streams which are
@@ -149,45 +150,45 @@ gnutls_openpgp_keyring_import (gnutls_openpgp_keyring_t keyring,
 
       err = cdk_stream_tmp_from_mem (data->data, data->size, &input);
       if (!err)
-	err = cdk_stream_set_armor_flag (input, 0);
+        err = cdk_stream_set_armor_flag (input, 0);
       if (err)
-	{
-	  gnutls_assert ();
-	  err = _gnutls_map_cdk_rc (err);
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          err = _gnutls_map_cdk_rc (err);
+          goto error;
+        }
 
       raw_len = cdk_stream_get_length (input);
       if (raw_len == 0)
-	{
-	  gnutls_assert ();
-	  err = GNUTLS_E_BASE64_DECODING_ERROR;
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          err = GNUTLS_E_BASE64_DECODING_ERROR;
+          goto error;
+        }
 
       raw_data = gnutls_malloc (raw_len);
       if (raw_data == NULL)
-	{
-	  gnutls_assert ();
-	  err = GNUTLS_E_MEMORY_ERROR;
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          err = GNUTLS_E_MEMORY_ERROR;
+          goto error;
+        }
 
       do
-	{
-	  err =
-	    cdk_stream_read (input, raw_data + written, raw_len - written);
+        {
+          err =
+            cdk_stream_read (input, raw_data + written, raw_len - written);
 
-	  if (err > 0)
-	    written += err;
-	}
+          if (err > 0)
+            written += err;
+        }
       while (written < raw_len && err != EOF && err > 0);
 
       raw_len = written;
 
     }
   else
-    {				/* RAW */
+    {                           /* RAW */
       raw_len = data->size;
       raw_data = data->data;
     }
@@ -209,7 +210,7 @@ error:
   cdk_kbnode_find_packet (node, CDK_PKT_PUBLIC_KEY)!=NULL
 
 /**
- * gnutls_openpgp_keyring_get_crt_count - return the number of certificates
+ * gnutls_openpgp_keyring_get_crt_count:
  * @ring: is an OpenPGP key ring
  *
  * This function will return the number of OpenPGP certificates
@@ -236,14 +237,14 @@ gnutls_openpgp_keyring_get_crt_count (gnutls_openpgp_keyring_t ring)
     {
       err = cdk_keydb_search (st, ring->db, &knode);
       if (err != CDK_Error_No_Key && err != CDK_Success)
-	{
-	  gnutls_assert ();
-	  cdk_keydb_search_release (st);
-	  return _gnutls_map_cdk_rc (err);
-	}
+        {
+          gnutls_assert ();
+          cdk_keydb_search_release (st);
+          return _gnutls_map_cdk_rc (err);
+        }
 
       if (knode_is_pkey (knode))
-	ret++;
+        ret++;
 
       cdk_kbnode_release (knode);
 
@@ -255,7 +256,7 @@ gnutls_openpgp_keyring_get_crt_count (gnutls_openpgp_keyring_t ring)
 }
 
 /**
- * gnutls_openpgp_keyring_get_crt - export an openpgp certificate from a keyring
+ * gnutls_openpgp_keyring_get_crt:
  * @ring: Holds the keyring.
  * @idx: the index of the certificate to export
  * @cert: An uninitialized #gnutls_openpgp_crt_t structure
@@ -269,7 +270,7 @@ gnutls_openpgp_keyring_get_crt_count (gnutls_openpgp_keyring_t ring)
  **/
 int
 gnutls_openpgp_keyring_get_crt (gnutls_openpgp_keyring_t ring,
-				unsigned int idx, gnutls_openpgp_crt_t * cert)
+                                unsigned int idx, gnutls_openpgp_crt_t * cert)
 {
   cdk_kbnode_t knode;
   cdk_error_t err;
@@ -288,23 +289,23 @@ gnutls_openpgp_keyring_get_crt (gnutls_openpgp_keyring_t ring,
     {
       err = cdk_keydb_search (st, ring->db, &knode);
       if (err != CDK_EOF && err != CDK_Success)
-	{
-	  gnutls_assert ();
-	  cdk_keydb_search_release (st);
-	  return _gnutls_map_cdk_rc (err);
-	}
+        {
+          gnutls_assert ();
+          cdk_keydb_search_release (st);
+          return _gnutls_map_cdk_rc (err);
+        }
 
       if (idx == count && err == CDK_Success)
-	{
-	  ret = gnutls_openpgp_crt_init (cert);
-	  if (ret == 0)
-	    (*cert)->knode = knode;
-	  cdk_keydb_search_release (st);
-	  return ret;
-	}
+        {
+          ret = gnutls_openpgp_crt_init (cert);
+          if (ret == 0)
+            (*cert)->knode = knode;
+          cdk_keydb_search_release (st);
+          return ret;
+        }
 
       if (knode_is_pkey (knode))
-	count++;
+        count++;
 
       cdk_kbnode_release (knode);
 

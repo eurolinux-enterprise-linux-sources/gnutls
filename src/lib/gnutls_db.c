@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -34,73 +35,72 @@
 #include <gnutls_datum.h>
 
 /**
-  * gnutls_db_set_retrieve_function - Set the function that will be used to get data
-  * @session: is a #gnutls_session_t structure.
-  * @retr_func: is the function.
-  *
-  * Sets the function that will be used to retrieve data from the
-  * resumed sessions database.  This function must return a
-  * gnutls_datum_t containing the data on success, or a gnutls_datum_t
-  * containing null and 0 on failure.
-  *
-  * The datum's data must be allocated using the function
-  * gnutls_malloc().
-  *
-  * The first argument to retr_func() will be null unless
-  * gnutls_db_set_ptr() has been called.
-  **/
+ * gnutls_db_set_retrieve_function:
+ * @session: is a #gnutls_session_t structure.
+ * @retr_func: is the function.
+ *
+ * Sets the function that will be used to retrieve data from the
+ * resumed sessions database.  This function must return a
+ * gnutls_datum_t containing the data on success, or a gnutls_datum_t
+ * containing null and 0 on failure.
+ *
+ * The datum's data must be allocated using the function
+ * gnutls_malloc().
+ *
+ * The first argument to @retr_func will be null unless
+ * gnutls_db_set_ptr() has been called.
+ **/
 void
 gnutls_db_set_retrieve_function (gnutls_session_t session,
-				 gnutls_db_retr_func retr_func)
+                                 gnutls_db_retr_func retr_func)
 {
   session->internals.db_retrieve_func = retr_func;
 }
 
 /**
-  * gnutls_db_set_remove_function - Set the function that will be used to remove data
-  * @session: is a #gnutls_session_t structure.
-  * @rem_func: is the function.
-  *
-  * Sets the function that will be used to remove data from the
-  * resumed sessions database. This function must return 0 on success.
-  *
-  * The first argument to rem_func() will be null unless
-  * gnutls_db_set_ptr() has been called.
-  **/
+ * gnutls_db_set_remove_function:
+ * @session: is a #gnutls_session_t structure.
+ * @rem_func: is the function.
+ *
+ * Sets the function that will be used to remove data from the
+ * resumed sessions database. This function must return 0 on success.
+ *
+ * The first argument to @rem_func will be null unless
+ * gnutls_db_set_ptr() has been called.
+ **/
 void
 gnutls_db_set_remove_function (gnutls_session_t session,
-			       gnutls_db_remove_func rem_func)
+                               gnutls_db_remove_func rem_func)
 {
   session->internals.db_remove_func = rem_func;
 }
 
 /**
-  * gnutls_db_set_store_function - Set the function that will be used to put data
-  * @session: is a #gnutls_session_t structure.
-  * @store_func: is the function
-  *
-  * Sets the function that will be used to store data from the resumed
-  * sessions database. This function must remove 0 on success.
-  *
-  * The first argument to store_func() will be null unless
-  * gnutls_db_set_ptr() has been called.
-  **/
+ * gnutls_db_set_store_function:
+ * @session: is a #gnutls_session_t structure.
+ * @store_func: is the function
+ *
+ * Sets the function that will be used to store data from the resumed
+ * sessions database. This function must remove 0 on success.
+ *
+ * The first argument to store_func() will be null unless
+ * gnutls_db_set_ptr() has been called.
+ **/
 void
 gnutls_db_set_store_function (gnutls_session_t session,
-			      gnutls_db_store_func store_func)
+                              gnutls_db_store_func store_func)
 {
   session->internals.db_store_func = store_func;
 }
 
 /**
-  * gnutls_db_set_ptr - Set a pointer to be sent to db functions
-  * @session: is a #gnutls_session_t structure.
-  * @ptr: is the pointer
-  *
-  * Sets the pointer that will be provided to db store, retrieve and
-  * delete functions, as the first argument.
-  *
-  **/
+ * gnutls_db_set_ptr:
+ * @session: is a #gnutls_session_t structure.
+ * @ptr: is the pointer
+ *
+ * Sets the pointer that will be provided to db store, retrieve and
+ * delete functions, as the first argument.
+ **/
 void
 gnutls_db_set_ptr (gnutls_session_t session, void *ptr)
 {
@@ -108,14 +108,14 @@ gnutls_db_set_ptr (gnutls_session_t session, void *ptr)
 }
 
 /**
-  * gnutls_db_get_ptr - Returns the pointer which is sent to db functions
-  * @session: is a #gnutls_session_t structure.
-  *
-  * Get db function pointer.
-  *
-  * Returns: the pointer that will be sent to db store, retrieve and
-  *   delete functions, as the first argument.
-  **/
+ * gnutls_db_get_ptr:
+ * @session: is a #gnutls_session_t structure.
+ *
+ * Get db function pointer.
+ *
+ * Returns: the pointer that will be sent to db store, retrieve and
+ *   delete functions, as the first argument.
+ **/
 void *
 gnutls_db_get_ptr (gnutls_session_t session)
 {
@@ -123,7 +123,7 @@ gnutls_db_get_ptr (gnutls_session_t session)
 }
 
 /**
- * gnutls_db_set_cache_expiration - Set the expiration time for resumed sessions.
+ * gnutls_db_set_cache_expiration:
  * @session: is a #gnutls_session_t structure.
  * @seconds: is the number of seconds.
  *
@@ -137,7 +137,7 @@ gnutls_db_set_cache_expiration (gnutls_session_t session, int seconds)
 }
 
 /**
- * gnutls_db_check_entry - check if the given db entry has expired
+ * gnutls_db_check_entry:
  * @session: is a #gnutls_session_t structure.
  * @session_entry: is the session data (not key)
  *
@@ -153,15 +153,15 @@ gnutls_db_check_entry (gnutls_session_t session, gnutls_datum_t session_entry)
 {
   time_t timestamp;
 
-  timestamp = time (0);
+  timestamp = gnutls_time (0);
 
   if (session_entry.data != NULL)
     if (timestamp -
-	((security_parameters_st *) (session_entry.data))->timestamp <=
-	session->internals.expire_time
-	|| ((security_parameters_st *) (session_entry.data))->timestamp >
-	timestamp
-	|| ((security_parameters_st *) (session_entry.data))->timestamp == 0)
+        ((security_parameters_st *) (session_entry.data))->timestamp <=
+        session->internals.expire_time
+        || ((security_parameters_st *) (session_entry.data))->timestamp >
+        timestamp
+        || ((security_parameters_st *) (session_entry.data))->timestamp == 0)
       return GNUTLS_E_EXPIRED;
 
   return 0;
@@ -224,7 +224,7 @@ _gnutls_db_func_is_ok (gnutls_session_t session)
 
 int
 _gnutls_server_restore_session (gnutls_session_t session,
-				uint8_t * session_id, int session_id_size)
+                                uint8_t * session_id, int session_id_size)
 {
   gnutls_datum_t data;
   gnutls_datum_t key;
@@ -262,7 +262,7 @@ _gnutls_server_restore_session (gnutls_session_t session,
 
 int
 _gnutls_db_remove_session (gnutls_session_t session, uint8_t * session_id,
-			   int session_id_size)
+                           int session_id_size)
 {
   gnutls_datum_t key;
 
@@ -277,7 +277,7 @@ _gnutls_db_remove_session (gnutls_session_t session, uint8_t * session_id,
  */
 int
 _gnutls_store_session (gnutls_session_t session,
-		       gnutls_datum_t session_id, gnutls_datum_t session_data)
+                       gnutls_datum_t session_id, gnutls_datum_t session_data)
 {
   int ret = 0;
 
@@ -308,7 +308,7 @@ _gnutls_store_session (gnutls_session_t session,
   if (session->internals.db_store_func != NULL)
     ret =
       session->internals.db_store_func (session->internals.db_ptr,
-					session_id, session_data);
+                                        session_id, session_data);
 
   return (ret == 0 ? ret : GNUTLS_E_DB_ERROR);
 
@@ -330,7 +330,7 @@ _gnutls_retrieve_session (gnutls_session_t session, gnutls_datum_t session_id)
   if (session->internals.db_retrieve_func != NULL)
     ret =
       session->internals.db_retrieve_func (session->internals.db_ptr,
-					   session_id);
+                                           session_id);
 
   return ret;
 
@@ -355,14 +355,14 @@ _gnutls_remove_session (gnutls_session_t session, gnutls_datum_t session_id)
   if (session->internals.db_remove_func != NULL)
     ret =
       session->internals.db_remove_func (session->internals.db_ptr,
-					 session_id);
+                                         session_id);
 
   return (ret == 0 ? ret : GNUTLS_E_DB_ERROR);
 
 }
 
 /**
- * gnutls_db_remove_session - remove the current session data from the database
+ * gnutls_db_remove_session:
  * @session: is a #gnutls_session_t structure.
  *
  * This function will remove the current session data from the
@@ -377,6 +377,6 @@ void
 gnutls_db_remove_session (gnutls_session_t session)
 {
   _gnutls_db_remove_session (session,
-			     session->security_parameters.session_id,
-			     session->security_parameters.session_id_size);
+                             session->security_parameters.session_id,
+                             session->security_parameters.session_id_size);
 }

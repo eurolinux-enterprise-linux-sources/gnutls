@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+ * Free Software Foundation, Inc.
  *
  * Author: Timo Schulz, Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -34,7 +35,6 @@
 #include <gnutls_str.h>
 #include <gnutls_sig.h>
 #include <stdio.h>
-#include <time.h>
 #include <sys/stat.h>
 
 #define datum_append(x, y, z) _gnutls_datum_append_m (x, y, z, gnutls_realloc)
@@ -76,8 +76,8 @@ _gnutls_map_cdk_rc (int rc)
  -*/
 int
 _gnutls_openpgp_raw_crt_to_gcert (gnutls_cert * gcert,
-				  const gnutls_datum_t * raw,
-				  const gnutls_openpgp_keyid_t keyid)
+                                  const gnutls_datum_t * raw,
+                                  const gnutls_openpgp_keyid_t keyid)
 {
   gnutls_openpgp_crt_t pcrt;
   int ret;
@@ -101,11 +101,11 @@ _gnutls_openpgp_raw_crt_to_gcert (gnutls_cert * gcert,
     {
       ret = gnutls_openpgp_crt_set_preferred_key_id (pcrt, keyid);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  gnutls_openpgp_crt_deinit (pcrt);
-	  return ret;
-	}
+        {
+          gnutls_assert ();
+          gnutls_openpgp_crt_deinit (pcrt);
+          return ret;
+        }
     }
 
   ret = _gnutls_openpgp_crt_to_gcert (gcert, pcrt);
@@ -115,7 +115,7 @@ _gnutls_openpgp_raw_crt_to_gcert (gnutls_cert * gcert,
 }
 
 /**
- * gnutls_certificate_set_openpgp_key - Used to set keys in a gnutls_certificate_credentials_t structure
+ * gnutls_certificate_set_openpgp_key:
  * @res: is a #gnutls_certificate_credentials_t structure.
  * @key: contains an openpgp public key
  * @pkey: is an openpgp private key
@@ -125,68 +125,68 @@ _gnutls_openpgp_raw_crt_to_gcert (gnutls_cert * gcert,
  * called more than once (in case multiple keys/certificates exist
  * for the server).
  *
- * With this function the subkeys of the certificate are not used.
+ * Note that this function requires that the preferred key ids have
+ * been set and be used. See gnutls_openpgp_crt_set_preferred_key_id().
+ * Otherwise the master key will be used.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (zero) is returned,
  *   otherwise an error code is returned.
  **/
 int
 gnutls_certificate_set_openpgp_key (gnutls_certificate_credentials_t res,
-				    gnutls_openpgp_crt_t crt,
-				    gnutls_openpgp_privkey_t pkey)
+                                    gnutls_openpgp_crt_t crt,
+                                    gnutls_openpgp_privkey_t pkey)
 {
   int ret;
+  gnutls_privkey_t privkey;
+  gnutls_cert *ccert;
 
   /* this should be first */
 
-  res->pkey = gnutls_realloc_fast (res->pkey,
-				   (res->ncerts + 1) *
-				   sizeof (gnutls_privkey));
-  if (res->pkey == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_MEMORY_ERROR;
-    }
-
-  ret = _gnutls_openpgp_privkey_to_gkey (&res->pkey[res->ncerts], pkey);
+  ret = gnutls_privkey_init (&privkey);
   if (ret < 0)
     {
       gnutls_assert ();
       return ret;
     }
+  
+  ret =
+    gnutls_privkey_import_openpgp (privkey, pkey,
+                                   GNUTLS_PRIVKEY_IMPORT_COPY);
+  if (ret < 0)
+    {
+      gnutls_privkey_deinit (privkey);
+      gnutls_assert ();
+      return ret;
+    }
 
-  res->cert_list = gnutls_realloc_fast (res->cert_list,
-					(1 +
-					 res->ncerts) *
-					sizeof (gnutls_cert *));
-  if (res->cert_list == NULL)
+
+  ccert = gnutls_calloc (1, sizeof (gnutls_cert));
+  if (ccert == NULL)
     {
       gnutls_assert ();
+      gnutls_privkey_deinit (privkey);
       return GNUTLS_E_MEMORY_ERROR;
     }
 
-  res->cert_list_length = gnutls_realloc_fast (res->cert_list_length,
-					       (1 +
-						res->ncerts) * sizeof (int));
-  if (res->cert_list_length == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_MEMORY_ERROR;
-    }
-
-  res->cert_list[res->ncerts] = gnutls_calloc (1, sizeof (gnutls_cert));
-  if (res->cert_list[res->ncerts] == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_MEMORY_ERROR;
-    }
-
-  res->cert_list_length[res->ncerts] = 1;
-
-  ret = _gnutls_openpgp_crt_to_gcert (res->cert_list[res->ncerts], crt);
+  ret = _gnutls_openpgp_crt_to_gcert (ccert, crt);
   if (ret < 0)
     {
       gnutls_assert ();
+      gnutls_free (ccert);
+      gnutls_privkey_deinit (privkey);
+      return ret;
+    }
+
+  ret = certificate_credentials_append_pkey (res, privkey);
+  if (ret >= 0)
+    ret = certificate_credential_append_crt_list (res, ccert, 1);
+
+  if (ret < 0)
+    {
+      gnutls_assert ();
+      gnutls_free (ccert);
+      gnutls_privkey_deinit (privkey);
       return ret;
     }
 
@@ -198,7 +198,7 @@ gnutls_certificate_set_openpgp_key (gnutls_certificate_credentials_t res,
 }
 
 /*-
- * gnutls_openpgp_get_key - Retrieve a key from the keyring.
+ * gnutls_openpgp_get_key:
  * @key: the destination context to save the key.
  * @keyring: the datum struct that contains all keyring information.
  * @attr: The attribute (keyid, fingerprint, ...).
@@ -209,8 +209,8 @@ gnutls_certificate_set_openpgp_key (gnutls_certificate_credentials_t res,
  -*/
 int
 gnutls_openpgp_get_key (gnutls_datum_t * key,
-			gnutls_openpgp_keyring_t keyring, key_attr_t by,
-			opaque * pattern)
+                        gnutls_openpgp_keyring_t keyring, key_attr_t by,
+                        opaque * pattern)
 {
   cdk_kbnode_t knode = NULL;
   unsigned long keyid[2];
@@ -272,62 +272,60 @@ leave:
 }
 
 /**
- * gnutls_certificate_set_openpgp_key_mem - Used to set OpenPGP keys
+ * gnutls_certificate_set_openpgp_key_mem:
  * @res: the destination context to save the data.
  * @cert: the datum that contains the public key.
  * @key: the datum that contains the secret key.
  * @format: the format of the keys
  *
  * This funtion is used to load OpenPGP keys into the GnuTLS credential 
- * structure. The files should contain non encrypted keys.
+ * structure. The datum should contain at least one valid non encrypted subkey.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS is returned, otherwise a
  *   negative error value.
  **/
 int
 gnutls_certificate_set_openpgp_key_mem (gnutls_certificate_credentials_t res,
-					const gnutls_datum_t * cert,
-					const gnutls_datum_t * key,
-					gnutls_openpgp_crt_fmt_t format)
+                                        const gnutls_datum_t * cert,
+                                        const gnutls_datum_t * key,
+                                        gnutls_openpgp_crt_fmt_t format)
 {
   return gnutls_certificate_set_openpgp_key_mem2 (res, cert, key,
-						  NULL, format);
+                                                  NULL, format);
 }
 
-
 /**
- * gnutls_certificate_set_openpgp_key_file - Used to set OpenPGP keys
+ * gnutls_certificate_set_openpgp_key_file:
  * @res: the destination context to save the data.
  * @certfile: the file that contains the public key.
  * @keyfile: the file that contains the secret key.
  * @format: the format of the keys
  *
  * This funtion is used to load OpenPGP keys into the GnuTLS
- * credentials structure.  The files should only contain one key which
- * is not encrypted.
+ * credentials structure. The file should contain at least one valid non encrypted subkey.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS is returned, otherwise a
  *   negative error value.
  **/
 int
 gnutls_certificate_set_openpgp_key_file (gnutls_certificate_credentials_t res,
-					 const char *certfile,
-					 const char *keyfile,
-					 gnutls_openpgp_crt_fmt_t format)
+                                         const char *certfile,
+                                         const char *keyfile,
+                                         gnutls_openpgp_crt_fmt_t format)
 {
   return gnutls_certificate_set_openpgp_key_file2 (res, certfile,
-						   keyfile, NULL, format);
+                                                   keyfile, NULL, format);
 }
 
 static int
 get_keyid (gnutls_openpgp_keyid_t keyid, const char *str)
 {
-  size_t keyid_size = sizeof (keyid);
+  size_t keyid_size = GNUTLS_OPENPGP_KEYID_SIZE;
 
   if (strlen (str) != 16)
     {
       _gnutls_debug_log
-	("The OpenPGP subkey ID has to be 16 hexadecimal characters.\n");
+        ("The OpenPGP subkey ID has to be 16 hexadecimal characters.\n");
       return GNUTLS_E_INVALID_REQUEST;
     }
 
@@ -341,7 +339,7 @@ get_keyid (gnutls_openpgp_keyid_t keyid, const char *str)
 }
 
 /**
- * gnutls_certificate_set_openpgp_key_mem2 - Used to set OpenPGP keys
+ * gnutls_certificate_set_openpgp_key_mem2:
  * @res: the destination context to save the data.
  * @cert: the datum that contains the public key.
  * @key: the datum that contains the secret key.
@@ -349,8 +347,7 @@ get_keyid (gnutls_openpgp_keyid_t keyid, const char *str)
  * @format: the format of the keys
  *
  * This funtion is used to load OpenPGP keys into the GnuTLS
- * credentials structure.  The files should only contain one key which
- * is not encrypted.
+ * credentials structure. The datum should contain at least one valid non encrypted subkey.
  *
  * The special keyword "auto" is also accepted as @subkey_id.  In that
  * case the gnutls_openpgp_crt_get_auth_subkey() will be used to
@@ -363,14 +360,15 @@ get_keyid (gnutls_openpgp_keyid_t keyid, const char *str)
  **/
 int
 gnutls_certificate_set_openpgp_key_mem2 (gnutls_certificate_credentials_t res,
-					 const gnutls_datum_t * cert,
-					 const gnutls_datum_t * key,
-					 const char *subkey_id,
-					 gnutls_openpgp_crt_fmt_t format)
+                                         const gnutls_datum_t * cert,
+                                         const gnutls_datum_t * key,
+                                         const char *subkey_id,
+                                         gnutls_openpgp_crt_fmt_t format)
 {
   gnutls_openpgp_privkey_t pkey;
   gnutls_openpgp_crt_t crt;
   int ret;
+  uint8_t keyid[GNUTLS_OPENPGP_KEYID_SIZE];
 
   ret = gnutls_openpgp_privkey_init (&pkey);
   if (ret < 0)
@@ -406,40 +404,40 @@ gnutls_certificate_set_openpgp_key_mem2 (gnutls_certificate_credentials_t res,
 
   if (subkey_id != NULL)
     {
-      gnutls_openpgp_keyid_t keyid;
-
       if (strcasecmp (subkey_id, "auto") == 0)
-	ret = gnutls_openpgp_crt_get_auth_subkey (crt, keyid, 1);
+        ret = gnutls_openpgp_crt_get_auth_subkey (crt, keyid, 1);
       else
-	ret = get_keyid (keyid, subkey_id);
-
-      if (ret >= 0)
-	{
-	  ret = gnutls_openpgp_crt_set_preferred_key_id (crt, keyid);
-	  if (ret >= 0)
-	    ret = gnutls_openpgp_privkey_set_preferred_key_id (pkey, keyid);
-	}
+        ret = get_keyid (keyid, subkey_id);
 
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  gnutls_openpgp_privkey_deinit (pkey);
-	  gnutls_openpgp_crt_deinit (crt);
-	  return ret;
-	}
+        gnutls_assert ();
+
+      if (ret >= 0)
+        {
+          ret = gnutls_openpgp_crt_set_preferred_key_id (crt, keyid);
+          if (ret >= 0)
+            ret = gnutls_openpgp_privkey_set_preferred_key_id (pkey, keyid);
+        }
+
+      if (ret < 0)
+        {
+          gnutls_assert ();
+          gnutls_openpgp_privkey_deinit (pkey);
+          gnutls_openpgp_crt_deinit (crt);
+          return ret;
+        }
     }
 
   ret = gnutls_certificate_set_openpgp_key (res, crt, pkey);
 
-  gnutls_openpgp_privkey_deinit (pkey);
   gnutls_openpgp_crt_deinit (crt);
+  gnutls_openpgp_privkey_deinit (pkey);
 
   return ret;
 }
 
-
 /**
- * gnutls_certificate_set_openpgp_key_file2 - Used to set OpenPGP keys
+ * gnutls_certificate_set_openpgp_key_file2:
  * @res: the destination context to save the data.
  * @certfile: the file that contains the public key.
  * @keyfile: the file that contains the secret key.
@@ -447,7 +445,7 @@ gnutls_certificate_set_openpgp_key_mem2 (gnutls_certificate_credentials_t res,
  * @format: the format of the keys
  *
  * This funtion is used to load OpenPGP keys into the GnuTLS credential 
- * structure. The files should contain non encrypted keys.
+ * structure. The file should contain at least one valid non encrypted subkey.
  *
  * The special keyword "auto" is also accepted as @subkey_id.  In that
  * case the gnutls_openpgp_crt_get_auth_subkey() will be used to
@@ -459,11 +457,11 @@ gnutls_certificate_set_openpgp_key_mem2 (gnutls_certificate_credentials_t res,
  * Since: 2.4.0
  **/
 int
-gnutls_certificate_set_openpgp_key_file2 (gnutls_certificate_credentials_t res,
-					  const char *certfile,
-					  const char *keyfile,
-					  const char *subkey_id,
-					  gnutls_openpgp_crt_fmt_t format)
+gnutls_certificate_set_openpgp_key_file2 (gnutls_certificate_credentials_t
+                                          res, const char *certfile,
+                                          const char *keyfile,
+                                          const char *subkey_id,
+                                          gnutls_openpgp_crt_fmt_t format)
 {
   struct stat statbuf;
   gnutls_datum_t key, cert;
@@ -501,7 +499,7 @@ gnutls_certificate_set_openpgp_key_file2 (gnutls_certificate_credentials_t res,
 
   rc =
     gnutls_certificate_set_openpgp_key_mem2 (res, &cert, &key, subkey_id,
-					     format);
+                                             format);
 
   free (cert.data);
   free (key.data);
@@ -540,19 +538,18 @@ gnutls_openpgp_count_key_names (const gnutls_datum_t * cert)
     {
       p = cdk_kbnode_walk (knode, &ctx, 0);
       if (!p)
-	break;
+        break;
       pkt = cdk_kbnode_get_packet (p);
       if (pkt->pkttype == CDK_PKT_USER_ID)
-	nuids++;
+        nuids++;
     }
 
   cdk_kbnode_release (knode);
   return nuids;
 }
 
-
 /**
- * gnutls_certificate_set_openpgp_keyring_file - Sets a keyring file for OpenPGP
+ * gnutls_certificate_set_openpgp_keyring_file:
  * @c: A certificate credentials structure
  * @file: filename of the keyring.
  * @format: format of keyring.
@@ -566,9 +563,9 @@ gnutls_openpgp_count_key_names (const gnutls_datum_t * cert)
  *   negative error value.
  **/
 int
-gnutls_certificate_set_openpgp_keyring_file (gnutls_certificate_credentials_t c,
-					     const char *file,
-					     gnutls_openpgp_crt_fmt_t format)
+gnutls_certificate_set_openpgp_keyring_file (gnutls_certificate_credentials_t
+                                             c, const char *file,
+                                             gnutls_openpgp_crt_fmt_t format)
 {
   gnutls_datum_t ring;
   size_t size;
@@ -590,7 +587,7 @@ gnutls_certificate_set_openpgp_keyring_file (gnutls_certificate_credentials_t c,
 
   rc =
     gnutls_certificate_set_openpgp_keyring_mem (c, ring.data, ring.size,
-						format);
+                                                format);
 
   free (ring.data);
 
@@ -598,7 +595,7 @@ gnutls_certificate_set_openpgp_keyring_file (gnutls_certificate_credentials_t c,
 }
 
 /**
- * gnutls_certificate_set_openpgp_keyring_mem - Add keyring data for OpenPGP
+ * gnutls_certificate_set_openpgp_keyring_mem:
  * @c: A certificate credentials structure
  * @data: buffer with keyring data.
  * @dlen: length of data buffer.
@@ -613,12 +610,12 @@ gnutls_certificate_set_openpgp_keyring_file (gnutls_certificate_credentials_t c,
  *   negative error value.
  **/
 int
-gnutls_certificate_set_openpgp_keyring_mem (gnutls_certificate_credentials_t c,
-					    const opaque * data,
-					    size_t dlen,
-					    gnutls_openpgp_crt_fmt_t format)
+gnutls_certificate_set_openpgp_keyring_mem (gnutls_certificate_credentials_t
+                                            c, const opaque * data,
+                                            size_t dlen,
+                                            gnutls_openpgp_crt_fmt_t format)
 {
-  gnutls_datum ddata;
+  gnutls_datum_t ddata;
   int rc;
 
   ddata.data = (void *) data;
@@ -661,8 +658,8 @@ gnutls_certificate_set_openpgp_keyring_mem (gnutls_certificate_credentials_t c,
  -*/
 int
 _gnutls_openpgp_request_key (gnutls_session_t session, gnutls_datum_t * ret,
-			     const gnutls_certificate_credentials_t cred,
-			     opaque * key_fpr, int key_fpr_size)
+                             const gnutls_certificate_credentials_t cred,
+                             opaque * key_fpr, int key_fpr_size)
 {
   int rc = 0;
 
@@ -673,11 +670,11 @@ _gnutls_openpgp_request_key (gnutls_session_t session, gnutls_datum_t * ret,
     }
 
   if (key_fpr_size != 16 && key_fpr_size != 20)
-    return GNUTLS_E_HASH_FAILED;	/* only MD5 and SHA1 are supported */
+    return GNUTLS_E_HASH_FAILED;        /* only MD5 and SHA1 are supported */
 
   rc = gnutls_openpgp_get_key (ret, cred->keyring, KEY_ATTR_FPR, key_fpr);
 
-  if (rc >= 0)			/* key was found */
+  if (rc >= 0)                  /* key was found */
     {
       rc = 0;
       goto error;
@@ -689,14 +686,14 @@ _gnutls_openpgp_request_key (gnutls_session_t session, gnutls_datum_t * ret,
   if (session->internals.openpgp_recv_key_func != NULL)
     {
       rc = session->internals.openpgp_recv_key_func (session,
-						     key_fpr,
-						     key_fpr_size, ret);
+                                                     key_fpr,
+                                                     key_fpr_size, ret);
       if (rc < 0)
-	{
-	  gnutls_assert ();
-	  rc = GNUTLS_E_OPENPGP_GETKEY_FAILED;
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          rc = GNUTLS_E_OPENPGP_GETKEY_FAILED;
+          goto error;
+        }
     }
 
 error:
@@ -705,7 +702,7 @@ error:
 }
 
 /**
- * gnutls_openpgp_set_recv_key_function - Used to set a key retrieval callback for PGP keys
+ * gnutls_openpgp_set_recv_key_function:
  * @session: a TLS session
  * @func: the callback
  *
@@ -716,78 +713,11 @@ error:
  **/
 void
 gnutls_openpgp_set_recv_key_function (gnutls_session_t session,
-				      gnutls_openpgp_recv_key_func func)
+                                      gnutls_openpgp_recv_key_func func)
 {
   session->internals.openpgp_recv_key_func = func;
 }
 
-
-/* Copies a gnutls_openpgp_privkey_t to a gnutls_privkey structure. */
-int
-_gnutls_openpgp_privkey_to_gkey (gnutls_privkey * dest,
-				 gnutls_openpgp_privkey_t src)
-{
-  int ret = 0;
-  gnutls_openpgp_keyid_t keyid;
-  char err_buf[33];
-
-  if (dest == NULL || src == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_CERTIFICATE_ERROR;
-    }
-
-  dest->params_size = MAX_PRIV_PARAMS_SIZE;
-
-  ret = gnutls_openpgp_privkey_get_preferred_key_id (src, keyid);
-
-  if (ret == 0)
-    {
-      int idx;
-      uint32_t kid32[2];
-
-      _gnutls_debug_log
-	("Importing Openpgp key and using openpgp sub key: %s\n",
-	 _gnutls_bin2hex (keyid, sizeof (keyid), err_buf, sizeof (err_buf)));
-
-      KEYID_IMPORT (kid32, keyid);
-
-      idx = gnutls_openpgp_privkey_get_subkey_idx (src, keyid);
-      if (idx < 0)
-	{
-	  gnutls_assert ();
-	  return idx;
-	}
-
-      dest->pk_algorithm =
-	gnutls_openpgp_privkey_get_subkey_pk_algorithm (src, idx, NULL);
-
-      ret =
-	_gnutls_openpgp_privkey_get_mpis (src, kid32, dest->params,
-					  &dest->params_size);
-    }
-  else
-    {
-      _gnutls_debug_log
-	("Importing Openpgp key and using main openpgp key.\n");
-
-      dest->pk_algorithm =
-	gnutls_openpgp_privkey_get_pk_algorithm (src, NULL);
-      ret =
-	_gnutls_openpgp_privkey_get_mpis (src, NULL, dest->params,
-					  &dest->params_size);
-    }
-
-
-  if (ret < 0)
-    {
-      gnutls_assert ();
-      return ret;
-    }
-
-  return 0;
-
-}
 
 /* Converts a parsed gnutls_openpgp_crt_t to a gnutls_cert structure.
  */
@@ -795,11 +725,13 @@ int
 _gnutls_openpgp_crt_to_gcert (gnutls_cert * gcert, gnutls_openpgp_crt_t cert)
 {
   int ret;
-  gnutls_openpgp_keyid_t keyid;
+  uint8_t keyid[GNUTLS_OPENPGP_KEYID_SIZE];
   char err_buf[33];
 
   memset (gcert, 0, sizeof (gnutls_cert));
   gcert->cert_type = GNUTLS_CRT_OPENPGP;
+  gcert->sign_algo = GNUTLS_SIGN_UNKNOWN;       /* N/A here */
+
   gcert->version = gnutls_openpgp_crt_get_version (cert);
   gcert->params_size = MAX_PUBLIC_PARAMS_SIZE;
 
@@ -811,41 +743,42 @@ _gnutls_openpgp_crt_to_gcert (gnutls_cert * gcert, gnutls_openpgp_crt_t cert)
       uint32_t kid32[2];
 
       _gnutls_debug_log
-	("Importing Openpgp cert and using openpgp sub key: %s\n",
-	 _gnutls_bin2hex (keyid, sizeof (keyid), err_buf, sizeof (err_buf)));
+        ("Importing Openpgp cert and using openpgp sub key: %s\n",
+         _gnutls_bin2hex (keyid, GNUTLS_OPENPGP_KEYID_SIZE, err_buf, sizeof (err_buf),
+                          NULL));
 
       KEYID_IMPORT (kid32, keyid);
 
       idx = gnutls_openpgp_crt_get_subkey_idx (cert, keyid);
       if (idx < 0)
-	{
-	  gnutls_assert ();
-	  return idx;
-	}
+        {
+          gnutls_assert ();
+          return idx;
+        }
 
       gcert->subject_pk_algorithm =
-	gnutls_openpgp_crt_get_subkey_pk_algorithm (cert, idx, NULL);
+        gnutls_openpgp_crt_get_subkey_pk_algorithm (cert, idx, NULL);
 
       gnutls_openpgp_crt_get_subkey_usage (cert, idx, &gcert->key_usage);
       gcert->use_subkey = 1;
 
-      memcpy (gcert->subkey_id, keyid, sizeof (keyid));
+      memcpy (gcert->subkey_id, keyid, GNUTLS_OPENPGP_KEYID_SIZE);
 
       ret =
-	_gnutls_openpgp_crt_get_mpis (cert, kid32, gcert->params,
-				      &gcert->params_size);
+        _gnutls_openpgp_crt_get_mpis (cert, kid32, gcert->params,
+                                      &gcert->params_size);
     }
   else
     {
       _gnutls_debug_log
-	("Importing Openpgp cert and using main openpgp key\n");
+        ("Importing Openpgp cert and using main openpgp key\n");
       gcert->subject_pk_algorithm =
-	gnutls_openpgp_crt_get_pk_algorithm (cert, NULL);
+        gnutls_openpgp_crt_get_pk_algorithm (cert, NULL);
 
       gnutls_openpgp_crt_get_key_usage (cert, &gcert->key_usage);
       ret =
-	_gnutls_openpgp_crt_get_mpis (cert, NULL, gcert->params,
-				      &gcert->params_size);
+        _gnutls_openpgp_crt_get_mpis (cert, NULL, gcert->params,
+                                      &gcert->params_size);
       gcert->use_subkey = 0;
     }
 
@@ -855,7 +788,7 @@ _gnutls_openpgp_crt_to_gcert (gnutls_cert * gcert, gnutls_openpgp_crt_t cert)
       return ret;
     }
 
-  {				/* copy the raw certificate */
+  {                             /* copy the raw certificate */
 #define SMALL_RAW 512
     opaque *raw;
     size_t raw_size = SMALL_RAW;
@@ -866,38 +799,38 @@ _gnutls_openpgp_crt_to_gcert (gnutls_cert * gcert, gnutls_openpgp_crt_t cert)
     raw = gnutls_malloc (raw_size);
     if (raw == NULL)
       {
-	gnutls_assert ();
-	return GNUTLS_E_MEMORY_ERROR;
+        gnutls_assert ();
+        return GNUTLS_E_MEMORY_ERROR;
       }
 
     ret =
       gnutls_openpgp_crt_export (cert, GNUTLS_OPENPGP_FMT_RAW, raw,
-				 &raw_size);
+                                 &raw_size);
     if (ret < 0 && ret != GNUTLS_E_SHORT_MEMORY_BUFFER)
       {
-	gnutls_assert ();
-	gnutls_free (raw);
-	return ret;
+        gnutls_assert ();
+        gnutls_free (raw);
+        return ret;
       }
 
     if (ret == GNUTLS_E_SHORT_MEMORY_BUFFER)
       {
-	raw = gnutls_realloc (raw, raw_size);
-	if (raw == NULL)
-	  {
-	    gnutls_assert ();
-	    return GNUTLS_E_MEMORY_ERROR;
-	  }
+        raw = gnutls_realloc (raw, raw_size);
+        if (raw == NULL)
+          {
+            gnutls_assert ();
+            return GNUTLS_E_MEMORY_ERROR;
+          }
 
-	ret =
-	  gnutls_openpgp_crt_export (cert, GNUTLS_OPENPGP_FMT_RAW, raw,
-				     &raw_size);
-	if (ret < 0)
-	  {
-	    gnutls_assert ();
-	    gnutls_free (raw);
-	    return ret;
-	  }
+        ret =
+          gnutls_openpgp_crt_export (cert, GNUTLS_OPENPGP_FMT_RAW, raw,
+                                     &raw_size);
+        if (ret < 0)
+          {
+            gnutls_assert ();
+            gnutls_free (raw);
+            return ret;
+          }
       }
 
     gcert->raw.data = raw;
@@ -906,72 +839,4 @@ _gnutls_openpgp_crt_to_gcert (gnutls_cert * gcert, gnutls_openpgp_crt_t cert)
 
   return 0;
 
-}
-
-
-/**
- * gnutls_openpgp_privkey_sign_hash - sign the given data using the private key params
- * @key: Holds the key
- * @hash: holds the data to be signed
- * @signature: will contain newly allocated signature
- *
- * This function will sign the given hash using the private key.  You
- * should use gnutls_openpgp_privkey_set_subkey() before calling this
- * function to set the subkey to use.
- *
- * Returns: On success, %GNUTLS_E_SUCCESS is returned, otherwise a
- *   negative error value.
- **/
-int
-gnutls_openpgp_privkey_sign_hash (gnutls_openpgp_privkey_t key,
-				  const gnutls_datum_t * hash,
-				  gnutls_datum_t * signature)
-{
-  int result, i;
-  bigint_t params[MAX_PUBLIC_PARAMS_SIZE];
-  int params_size = MAX_PUBLIC_PARAMS_SIZE;
-  int pk_algorithm;
-  gnutls_openpgp_keyid_t keyid;
-
-  if (key == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INVALID_REQUEST;
-    }
-
-  result = gnutls_openpgp_privkey_get_preferred_key_id (key, keyid);
-  if (result == 0)
-    {
-      uint32_t kid[2];
-
-      KEYID_IMPORT (kid, keyid);
-      result = _gnutls_openpgp_privkey_get_mpis (key, kid,
-						 params, &params_size);
-    }
-  else
-    {
-      result = _gnutls_openpgp_privkey_get_mpis (key, NULL,
-						 params, &params_size);
-    }
-
-  if (result < 0)
-    {
-      gnutls_assert ();
-      return result;
-    }
-
-  pk_algorithm = gnutls_openpgp_privkey_get_pk_algorithm (key, NULL);
-
-  result = _gnutls_sign (pk_algorithm, params, params_size, hash, signature);
-
-  for (i = 0; i < params_size; i++)
-    _gnutls_mpi_release (&params[i]);
-
-  if (result < 0)
-    {
-      gnutls_assert ();
-      return result;
-    }
-
-  return 0;
 }

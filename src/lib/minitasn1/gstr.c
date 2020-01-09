@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation
- * Copyright (C) 2002 Nikos Mavroyanopoulos
+ * Copyright (C) 2002-2012 Free Software Foundation, Inc.
  *
  * This file is part of LIBTASN1.
  *
@@ -49,7 +48,8 @@ _asn1_str_cat (char *dest, size_t dest_tot_size, const char *src)
     }
 }
 
-void
+/* Returns the bytes copied (not including the null terminator) */
+unsigned int
 _asn1_str_cpy (char *dest, size_t dest_tot_size, const char *src)
 {
   size_t str_size = strlen (src);
@@ -57,13 +57,17 @@ _asn1_str_cpy (char *dest, size_t dest_tot_size, const char *src)
   if (dest_tot_size > str_size)
     {
       strcpy (dest, src);
+      return str_size;
     }
   else
     {
       if (dest_tot_size > 0)
 	{
-	  strncpy (dest, src, (dest_tot_size) - 1);
-	  dest[dest_tot_size - 1] = 0;
+	  str_size = dest_tot_size - 1;
+	  memcpy (dest, src, str_size);
+	  dest[str_size] = 0;
+	  return str_size;
 	}
+      else return 0;
     }
 }

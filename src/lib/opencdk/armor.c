@@ -1,5 +1,6 @@
 /* armor.c - Armor filters
- * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2007, 2008 Free Software Foundation, Inc.
+ * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2007, 2008, 2010
+ * Free Software Foundation, Inc.
  *
  * Author: Timo Schulz
  *
@@ -27,7 +28,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -38,9 +39,11 @@
 #include "filters.h"
 
 #ifdef __MINGW32__
-# define LF "\r\n"
+#define LF "\r\n"
+#define ALTLF "\n"
 #else
-# define LF "\n"
+#define LF "\n"
+#define ALTLF "\r\n"
 #endif
 
 #define CRCINIT 0xB704CE
@@ -183,7 +186,7 @@ base64_encode (char *out, const byte * in, size_t len, size_t olen)
       *out++ = b64chars[in[0] >> 2];
       fragment = (in[0] << 4) & 0x30;
       if (len > 1)
-	fragment |= in[1] >> 4;
+        fragment |= in[1] >> 4;
       *out++ = b64chars[fragment];
       *out++ = (len < 2) ? '=' : b64chars[(in[1] << 2) & 0x3c];
       *out++ = '=';
@@ -212,43 +215,43 @@ base64_decode (byte * out, const char *in)
     {
       digit1 = in[0];
       if (digit1 > 127 || b64val (digit1) == BAD)
-	{
-	  gnutls_assert ();
-	  return -1;
-	}
+        {
+          gnutls_assert ();
+          return -1;
+        }
       digit2 = in[1];
       if (digit2 > 127 || b64val (digit2) == BAD)
-	{
-	  gnutls_assert ();
-	  return -1;
-	}
+        {
+          gnutls_assert ();
+          return -1;
+        }
       digit3 = in[2];
       if (digit3 > 127 || ((digit3 != '=') && (b64val (digit3) == BAD)))
-	{
-	  gnutls_assert ();
-	  return -1;
-	}
+        {
+          gnutls_assert ();
+          return -1;
+        }
       digit4 = in[3];
       if (digit4 > 127 || ((digit4 != '=') && (b64val (digit4) == BAD)))
-	{
-	  gnutls_assert ();
-	  return -1;
-	}
+        {
+          gnutls_assert ();
+          return -1;
+        }
       in += 4;
 
       /* digits are already sanity-checked */
       *out++ = (b64val (digit1) << 2) | (b64val (digit2) >> 4);
       len++;
       if (digit3 != '=')
-	{
-	  *out++ = ((b64val (digit2) << 4) & 0xf0) | (b64val (digit3) >> 2);
-	  len++;
-	  if (digit4 != '=')
-	    {
-	      *out++ = ((b64val (digit3) << 6) & 0xc0) | b64val (digit4);
-	      len++;
-	    }
-	}
+        {
+          *out++ = ((b64val (digit2) << 4) & 0xf0) | (b64val (digit3) >> 2);
+          len++;
+          if (digit4 != '=')
+            {
+              *out++ = ((b64val (digit3) << 6) & 0xc0) | b64val (digit4);
+              len++;
+            }
+        }
     }
   while (*in && digit4 != '=');
 
@@ -272,21 +275,22 @@ compress_get_algo (cdk_stream_t inp, int *r_zipalgo)
     {
       nread = _cdk_stream_gets (inp, buf, DIM (buf) - 1);
       if (!nread || nread == -1)
-	break;
+        break;
       if (nread == 1 && !cdk_stream_eof (inp)
-	  && (nread = _cdk_stream_gets (inp, buf, DIM (buf) - 1)) > 0)
-	{
-	  base64_decode (plain, buf);
-	  if (!(*plain & 0x80))
-	    break;
-	  pkttype = *plain & 0x40 ? (*plain & 0x3f) : ((*plain >> 2) & 0xf);
-	  if (pkttype == CDK_PKT_COMPRESSED && r_zipalgo)
-	    {
-	      _cdk_log_debug ("armor compressed (algo=%d)\n", *(plain + 1));
-	      *r_zipalgo = *(plain + 1);
-	    }
-	  break;
-	}
+          && (nread = _cdk_stream_gets (inp, buf, DIM (buf) - 1)) > 0)
+        {
+          base64_decode (plain, buf);
+          if (!(*plain & 0x80))
+            break;
+          pkttype = *plain & 0x40 ? (*plain & 0x3f) : ((*plain >> 2) & 0xf);
+          if (pkttype == CDK_PKT_COMPRESSED && r_zipalgo)
+            {
+              _gnutls_buffers_log ("armor compressed (algo=%d)\n",
+                                   *(plain + 1));
+              *r_zipalgo = *(plain + 1);
+            }
+          break;
+        }
     }
   return 0;
 }
@@ -305,10 +309,10 @@ check_armor (cdk_stream_t inp, int *r_zipalgo)
     {
       buf[nread] = '\0';
       if (strstr (buf, "-----BEGIN PGP"))
-	{
-	  compress_get_algo (inp, r_zipalgo);
-	  check = 1;
-	}
+        {
+          compress_get_algo (inp, r_zipalgo);
+          check = 1;
+        }
       cdk_stream_seek (inp, 0);
     }
   return check;
@@ -323,7 +327,7 @@ is_armored (int ctb)
   if (!(ctb & 0x80))
     {
       gnutls_assert ();
-      return 1;			/* invalid packet: assume it is armored */
+      return 1;                 /* invalid packet: assume it is armored */
     }
   pkttype = ctb & 0x40 ? (ctb & 0x3f) : ((ctb >> 2) & 0xf);
   switch (pkttype)
@@ -336,7 +340,7 @@ is_armored (int ctb)
     case CDK_PKT_SIGNATURE:
     case CDK_PKT_LITERAL:
     case CDK_PKT_COMPRESSED:
-      return 0;			/* seems to be a regular packet: not armored */
+      return 0;                 /* seems to be a regular packet: not armored */
     }
   return 1;
 }
@@ -379,7 +383,7 @@ armor_encode (void *data, FILE * in, FILE * out)
       return CDK_Inv_Value;
     }
 
-  _cdk_log_debug ("armor filter: encode\n");
+  _gnutls_buffers_log ("armor filter: encode\n");
 
   memset (crcbuf, 0, sizeof (crcbuf));
 
@@ -400,12 +404,12 @@ armor_encode (void *data, FILE * in, FILE * out)
     {
       nread = fread (raw, 1, DIM (raw) - 1, in);
       if (!nread)
-	break;
+        break;
       if (ferror (in))
-	{
-	  gnutls_assert ();
-	  return CDK_File_Error;
-	}
+        {
+          gnutls_assert ();
+          return CDK_File_Error;
+        }
       afx->crc = update_crc (afx->crc, (byte *) raw, nread);
       base64_encode (buf, (byte *) raw, nread, DIM (buf) - 1);
       fprintf (out, "%s%s", buf, lf);
@@ -440,14 +444,14 @@ cdk_armor_filter_use (cdk_stream_t inp)
   zipalgo = 0;
   c = cdk_stream_getc (inp);
   if (c == EOF)
-    return 0;			/* EOF, doesn't matter whether armored or not */
+    return 0;                   /* EOF, doesn't matter whether armored or not */
   cdk_stream_seek (inp, 0);
   check = is_armored (c);
   if (check)
     {
       check = check_armor (inp, &zipalgo);
       if (zipalgo)
-	_cdk_stream_set_compress_algo (inp, zipalgo);
+        _cdk_stream_set_compress_algo (inp, zipalgo);
     }
   return check;
 }
@@ -467,7 +471,7 @@ search_header (const char *buf, const char **array)
   for (i = 0; (s = array[i]); i++)
     {
       if (!strncmp (s, buf + 5, strlen (s)))
-	return i;
+        return i;
     }
   return -1;
 }
@@ -491,6 +495,7 @@ armor_decode (void *data, FILE * in, FILE * out)
   ssize_t nread = 0;
   int i, pgp_data = 0;
   cdk_error_t rc = 0;
+  int len;
 
   if (!afx)
     {
@@ -498,7 +503,7 @@ armor_decode (void *data, FILE * in, FILE * out)
       return CDK_Inv_Value;
     }
 
-  _cdk_log_debug ("armor filter: decode\n");
+  _gnutls_buffers_log ("armor filter: decode\n");
 
   fseek (in, 0, SEEK_SET);
   /* Search the begin of the message */
@@ -506,16 +511,16 @@ armor_decode (void *data, FILE * in, FILE * out)
     {
       s = fgets (buf, DIM (buf) - 1, in);
       if (!s)
-	break;
+        break;
       afx->idx = search_header (buf, armor_begin);
       if (afx->idx >= 0)
-	pgp_data = 1;
+        pgp_data = 1;
     }
 
   if (feof (in) || !pgp_data)
     {
       gnutls_assert ();
-      return CDK_Armor_Error;	/* no data found */
+      return CDK_Armor_Error;   /* no data found */
     }
 
   /* Parse header until the empty line is reached */
@@ -523,33 +528,33 @@ armor_decode (void *data, FILE * in, FILE * out)
     {
       s = fgets (buf, DIM (buf) - 1, in);
       if (!s)
-	return CDK_EOF;
-      if (strlen (s) == strlen (LF))
-	{
-	  rc = 0;
-	  break;		/* empty line */
-	}
+        return CDK_EOF;
+      if (strcmp (s, LF) == 0 || strcmp (s, ALTLF) == 0)
+        {
+          rc = 0;
+          break;                /* empty line */
+        }
       /* From RFC2440: OpenPGP should consider improperly formatted Armor
          Headers to be corruption of the ASCII Armor. A colon and a single
          space separate the key and value. */
       if (!strstr (buf, ": "))
-	{
-	  gnutls_assert ();
-	  return CDK_Armor_Error;
-	}
+        {
+          gnutls_assert ();
+          return CDK_Armor_Error;
+        }
       rc = CDK_General_Error;
       for (i = 0; (s = valid_headers[i]); i++)
-	{
-	  if (!strncmp (s, buf, strlen (s)))
-	    rc = 0;
-	}
+        {
+          if (!strncmp (s, buf, strlen (s)))
+            rc = 0;
+        }
       if (rc)
-	{
-	  /* From RFC2440: Unknown keys should be reported to the user,
-	     but OpenPGP should continue to process the message. */
-	  _cdk_log_info ("unknown header: `%s'\n", buf);
-	  rc = 0;
-	}
+        {
+          /* From RFC2440: Unknown keys should be reported to the user,
+             but OpenPGP should continue to process the message. */
+          _cdk_log_info ("unknown header: `%s'\n", buf);
+          rc = 0;
+        }
     }
 
   /* Read the data body */
@@ -557,34 +562,44 @@ armor_decode (void *data, FILE * in, FILE * out)
     {
       s = fgets (buf, DIM (buf) - 1, in);
       if (!s)
-	break;
-      buf[strlen (buf) - strlen (LF)] = '\0';
+        break;
+        
+      len = strlen(buf);
+
+      if (buf[len - 1] == '\n')
+        buf[len - 1] = '\0';
+      if (buf[len - 1] == '\r')
+        buf[len - 1] = '\0';
       if (buf[0] == '=' && strlen (s) == 5)
-	{			/* CRC */
-	  memset (crcbuf, 0, sizeof (crcbuf));
-	  base64_decode (crcbuf, buf + 1);
-	  crc2 = (crcbuf[0] << 16) | (crcbuf[1] << 8) | crcbuf[2];
-	  break;		/* stop here */
-	}
+        {                       /* CRC */
+          memset (crcbuf, 0, sizeof (crcbuf));
+          base64_decode (crcbuf, buf + 1);
+          crc2 = (crcbuf[0] << 16) | (crcbuf[1] << 8) | crcbuf[2];
+          break;                /* stop here */
+        }
       else
-	{
-	  nread = base64_decode (raw, buf);
-	  if (nread == -1 || nread == 0)
-	    break;
-	  afx->crc = update_crc (afx->crc, raw, nread);
-	  fwrite (raw, 1, nread, out);
-	}
+        {
+          nread = base64_decode (raw, buf);
+          if (nread == -1 || nread == 0)
+            break;
+          afx->crc = update_crc (afx->crc, raw, nread);
+          fwrite (raw, 1, nread, out);
+        }
     }
 
   /* Search the tail of the message */
   s = fgets (buf, DIM (buf) - 1, in);
   if (s)
     {
-      buf[strlen (buf) - strlen (LF)] = '\0';
+      int len = strlen(buf);
+      if (buf[len - 1] == '\n')
+        buf[len - 1] = '\0';
+      if (buf[len - 1] == '\r')
+        buf[len - 1] = '\0';
       rc = CDK_General_Error;
       afx->idx2 = search_header (buf, armor_end);
       if (afx->idx2 >= 0)
-	rc = 0;
+        rc = 0;
     }
 
   /* This catches error when no tail was found or the header is
@@ -595,7 +610,8 @@ armor_decode (void *data, FILE * in, FILE * out)
   afx->crc_okay = (afx->crc == crc2) ? 1 : 0;
   if (!afx->crc_okay && !rc)
     {
-      _cdk_log_debug ("file crc=%08lX afx_crc=%08lX\n", crc2, afx->crc);
+      _gnutls_buffers_log ("file crc=%08X afx_crc=%08X\n",
+                           (unsigned int) crc2, (unsigned int) afx->crc);
       rc = CDK_Armor_CRC_Error;
     }
 
@@ -639,7 +655,7 @@ cdk_file_armor (cdk_ctx_t hd, const char *file, const char *output)
   cdk_stream_set_armor_flag (out, CDK_ARMOR_MESSAGE);
   if (hd->opt.compress)
     rc = cdk_stream_set_compress_flag (out, hd->compress.algo,
-				       hd->compress.level);
+                                       hd->compress.level);
   if (!rc)
     rc = cdk_stream_set_literal_flag (out, 0, file);
   if (!rc)
@@ -694,13 +710,13 @@ cdk_file_dearmor (const char *file, const char *output)
       rc = cdk_stream_set_literal_flag (inp, 0, NULL);
       zipalgo = cdk_stream_is_compressed (inp);
       if (zipalgo)
-	rc = cdk_stream_set_compress_flag (inp, zipalgo, 0);
+        rc = cdk_stream_set_compress_flag (inp, zipalgo, 0);
       if (!rc)
-	rc = cdk_stream_set_armor_flag (inp, 0);
+        rc = cdk_stream_set_armor_flag (inp, 0);
       if (!rc)
-	rc = cdk_stream_kick_off (inp, out);
+        rc = cdk_stream_kick_off (inp, out);
       if (!rc)
-	rc = _cdk_stream_get_errno (inp);
+        rc = _cdk_stream_get_errno (inp);
     }
 
   cdk_stream_close (inp);
@@ -721,12 +737,12 @@ _cdk_filter_armor (void *data, int ctl, FILE * in, FILE * out)
     {
       armor_filter_t *afx = data;
       if (afx)
-	{
-	  _cdk_log_debug ("free armor filter\n");
-	  afx->idx = afx->idx2 = 0;
-	  afx->crc = afx->crc_okay = 0;
-	  return 0;
-	}
+        {
+          _gnutls_buffers_log ("free armor filter\n");
+          afx->idx = afx->idx2 = 0;
+          afx->crc = afx->crc_okay = 0;
+          return 0;
+        }
     }
 
   gnutls_assert ();
@@ -743,12 +759,14 @@ _cdk_filter_armor (void *data, int ctl, FILE * in, FILE * out)
  * @nwritten: actual length of the base64 data
  * @type: the base64 file type.
  * 
- * Encode the given buffer into base64 format.
+ * Encode the given buffer into base64 format. The base64
+ * string will be null terminated but the null will
+ * not be contained in the size.
  **/
 cdk_error_t
 cdk_armor_encode_buffer (const byte * inbuf, size_t inlen,
-			 char *outbuf, size_t outlen,
-			 size_t * nwritten, int type)
+                         char *outbuf, size_t outlen,
+                         size_t * nwritten, int type)
 {
   const char *head, *tail, *le;
   byte tempbuf[48];
@@ -769,13 +787,14 @@ cdk_armor_encode_buffer (const byte * inbuf, size_t inlen,
   head = armor_begin[type];
   tail = armor_end[type];
   le = _cdk_armor_get_lineend ();
-  pos = strlen (head) + 10 + 2 + 2 + strlen (tail) + 10 + 2 + 5 + 2;
+  pos = strlen (head) + 10 + 2 + 2 + strlen (tail) + 10 + 2 + 5 + 2 + 1;
   /* The output data is 4/3 times larger, plus a line end for each line. */
-  pos += (4 * inlen / 3) + 2 * (4 * inlen / 3 / 64);
+  pos += (4 * inlen / 3) + 2 * (4 * inlen / 3 / 64) + 1;
 
   if (outbuf && outlen < pos)
     {
       gnutls_assert ();
+      *nwritten = pos;
       return CDK_Too_Short;
     }
 
@@ -802,17 +821,17 @@ cdk_armor_encode_buffer (const byte * inbuf, size_t inlen,
   for (off = 0; off < inlen;)
     {
       if (rest > 48)
-	{
-	  memcpy (tempbuf, inbuf + off, 48);
-	  off += 48;
-	  len = 48;
-	}
+        {
+          memcpy (tempbuf, inbuf + off, 48);
+          off += 48;
+          len = 48;
+        }
       else
-	{
-	  memcpy (tempbuf, inbuf + off, rest);
-	  off += rest;
-	  len = rest;
-	}
+        {
+          memcpy (tempbuf, inbuf + off, rest);
+          off += rest;
+          len = rest;
+        }
       rest -= len;
       base64_encode (tempout, tempbuf, len, DIM (tempout) - 1);
       memcpy (outbuf + pos, tempout, strlen (tempout));
@@ -829,6 +848,7 @@ cdk_armor_encode_buffer (const byte * inbuf, size_t inlen,
   pos += 5;
   memcpy (outbuf + pos, le, strlen (le));
   pos += strlen (le);
-  *nwritten = pos;
+  outbuf[pos] = 0;
+  *nwritten = pos - 1;
   return 0;
 }

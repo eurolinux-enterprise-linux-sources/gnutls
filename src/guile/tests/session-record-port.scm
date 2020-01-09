@@ -1,18 +1,18 @@
-;;; GNUTLS --- Guile bindings for GnuTLS.
-;;; Copyright (C) 2007  Free Software Foundation
+;;; GnuTLS --- Guile bindings for GnuTLS.
+;;; Copyright (C) 2007, 2010, 2011 Free Software Foundation, Inc.
 ;;;
-;;; GNUTLS is free software; you can redistribute it and/or
+;;; GnuTLS is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
 ;;; License as published by the Free Software Foundation; either
 ;;; version 2.1 of the License, or (at your option) any later version.
 ;;;
-;;; GNUTLS is distributed in the hope that it will be useful,
+;;; GnuTLS is distributed in the hope that it will be useful,
 ;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;; Lesser General Public License for more details.
 ;;;
 ;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with GNUTLS; if not, write to the Free Software
+;;; License along with GnuTLS; if not, write to the Free Software
 ;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 ;;; Written by Ludovic Courtès <ludo@chbouib.org>.
@@ -24,6 +24,7 @@
 ;;;
 
 (use-modules (gnutls)
+             (gnutls build tests)
              (srfi srfi-4))
 
 
@@ -38,15 +39,23 @@
 ;; Message sent by the client.
 (define %message (apply u8vector (iota 256)))
 
+(define (import-something import-proc file fmt)
+  (let* ((path (search-path %load-path file))
+         (size (stat:size (stat path)))
+         (raw  (make-u8vector size)))
+    (uniform-vector-read! raw (open-input-file path))
+    (import-proc raw fmt)))
+
+(define (import-dh-params file)
+  (import-something pkcs3-import-dh-parameters file
+                    x509-certificate-format/pem))
+
 ;; Debugging.
 ;; (set-log-level! 100)
 ;; (set-log-procedure! (lambda (level str)
 ;;                       (format #t "[~a|~a] ~a" (getpid) level str)))
 
-(dynamic-wind
-    (lambda ()
-      #t)
-
+(run-test
     (lambda ()
       ;; Stress the GC.  In 0.0, this triggered an abort due to
       ;; "scm_unprotect_object called during GC".
@@ -93,7 +102,7 @@
               (uniform-vector-write %message (session-record-port client))
               (bye client close-request/rdwr)
 
-              (exit))
+              (primitive-exit))
 
             (let ((server (make-session connection-end/server)))
               ;; server-side
@@ -106,7 +115,7 @@
 
               (set-session-transport-port! server (cdr socket-pair))
               (let ((cred (make-anonymous-server-credentials))
-                    (dh-params (make-dh-parameters 1024)))
+                    (dh-params (import-dh-params "dh-parameters.pem")))
                 ;; Note: DH parameter generation can take some time.
                 (set-anonymous-server-dh-parameters! cred dh-params)
                 (set-session-credentials! server cred))
@@ -119,15 +128,11 @@
                 (bye server close-request/rdwr)
 
                 ;; Make sure we got everything right.
-                (exit (eq? (session-record-port server)
-                           (session-record-port server))
-                      (= amount (u8vector-length %message))
-                      (equal? buf %message)
-                      (eof-object?
-                       (read-char (session-record-port server)))))))))
-
-    (lambda ()
-      ;; failure
-      (exit 1)))
+                (and (eq? (session-record-port server)
+                          (session-record-port server))
+                     (= amount (u8vector-length %message))
+                     (equal? buf %message)
+                     (eof-object?
+                      (read-char (session-record-port server))))))))))
 
 ;;; arch-tag: e873226a-d0b6-4a93-87ec-a1b5ad2ae8a2

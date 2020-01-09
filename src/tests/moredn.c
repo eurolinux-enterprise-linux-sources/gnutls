@@ -1,29 +1,29 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Joe Orton
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Parts copied from GnuTLS example programs. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -67,51 +67,35 @@ doit (void)
 
   gnutls_global_init ();
 
-  if (gnutls_x509_crt_init (&cert) == 0)
-    success ("success: cert init\n");
-  else
+  if (gnutls_x509_crt_init (&cert) != 0)
     fail ("cert init failure\n");
 
-  if (gnutls_x509_crt_import (cert, &cert_datum, GNUTLS_X509_FMT_PEM) == 0)
-    success ("success: imported PEM cert\n");
-  else
+  if (gnutls_x509_crt_import (cert, &cert_datum, GNUTLS_X509_FMT_PEM) != 0)
     fail ("FAIL: could not import PEM cert\n");
 
-  if (gnutls_x509_crt_get_subject (cert, &sdn) == 0)
-    success ("success: got subject DN.\n");
-  else
+  if (gnutls_x509_crt_get_subject (cert, &sdn) != 0)
     fail ("FAIL: could not get subject DN.\n");
 
   buflen = sizeof buf;
   rv = gnutls_x509_dn_export (sdn, GNUTLS_X509_FMT_DER, buf, &buflen);
-  if (rv == 0)
-    success ("success: exported subject DN.\n");
-  else
+  if (rv != 0)
     fail ("FAIL: could not export subject DN: %s\n", gnutls_strerror (rv));
 
-  if (gnutls_x509_dn_init (&dn2) == 0)
-    success ("success: init DN.\n");
-  else
+  if (gnutls_x509_dn_init (&dn2) != 0)
     fail ("FAIL: DN init.\n");
 
   datum.data = buf;
   datum.size = buflen;
 
-  if (gnutls_x509_dn_import (dn2, &datum) == 0)
-    success ("success: re-import subject DN.\n");
-  else
+  if (gnutls_x509_dn_import (dn2, &datum) != 0)
     fail ("FAIL: re-import subject DN.\n");
 
   buf2len = sizeof buf2;
   rv = gnutls_x509_dn_export (dn2, GNUTLS_X509_FMT_DER, buf2, &buf2len);
-  if (rv == 0)
-    success ("success: exported subject DN.\n");
-  else
+  if (rv != 0)
     fail ("FAIL: could not export subject DN: %s\n", gnutls_strerror (rv));
 
-  if (buflen == buf2len && memcmp (buf, buf2, buflen) == 0)
-    success ("success: export/import/export match.\n");
-  else
+  if (buflen == buf2len && memcmp (buf, buf2, buflen) != 0)
     fail ("FAIL: export/import/export differ.\n");
 
   gnutls_x509_dn_deinit (dn2);

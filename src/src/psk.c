@@ -1,20 +1,21 @@
 /*
- * Copyright (C) 2005, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2005, 2007, 2008, 2009, 2010  Free Software Foundation, Inc.
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * GnuTLS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *               
- * GNUTLS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *                               
+ *
+ * GnuTLS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
@@ -43,16 +44,16 @@ main (int argc, char **argv)
 #include <gnutls/extra.h>
 #include <psk-gaa.h>
 
-#include "../lib/random.h"	/* for random */
+#include "../lib/random.h"      /* for random */
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #ifndef _WIN32
-# include <pwd.h>
-# include <unistd.h>
+#include <pwd.h>
+#include <unistd.h>
 #else
-# include <windows.h>
+#include <windows.h>
 #endif
 
 /* Gnulib portability files. */
@@ -60,7 +61,7 @@ main (int argc, char **argv)
 #include "getpass.h"
 
 static int write_key (const char *username, const char *key, int key_size,
-		      char *passwd_file);
+                      char *passwd_file);
 
 #define KPASSWD "/etc/passwd.psk"
 #define MAX_KEY_SIZE 64
@@ -69,7 +70,9 @@ main (int argc, char **argv)
 {
   gaainfo info;
   int ret;
+#ifndef _WIN32
   struct passwd *pwd;
+#endif
   unsigned char key[MAX_KEY_SIZE];
   char hex_key[MAX_KEY_SIZE * 2 + 1];
   gnutls_datum_t dkey;
@@ -92,7 +95,7 @@ main (int argc, char **argv)
     }
 
   if (info.passwd == NULL)
-    info.passwd = (char*) KPASSWD;
+    info.passwd = (char *) KPASSWD;
 
   if (info.username == NULL)
     {
@@ -100,10 +103,10 @@ main (int argc, char **argv)
       pwd = getpwuid (getuid ());
 
       if (pwd == NULL)
-	{
-	  fprintf (stderr, "No such user\n");
-	  return -1;
-	}
+        {
+          fprintf (stderr, "No such user\n");
+          return -1;
+        }
 
       info.username = pwd->pw_name;
 #else
@@ -118,53 +121,22 @@ main (int argc, char **argv)
       exit (1);
     }
 
-  if (info.netconf_hint)
+  if (info.key_size < 1)
+    info.key_size = 16;
+
+  printf ("Generating a random key for user '%s'\n", info.username);
+
+  ret = gnutls_rnd (GNUTLS_RND_RANDOM, (char *) key, info.key_size);
+  if (ret < 0)
     {
-      char *passwd;
-
-      if (info.key_size != 0 && info.key_size != 20)
-	{
-	  fprintf (stderr, "For netconf, key size must always be 20.\n");
-	  exit (1);
-	}
-
-      passwd = getpass ("Enter password: ");
-      if (passwd == NULL)
-	{
-	  fprintf (stderr, "Please specify a password\n");
-	  exit (1);
-	}
-
-      ret = gnutls_psk_netconf_derive_key (passwd,
-					   info.username,
-					   info.netconf_hint, &dkey);
-      if (ret < 0)
-	{
-	  fprintf (stderr, "Deriving the key failed\n");
-	  exit (1);
-	}
+      fprintf (stderr, "Not enough randomness\n");
+      exit (1);
     }
-  else
-    {
-      if (info.key_size < 1)
-	info.key_size = 16;
 
-      printf ("Generating a random key for user '%s'\n", info.username);
-
-      ret = _gnutls_rnd (GNUTLS_RND_RANDOM, (char *) key, info.key_size);
-      if (ret < 0)
-	{
-	  fprintf (stderr, "Not enough randomness\n");
-	  exit (1);
-	}
-
-      dkey.data = key;
-      dkey.size = info.key_size;
-    }
+  dkey.data = key;
+  dkey.size = info.key_size;
 
   ret = gnutls_hex_encode (&dkey, hex_key, &hex_key_size);
-  if (info.netconf_hint)
-    gnutls_free (dkey.data);
   if (ret < 0)
     {
       fprintf (stderr, "HEX encoding error\n");
@@ -205,7 +177,7 @@ filecopy (char *src, char *dst)
     {
       p = fgets (line, sizeof (line) - 1, fd2);
       if (p == NULL)
-	break;
+        break;
 
       fputs (line, fd);
     }
@@ -219,7 +191,7 @@ filecopy (char *src, char *dst)
 
 static int
 write_key (const char *username, const char *key, int key_size,
-	   char *passwd_file)
+           char *passwd_file)
 {
   FILE *fd;
   char line[5 * 1024];
@@ -273,22 +245,22 @@ write_key (const char *username, const char *key, int key_size,
     {
       p = fgets (line, sizeof (line) - 1, fd2);
       if (p == NULL)
-	break;
+        break;
 
       pp = strchr (line, ':');
       if (pp == NULL)
-	continue;
+        continue;
 
       if (strncmp (p, username,
-		   MAX (strlen (username), (unsigned int) (pp - p))) == 0)
-	{
-	  put = 1;
-	  fprintf (fd, "%s:%s\n", username, key);
-	}
+                   MAX (strlen (username), (unsigned int) (pp - p))) == 0)
+        {
+          put = 1;
+          fprintf (fd, "%s:%s\n", username, key);
+        }
       else
-	{
-	  fputs (line, fd);
-	}
+        {
+          fputs (line, fd);
+        }
     }
   while (1);
 
@@ -317,5 +289,5 @@ psktool_version (void)
   if (strcmp (gnutls_check_version (NULL), PACKAGE_VERSION) != 0)
     p = PACKAGE_STRING;
   version_etc (stdout, "psktool", p, gnutls_check_version (NULL),
-	       "Nikos Mavrogiannopoulos", (char *) NULL);
+               "Nikos Mavrogiannopoulos", (char *) NULL);
 }

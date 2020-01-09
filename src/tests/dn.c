@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2006, 2007, 2008 Free Software Foundation
+ * Copyright (C) 2006, 2007, 2008, 2010 Free Software Foundation, Inc.
  * Author: Simon Josefsson, Howard Chu
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include <stdio.h>
@@ -68,20 +68,21 @@ print_dn (gnutls_x509_dn_t dn)
   for (i = 0; ret == 0; i++)
     for (j = 0; ret == 0; j++)
       {
-	ret = gnutls_x509_dn_get_rdn_ava (dn, i, j, &ava);
-	if (ret == GNUTLS_E_ASN1_ELEMENT_NOT_FOUND)
-	  {
-	    if (j > 0)
-	      {
-		j = 0;
-		ret = 0;
-	      }
-	    break;
-	  }
-	if (ret < 0)
-	  fail ("get_rdn_ava %d\n", ret);
-	printf ("dn[%d][%d] OID=%.*s\n\tDATA=%.*s\n", i, j,
-		ava.oid.size, ava.oid.data, ava.value.size, ava.value.data);
+        ret = gnutls_x509_dn_get_rdn_ava (dn, i, j, &ava);
+        if (ret == GNUTLS_E_ASN1_ELEMENT_NOT_FOUND)
+          {
+            if (j > 0)
+              {
+                j = 0;
+                ret = 0;
+              }
+            break;
+          }
+        if (ret < 0)
+          fail ("get_rdn_ava %d\n", ret);
+        if (debug)
+          printf ("dn[%d][%d] OID=%.*s\n\tDATA=%.*s\n", i, j,
+                  ava.oid.size, ava.oid.data, ava.value.size, ava.value.data);
       }
 }
 
@@ -107,19 +108,26 @@ doit (void)
 
   ret = gnutls_x509_crt_get_issuer (cert, &xdn);
   if (ret < 0)
-    fail ("get_subject %d\n", ret);
+    fail ("get_issuer %d\n", ret);
 
-  printf ("Issuer:\n");
-  print_dn (xdn);
+  if (debug)
+    {
+      printf ("Issuer:\n");
+      print_dn (xdn);
+    }
 
   ret = gnutls_x509_crt_get_subject (cert, &xdn);
   if (ret < 0)
     fail ("get_subject %d\n", ret);
 
-  printf ("Subject:\n");
-  print_dn (xdn);
+  if (debug)
+    {
+      printf ("Subject:\n");
+      print_dn (xdn);
+    }
 
-  success ("done\n");
+  if (debug)
+    success ("done\n");
 
   gnutls_x509_crt_deinit (cert);
   gnutls_global_deinit ();

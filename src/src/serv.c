@@ -1,16 +1,17 @@
 /*
- * Copyright (C) 2004, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  * Copyright (C) 2001,2002 Paul Sheer
  * Portions Copyright (C) 2002,2003 Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software: you can redistribute it and/or modify
+ * GnuTLS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful,
+ * GnuTLS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -19,7 +20,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* This server is heavily modified for GNUTLS by Nikos Mavrogiannopoulos
+/* This server is heavily modified for GnuTLS by Nikos Mavrogiannopoulos
  * (which means it is quite unreadable)
  */
 
@@ -33,7 +34,6 @@
 #include <sys/types.h>
 #include <string.h>
 #include <gnutls/gnutls.h>
-#include <gcrypt.h>
 #include <gnutls/extra.h>
 #include <gnutls/openpgp.h>
 #include <sys/time.h>
@@ -62,6 +62,7 @@ static int debug;
 
 int verbose;
 static int nodb;
+static int noticket;
 int require_cert;
 int disable_client_cert;
 
@@ -78,6 +79,8 @@ char *x509_dsacertfile;
 char *x509_cafile;
 char *dh_params_file;
 char *x509_crlfile = NULL;
+
+gnutls_datum_t session_ticket_key;
 
 /* end of globals */
 
@@ -99,7 +102,7 @@ char *x509_crlfile = NULL;
 		"\n" \
 		"<HTML><BODY>\n" \
 		"<CENTER><H1>This is <a href=\"http://www.gnu.org/software/gnutls\">" \
-		"GNUTLS</a></H1></CENTER>\n\n"
+		"GnuTLS</a></H1></CENTER>\n\n"
 
 /* These are global */
 gnutls_srp_server_credentials_t srp_cred = NULL;
@@ -122,11 +125,13 @@ static int wrap_db_delete (void *dbf, gnutls_datum_t key);
 #define HTTP_STATE_RESPONSE	2
 #define HTTP_STATE_CLOSING	3
 
-LIST_TYPE_DECLARE (listener_item, char *http_request;
-		   char *http_response; int request_length;
-		   int response_length; int response_written;
-		   int http_state; int listen_socket;
-		   int fd; gnutls_session_t tls_session; int handshake_ok;);
+LIST_TYPE_DECLARE (listener_item, char *http_request; char *http_response;
+                   int request_length; int response_length;
+                   int response_written; int http_state;
+                   int listen_socket; int fd;
+                   gnutls_session_t tls_session;
+                   int handshake_ok;
+  );
 
 static const char *
 safe_strerror (int value)
@@ -254,7 +259,7 @@ static_dh_params (void)
     }
 
   ret = gnutls_dh_params_import_pkcs3 (dh_params, &params,
-				       GNUTLS_X509_FMT_PEM);
+                                       GNUTLS_X509_FMT_PEM);
 
   if (ret < 0)
     {
@@ -269,19 +274,19 @@ static_dh_params (void)
 
 static int
 get_params (gnutls_session_t session, gnutls_params_type_t type,
-	    gnutls_params_st * st)
+            gnutls_params_st * st)
 {
 
   if (type == GNUTLS_PARAMS_RSA_EXPORT)
     {
       if (rsa_params == NULL)
-	return -1;
+        return -1;
       st->params.rsa_export = rsa_params;
     }
   else if (type == GNUTLS_PARAMS_DH)
     {
       if (dh_params == NULL)
-	return -1;
+        return -1;
       st->params.dh = dh_params;
     }
   else
@@ -321,36 +326,6 @@ generate_rsa_params (void)
 
 LIST_DECLARE_INIT (listener_list, listener_item, listener_free);
 
-static int protocol_priority[PRI_MAX];
-static int kx_priority[PRI_MAX];
-static int cipher_priority[PRI_MAX];
-static int comp_priority[PRI_MAX];
-static int mac_priority[PRI_MAX];
-static int cert_type_priority[PRI_MAX];
-
-#if ENABLE_OPRFI
-int
-oprfi_callback (gnutls_session_t session,
-		void *userdata,
-		size_t oprfi_len,
-		const unsigned char *in_oprfi, unsigned char *out_oprfi)
-{
-  size_t ourlen = strlen (info.opaque_prf_input);
-  size_t i;
-
-  printf ("- Received Opaque PRF data of %d bytes\n", oprfi_len);
-  printf ("  data: ");
-  for (i = 0; i < oprfi_len; i++)
-    printf ("%02x", in_oprfi[i]);
-  printf ("\n");
-
-  memset (out_oprfi, 0, oprfi_len);
-  strncpy (out_oprfi, info.opaque_prf_input, oprfi_len);
-
-  return 0;
-}
-#endif
-
 static gnutls_session_t
 initialize_session (void)
 {
@@ -370,25 +345,16 @@ initialize_session (void)
       gnutls_db_set_store_function (session, wrap_db_store);
       gnutls_db_set_ptr (session, NULL);
     }
+#ifdef ENABLE_SESSION_TICKET
+  if (noticket == 0)
+    gnutls_session_ticket_enable_server (session, &session_ticket_key);
+#endif
 
   if (gnutls_priority_set_direct (session, info.priorities, &err) < 0)
     {
       fprintf (stderr, "Syntax error at: %s\n", err);
       exit (1);
     }
-
-  if (cipher_priority[0])
-    gnutls_cipher_set_priority (session, cipher_priority);
-  if (comp_priority[0])
-    gnutls_compression_set_priority (session, comp_priority);
-  if (kx_priority[0])
-    gnutls_kx_set_priority (session, kx_priority);
-  if (protocol_priority[0])
-    gnutls_protocol_set_priority (session, protocol_priority);
-  if (mac_priority[0])
-    gnutls_mac_set_priority (session, mac_priority);
-  if (cert_type_priority[0])
-    gnutls_certificate_type_set_priority (session, cert_type_priority);
 
   gnutls_credentials_set (session, GNUTLS_CRD_ANON, dh_cred);
 
@@ -406,15 +372,10 @@ initialize_session (void)
   else
     {
       if (require_cert)
-	gnutls_certificate_server_set_request (session, GNUTLS_CERT_REQUIRE);
+        gnutls_certificate_server_set_request (session, GNUTLS_CERT_REQUIRE);
       else
-	gnutls_certificate_server_set_request (session, GNUTLS_CERT_REQUEST);
+        gnutls_certificate_server_set_request (session, GNUTLS_CERT_REQUEST);
     }
-
-#ifdef ENABLE_OPRFI
-  if (info.opaque_prf_input)
-    gnutls_oprfi_enable_server (session, oprfi_callback, NULL);
-#endif
 
   return session;
 }
@@ -428,17 +389,18 @@ static const char DEFAULT_DATA[] =
 
 /* Creates html with the current session information.
  */
-#define tmp2 &http_buffer[strlen(http_buffer)]
+#define tmp_buffer &http_buffer[strlen(http_buffer)]
+#define tmp_buffer_size len-strlen(http_buffer)
 static char *
 peer_print_info (gnutls_session_t session, int *ret_length,
-		 const char *header)
+                 const char *header)
 {
   const char *tmp;
   unsigned char sesid[32];
   size_t i, sesid_size;
   char *http_buffer;
   gnutls_kx_algorithm_t kx_alg;
-  size_t len = 5 * 1024 + strlen (header);
+  size_t len = 20 * 1024 + strlen (header);
   char *crtinfo = NULL;
   size_t ncrtinfo = 0;
 
@@ -446,14 +408,14 @@ peer_print_info (gnutls_session_t session, int *ret_length,
     {
       http_buffer = malloc (len);
       if (http_buffer == NULL)
-	return NULL;
+        return NULL;
 
       strcpy (http_buffer, HTTP_BEGIN);
       strcpy (&http_buffer[sizeof (HTTP_BEGIN) - 1], DEFAULT_DATA);
       strcpy (&http_buffer[sizeof (HTTP_BEGIN) + sizeof (DEFAULT_DATA) - 2],
-	      HTTP_END);
+              HTTP_END);
       *ret_length =
-	sizeof (DEFAULT_DATA) + sizeof (HTTP_BEGIN) + sizeof (HTTP_END) - 3;
+        sizeof (DEFAULT_DATA) + sizeof (HTTP_BEGIN) + sizeof (HTTP_END) - 3;
       return http_buffer;
 
     }
@@ -466,46 +428,49 @@ peer_print_info (gnutls_session_t session, int *ret_length,
       cert_list = gnutls_certificate_get_peers (session, &cert_list_size);
 
       for (i = 0; i < cert_list_size; i++)
-	{
-	  gnutls_x509_crt_t cert;
-	  gnutls_datum_t info;
+        {
+          gnutls_x509_crt_t cert;
+          gnutls_datum_t info;
 
-	  if (gnutls_x509_crt_init (&cert) == 0 &&
-	      gnutls_x509_crt_import (cert, &cert_list[i],
-				      GNUTLS_X509_FMT_DER) == 0 &&
-	      gnutls_x509_crt_print (cert, GNUTLS_CRT_PRINT_FULL, &info) == 0)
-	    {
-	      const char *post = "</PRE><P><PRE>";
+          if (gnutls_x509_crt_init (&cert) == 0 &&
+              gnutls_x509_crt_import (cert, &cert_list[i],
+                                      GNUTLS_X509_FMT_DER) == 0 &&
+              gnutls_x509_crt_print (cert, GNUTLS_CRT_PRINT_FULL, &info) == 0)
+            {
+              const char *post = "</PRE><P><PRE>";
 
-	      crtinfo = realloc (crtinfo, ncrtinfo + info.size +
-				 strlen (post) + 1);
-	      if (crtinfo == NULL)
-		return NULL;
-	      memcpy (crtinfo + ncrtinfo, info.data, info.size);
-	      ncrtinfo += info.size;
-	      memcpy (crtinfo + ncrtinfo, post, strlen (post));
-	      ncrtinfo += strlen (post);
-	      crtinfo[ncrtinfo] = '\0';
-	      gnutls_free (info.data);
-	    }
-	}
+              crtinfo = realloc (crtinfo, ncrtinfo + info.size +
+                                 strlen (post) + 1);
+              if (crtinfo == NULL)
+                return NULL;
+              memcpy (crtinfo + ncrtinfo, info.data, info.size);
+              ncrtinfo += info.size;
+              memcpy (crtinfo + ncrtinfo, post, strlen (post));
+              ncrtinfo += strlen (post);
+              crtinfo[ncrtinfo] = '\0';
+              gnutls_free (info.data);
+            }
+        }
     }
 
   http_buffer = malloc (len);
   if (http_buffer == NULL)
-    return NULL;
+    {
+      free (crtinfo);
+      return NULL;
+    }
 
   strcpy (http_buffer, HTTP_BEGIN);
 
   /* print session_id */
   gnutls_session_get_id (session, sesid, &sesid_size);
-  sprintf (tmp2, "\n<p>Session ID: <i>");
+  snprintf (tmp_buffer, tmp_buffer_size, "\n<p>Session ID: <i>");
   for (i = 0; i < sesid_size; i++)
-    sprintf (tmp2, "%.2X", sesid[i]);
-  sprintf (tmp2, "</i></p>\n");
-  sprintf (tmp2,
-	   "<h5>If your browser supports session resuming, then you should see the "
-	   "same session ID, when you press the <b>reload</b> button.</h5>\n");
+    snprintf (tmp_buffer, tmp_buffer_size, "%.2X", sesid[i]);
+  snprintf (tmp_buffer, tmp_buffer_size, "</i></p>\n");
+  snprintf (tmp_buffer, tmp_buffer_size,
+            "<h5>If your browser supports session resuming, then you should see the "
+            "same session ID, when you press the <b>reload</b> button.</h5>\n");
 
   /* Here unlike print_info() we use the kx algorithm to distinguish
    * the functions to call.
@@ -517,7 +482,7 @@ peer_print_info (gnutls_session_t session, int *ret_length,
 
     if (gnutls_server_name_get (session, dns, &dns_size, &type, 0) == 0)
       {
-	sprintf (tmp2, "\n<p>Server Name: %s</p>\n", dns);
+        snprintf (tmp_buffer, tmp_buffer_size, "\n<p>Server Name: %s</p>\n", dns);
       }
 
   }
@@ -528,33 +493,33 @@ peer_print_info (gnutls_session_t session, int *ret_length,
 #ifdef ENABLE_SRP
   if (kx_alg == GNUTLS_KX_SRP)
     {
-      sprintf (tmp2, "<p>Connected as user '%s'.</p>\n",
-	       gnutls_srp_server_get_username (session));
+      snprintf (tmp_buffer, tmp_buffer_size, "<p>Connected as user '%s'.</p>\n",
+                gnutls_srp_server_get_username (session));
     }
 #endif
 
 #ifdef ENABLE_PSK
   if (kx_alg == GNUTLS_KX_PSK)
     {
-      sprintf (tmp2, "<p>Connected as user '%s'.</p>\n",
-	       gnutls_psk_server_get_username (session));
+      snprintf (tmp_buffer, tmp_buffer_size, "<p>Connected as user '%s'.</p>\n",
+                gnutls_psk_server_get_username (session));
     }
 #endif
 
 #ifdef ENABLE_ANON
   if (kx_alg == GNUTLS_KX_ANON_DH)
     {
-      sprintf (tmp2,
-	       "<p> Connect using anonymous DH (prime of %d bits)</p>\n",
-	       gnutls_dh_get_prime_bits (session));
+      snprintf (tmp_buffer, tmp_buffer_size,
+                "<p> Connect using anonymous DH (prime of %d bits)</p>\n",
+                gnutls_dh_get_prime_bits (session));
     }
 #endif
 
   if (kx_alg == GNUTLS_KX_DHE_RSA || kx_alg == GNUTLS_KX_DHE_DSS)
     {
-      sprintf (tmp2,
-	       "Ephemeral DH using prime of <b>%d</b> bits.<br>\n",
-	       gnutls_dh_get_prime_bits (session));
+      snprintf (tmp_buffer, tmp_buffer_size,
+                "Ephemeral DH using prime of <b>%d</b> bits.<br>\n",
+                gnutls_dh_get_prime_bits (session));
     }
 
   /* print session information */
@@ -563,91 +528,109 @@ peer_print_info (gnutls_session_t session, int *ret_length,
   tmp = gnutls_protocol_get_name (gnutls_protocol_get_version (session));
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2,
-	   "<TABLE border=1><TR><TD>Protocol version:</TD><TD>%s</TD></TR>\n",
-	   tmp);
+  snprintf (tmp_buffer, tmp_buffer_size,
+            "<TABLE border=1><TR><TD>Protocol version:</TD><TD>%s</TD></TR>\n",
+            tmp);
 
   if (gnutls_auth_get_type (session) == GNUTLS_CRD_CERTIFICATE)
     {
       tmp =
-	gnutls_certificate_type_get_name (gnutls_certificate_type_get
-					  (session));
+        gnutls_certificate_type_get_name (gnutls_certificate_type_get
+                                          (session));
       if (tmp == NULL)
-	tmp = str_unknown;
-      sprintf (tmp2, "<TR><TD>Certificate Type:</TD><TD>%s</TD></TR>\n", tmp);
+        tmp = str_unknown;
+      snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>Certificate Type:</TD><TD>%s</TD></TR>\n",
+                tmp);
     }
 
   tmp = gnutls_kx_get_name (kx_alg);
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2, "<TR><TD>Key Exchange:</TD><TD>%s</TD></TR>\n", tmp);
+  snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>Key Exchange:</TD><TD>%s</TD></TR>\n", tmp);
 
   tmp = gnutls_compression_get_name (gnutls_compression_get (session));
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2, "<TR><TD>Compression</TD><TD>%s</TD></TR>\n", tmp);
+  snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>Compression</TD><TD>%s</TD></TR>\n", tmp);
 
   tmp = gnutls_cipher_get_name (gnutls_cipher_get (session));
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2, "<TR><TD>Cipher</TD><TD>%s</TD></TR>\n", tmp);
+  snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>Cipher</TD><TD>%s</TD></TR>\n", tmp);
 
   tmp = gnutls_mac_get_name (gnutls_mac_get (session));
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2, "<TR><TD>MAC</TD><TD>%s</TD></TR>\n", tmp);
+  snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>MAC</TD><TD>%s</TD></TR>\n", tmp);
 
   tmp = gnutls_cipher_suite_get_name (kx_alg,
-				      gnutls_cipher_get (session),
-				      gnutls_mac_get (session));
+                                      gnutls_cipher_get (session),
+                                      gnutls_mac_get (session));
   if (tmp == NULL)
     tmp = str_unknown;
-  sprintf (tmp2, "<TR><TD>Ciphersuite</TD><TD>%s</TD></TR></p></TABLE>\n",
-	   tmp);
+  snprintf (tmp_buffer, tmp_buffer_size, "<TR><TD>Ciphersuite</TD><TD>%s</TD></TR></p></TABLE>\n",
+            tmp);
 
   if (crtinfo)
     {
-      strcat (http_buffer, "<hr><PRE>");
-      strcat (http_buffer, crtinfo);
-      strcat (http_buffer, "\n</PRE>\n");
+      snprintf (tmp_buffer, tmp_buffer_size, "<hr><PRE>%s\n</PRE>\n", crtinfo);
+      free (crtinfo);
     }
 
-  strcat (http_buffer, "<hr><P>Your HTTP header was:<PRE>");
-  strcat (http_buffer, header);
-  strcat (http_buffer, "</PRE></P>");
-
-  strcat (http_buffer, "\n" HTTP_END);
+  snprintf (tmp_buffer, tmp_buffer_size, "<hr><P>Your HTTP header was:<PRE>%s</PRE></P>\n" HTTP_END,
+            header);
 
   *ret_length = strlen (http_buffer);
 
   return http_buffer;
 }
 
-static int
-get_port (const struct sockaddr *addr)
+static const char *
+human_addr (const struct sockaddr *sa, socklen_t salen,
+            char *buf, size_t buflen)
 {
-  switch (addr->sa_family)
+  const char *save_buf = buf;
+  size_t l;
+
+  if (!buf || !buflen)
+    return NULL;
+
+  *buf = '\0';
+
+  switch (sa->sa_family)
     {
 #if HAVE_IPV6
     case AF_INET6:
-      return ntohs (((const struct sockaddr_in6 *) addr)->sin6_port);
+      snprintf (buf, buflen, "IPv6 ");
+      break;
 #endif
 
     case AF_INET:
-      return ntohs (((const struct sockaddr_in *) addr)->sin_port);
+      snprintf (buf, buflen, "IPv4 ");
+      break;
     }
 
-  return -1;
-}
+  l = strlen (buf);
+  buf += l;
+  buflen -= l;
 
-static const char *
-addr_ntop (const struct sockaddr *sa, socklen_t salen,
-	   char *buf, size_t buflen)
-{
-  if (getnameinfo (sa, salen, buf, buflen, NULL, 0, NI_NUMERICHOST) == 0)
-    return buf;
+  if (getnameinfo (sa, salen, buf, buflen, NULL, 0, NI_NUMERICHOST) != 0)
+    return NULL;
 
-  return NULL;
+  l = strlen (buf);
+  buf += l;
+  buflen -= l;
+
+  strncat (buf, " port ", buflen);
+
+  l = strlen (buf);
+  buf += l;
+  buflen -= l;
+
+  if (getnameinfo (sa, salen, NULL, 0, buf, buflen, NI_NUMERICSERV) != 0)
+    return NULL;
+
+  return save_buf;
 }
 
 static int
@@ -669,48 +652,46 @@ listen_socket (const char *name, int listen_port)
       fprintf (stderr, "getaddrinfo() failed: %s\n", gai_strerror (s));
       return -1;
     }
-  s = -1;
 
   for (ptr = res; ptr != NULL; ptr = ptr->ai_next)
     {
       /* Print what we are doing. */
       {
-	char topbuf[512];
+        char topbuf[512];
 
-	fprintf (stderr, "%s listening on %s port %d family %d...",
-		 name, addr_ntop (ptr->ai_addr, ptr->ai_addrlen,
-				  topbuf, sizeof (topbuf)),
-		 get_port (ptr->ai_addr), ptr->ai_family);
+        fprintf (stderr, "%s listening on %s...",
+                 name, human_addr (ptr->ai_addr, ptr->ai_addrlen,
+                                   topbuf, sizeof (topbuf)));
       }
 
       if ((s = socket (ptr->ai_family, ptr->ai_socktype,
-		       ptr->ai_protocol)) < 0)
-	{
-	  perror ("socket() failed");
-	  continue;
-	}
+                       ptr->ai_protocol)) < 0)
+        {
+          perror ("socket() failed");
+          continue;
+        }
 
       yes = 1;
       if (setsockopt (s, SOL_SOCKET, SO_REUSEADDR,
-		      (const void *) &yes, sizeof (yes)) < 0)
-	{
-	  perror ("setsockopt() failed");
-	failed:
-	  close (s);
-	  continue;
-	}
+                      (const void *) &yes, sizeof (yes)) < 0)
+        {
+          perror ("setsockopt() failed");
+        failed:
+          close (s);
+          continue;
+        }
 
       if (bind (s, ptr->ai_addr, ptr->ai_addrlen) < 0)
-	{
-	  perror ("bind() failed");
-	  goto failed;
-	}
+        {
+          perror ("bind() failed");
+          goto failed;
+        }
 
       if (listen (s, 10) < 0)
-	{
-	  perror ("listen() failed");
-	  goto failed;
-	}
+        {
+          perror ("listen() failed");
+          goto failed;
+        }
 
       /* new list entry for the connection */
       lappend (listener_list);
@@ -731,26 +712,45 @@ listen_socket (const char *name, int listen_port)
   return 0;
 }
 
+/* strips \r\n from the end of the string 
+ */
+static void
+strip (char *data)
+{
+  int i;
+  int len = strlen (data);
+
+  for (i = 0; i < len; i++)
+    {
+      if (data[i] == '\r' && data[i + 1] == '\n' && data[i + 1] == 0)
+        {
+          data[i] = '\n';
+          data[i + 1] = 0;
+          break;
+        }
+    }
+}
+
 static void
 get_response (gnutls_session_t session, char *request,
-	      char **response, int *response_length)
+              char **response, int *response_length)
 {
   char *p, *h;
 
   if (http != 0)
     {
       if (strncmp (request, "GET ", 4))
-	goto unimplemented;
+        goto unimplemented;
 
       if (!(h = strchr (request, '\n')))
-	goto unimplemented;
+        goto unimplemented;
 
       *h++ = '\0';
       while (*h == '\r' || *h == '\n')
-	h++;
+        h++;
 
       if (!(p = strchr (request + 4, ' ')))
-	goto unimplemented;
+        goto unimplemented;
       *p = '\0';
     }
 /*    *response = peer_print_info(session, request+4, h, response_length); */
@@ -760,6 +760,21 @@ get_response (gnutls_session_t session, char *request,
     }
   else
     {
+      strip (request);
+      fprintf (stderr, "received: %s\n", request);
+      if (request[0] == request[1] && request[0] == '*')
+        {
+          if (strncmp
+              (request, "**REHANDSHAKE**",
+               sizeof ("**REHANDSHAKE**") - 1) == 0)
+            {
+              fprintf (stderr, "*** Sending rehandshake request\n");
+              gnutls_rehandshake (session);
+            }
+          *response = NULL;
+          *response_length = 0;
+          return;
+        }
       *response = strdup (request);
       *response_length = ((*response) ? strlen (*response) : 0);
     }
@@ -789,12 +804,12 @@ check_alert (gnutls_session_t session, int ret)
     {
       int last_alert = gnutls_alert_get (session);
       if (last_alert == GNUTLS_A_NO_RENEGOTIATION &&
-	  ret == GNUTLS_E_WARNING_ALERT_RECEIVED)
-	printf
-	  ("* Received NO_RENEGOTIATION alert. Client does not support renegotiation.\n");
+          ret == GNUTLS_E_WARNING_ALERT_RECEIVED)
+        printf
+          ("* Received NO_RENEGOTIATION alert. Client does not support renegotiation.\n");
       else
-	printf ("* Received alert '%d': %s.\n", last_alert,
-		gnutls_alert_get_name (last_alert));
+        printf ("* Received alert '%d': %s.\n", last_alert,
+                gnutls_alert_get_name (last_alert));
     }
 }
 
@@ -818,22 +833,12 @@ main (int argc, char **argv)
 
   set_program_name (argv[0]);
 
-#ifdef gcry_fips_mode_active
-  if (gcry_fips_mode_active ())
-    {
-      ret = gnutls_register_md5_handler ();
-      if (ret)
-	fprintf (stderr, "gnutls_register_md5_handler: %s\n",
-		 gnutls_strerror (ret));
-    }
-#endif
-
 #ifndef _WIN32
   signal (SIGPIPE, SIG_IGN);
   signal (SIGHUP, SIG_IGN);
   signal (SIGTERM, terminate);
   if (signal (SIGINT, terminate) == SIG_IGN)
-    signal (SIGINT, SIG_IGN);	/* e.g. background process */
+    signal (SIGINT, SIG_IGN);   /* e.g. background process */
 #endif
 
   sockets_init ();
@@ -852,8 +857,6 @@ main (int argc, char **argv)
       strcpy (name, "Echo Server");
     }
 
-  gcry_control (GCRYCTL_ENABLE_QUICK_RANDOM, 0);
-
   if ((ret = gnutls_global_init ()) < 0)
     {
       fprintf (stderr, "global_init: %s\n", gnutls_strerror (ret));
@@ -866,6 +869,9 @@ main (int argc, char **argv)
       exit (1);
     }
 
+#ifdef ENABLE_PKCS11
+  pkcs11_common ();
+#endif
   gnutls_global_set_log_function (tls_log_func);
   gnutls_global_set_log_level (debug);
 
@@ -896,31 +902,31 @@ main (int argc, char **argv)
   if (x509_cafile != NULL)
     {
       if ((ret = gnutls_certificate_set_x509_trust_file
-	   (cert_cred, x509_cafile, x509ctype)) < 0)
-	{
-	  fprintf (stderr, "Error reading '%s'\n", x509_cafile);
-	  GERR (ret);
-	  exit (1);
-	}
+           (cert_cred, x509_cafile, x509ctype)) < 0)
+        {
+          fprintf (stderr, "Error reading '%s'\n", x509_cafile);
+          GERR (ret);
+          exit (1);
+        }
       else
-	{
-	  printf ("Processed %d CA certificate(s).\n", ret);
-	}
+        {
+          printf ("Processed %d CA certificate(s).\n", ret);
+        }
     }
 #ifdef ENABLE_PKI
   if (x509_crlfile != NULL)
     {
       if ((ret = gnutls_certificate_set_x509_crl_file
-	   (cert_cred, x509_crlfile, x509ctype)) < 0)
-	{
-	  fprintf (stderr, "Error reading '%s'\n", x509_crlfile);
-	  GERR (ret);
-	  exit (1);
-	}
+           (cert_cred, x509_crlfile, x509ctype)) < 0)
+        {
+          fprintf (stderr, "Error reading '%s'\n", x509_crlfile);
+          GERR (ret);
+          exit (1);
+        }
       else
-	{
-	  printf ("Processed %d CRL(s).\n", ret);
-	}
+        {
+          printf ("Processed %d CRL(s).\n", ret);
+        }
     }
 #endif
 
@@ -928,53 +934,53 @@ main (int argc, char **argv)
   if (pgp_keyring != NULL)
     {
       ret =
-	gnutls_certificate_set_openpgp_keyring_file (cert_cred, pgp_keyring,
-						     GNUTLS_OPENPGP_FMT_BASE64);
+        gnutls_certificate_set_openpgp_keyring_file (cert_cred, pgp_keyring,
+                                                     GNUTLS_OPENPGP_FMT_BASE64);
       if (ret < 0)
-	{
-	  fprintf (stderr, "Error setting the OpenPGP keyring file\n");
-	  GERR (ret);
-	}
+        {
+          fprintf (stderr, "Error setting the OpenPGP keyring file\n");
+          GERR (ret);
+        }
     }
 
   if (pgp_certfile != NULL)
     {
       if (info.pgp_subkey != NULL)
-	ret = gnutls_certificate_set_openpgp_key_file2
-	  (cert_cred, pgp_certfile, pgp_keyfile, info.pgp_subkey,
-	   GNUTLS_OPENPGP_FMT_BASE64);
+        ret = gnutls_certificate_set_openpgp_key_file2
+          (cert_cred, pgp_certfile, pgp_keyfile, info.pgp_subkey,
+           GNUTLS_OPENPGP_FMT_BASE64);
       else
-	ret = gnutls_certificate_set_openpgp_key_file
-	  (cert_cred, pgp_certfile, pgp_keyfile, GNUTLS_OPENPGP_FMT_BASE64);
+        ret = gnutls_certificate_set_openpgp_key_file
+          (cert_cred, pgp_certfile, pgp_keyfile, GNUTLS_OPENPGP_FMT_BASE64);
 
       if (ret < 0)
-	{
-	  fprintf (stderr,
-		   "Error[%d] while reading the OpenPGP key pair ('%s', '%s')\n",
-		   ret, pgp_certfile, pgp_keyfile);
-	  GERR (ret);
-	}
+        {
+          fprintf (stderr,
+                   "Error[%d] while reading the OpenPGP key pair ('%s', '%s')\n",
+                   ret, pgp_certfile, pgp_keyfile);
+          GERR (ret);
+        }
     }
 #endif
 
   if (x509_certfile != NULL)
     if ((ret = gnutls_certificate_set_x509_key_file
-	 (cert_cred, x509_certfile, x509_keyfile, x509ctype)) < 0)
+         (cert_cred, x509_certfile, x509_keyfile, x509ctype)) < 0)
       {
-	fprintf (stderr,
-		 "Error reading '%s' or '%s'\n", x509_certfile, x509_keyfile);
-	GERR (ret);
-	exit (1);
+        fprintf (stderr,
+                 "Error reading '%s' or '%s'\n", x509_certfile, x509_keyfile);
+        GERR (ret);
+        exit (1);
       }
 
   if (x509_dsacertfile != NULL)
     if ((ret = gnutls_certificate_set_x509_key_file
-	 (cert_cred, x509_dsacertfile, x509_dsakeyfile, x509ctype)) < 0)
+         (cert_cred, x509_dsacertfile, x509_dsakeyfile, x509ctype)) < 0)
       {
-	fprintf (stderr, "Error reading '%s' or '%s'\n",
-		 x509_dsacertfile, x509_dsakeyfile);
-	GERR (ret);
-	exit (1);
+        fprintf (stderr, "Error reading '%s' or '%s'\n",
+                 x509_dsacertfile, x509_dsakeyfile);
+        GERR (ret);
+        exit (1);
       }
 
   gnutls_certificate_set_params_function (cert_cred, get_params);
@@ -991,14 +997,14 @@ main (int argc, char **argv)
       gnutls_srp_allocate_server_credentials (&srp_cred);
 
       if ((ret =
-	   gnutls_srp_set_server_credentials_file (srp_cred, srp_passwd,
-						   srp_passwd_conf)) < 0)
-	{
-	  /* only exit is this function is not disabled 
-	   */
-	  fprintf (stderr, "Error while setting SRP parameters\n");
-	  GERR (ret);
-	}
+           gnutls_srp_set_server_credentials_file (srp_cred, srp_passwd,
+                                                   srp_passwd_conf)) < 0)
+        {
+          /* only exit is this function is not disabled 
+           */
+          fprintf (stderr, "Error while setting SRP parameters\n");
+          GERR (ret);
+        }
     }
 #endif
 
@@ -1010,24 +1016,24 @@ main (int argc, char **argv)
       gnutls_psk_allocate_server_credentials (&psk_cred);
 
       if ((ret =
-	   gnutls_psk_set_server_credentials_file (psk_cred, psk_passwd)) < 0)
-	{
-	  /* only exit is this function is not disabled 
-	   */
-	  fprintf (stderr, "Error while setting PSK parameters\n");
-	  GERR (ret);
-	}
+           gnutls_psk_set_server_credentials_file (psk_cred, psk_passwd)) < 0)
+        {
+          /* only exit is this function is not disabled 
+           */
+          fprintf (stderr, "Error while setting PSK parameters\n");
+          GERR (ret);
+        }
 
       if (info.psk_hint)
-	{
-	  ret = gnutls_psk_set_server_credentials_hint (psk_cred,
-							info.psk_hint);
-	  if (ret)
-	    {
-	      fprintf (stderr, "Error setting PSK identity hint.\n");
-	      GERR (ret);
-	    }
-	}
+        {
+          ret = gnutls_psk_set_server_credentials_hint (psk_cred,
+                                                        info.psk_hint);
+          if (ret)
+            {
+              fprintf (stderr, "Error setting PSK identity hint.\n");
+              GERR (ret);
+            }
+        }
 
       gnutls_psk_set_server_params_function (psk_cred, get_params);
     }
@@ -1040,6 +1046,11 @@ main (int argc, char **argv)
 /*      gnutls_anon_set_server_dh_params(dh_cred, dh_params); */
 #endif
 
+#ifdef ENABLE_SESSION_TICKET
+  if (noticket == 0)
+    gnutls_session_ticket_key_generate (&session_ticket_key);
+#endif
+
   if (listen_socket (name, port) < 0)
     exit (1);
 
@@ -1047,7 +1058,9 @@ main (int argc, char **argv)
     {
       listener_item *j;
       fd_set rd, wr;
+#ifndef _WIN32
       int val;
+#endif
 
       FD_ZERO (&rd);
       FD_ZERO (&wr);
@@ -1058,306 +1071,333 @@ main (int argc, char **argv)
       {
 
 #ifndef _WIN32
-	val = fcntl (j->fd, F_GETFL, 0);
-	if ((val == -1) || (fcntl (j->fd, F_SETFL, val | O_NONBLOCK) < 0))
-	  {
-	    perror ("fcntl()");
-	    exit (1);
-	  }
+        val = fcntl (j->fd, F_GETFL, 0);
+        if ((val == -1) || (fcntl (j->fd, F_SETFL, val | O_NONBLOCK) < 0))
+          {
+            perror ("fcntl()");
+            exit (1);
+          }
 #endif
 
-	if (j->listen_socket)
-	  {
-	    FD_SET (j->fd, &rd);
-	    n = MAX (n, j->fd);
-	  }
-	if (j->http_state == HTTP_STATE_REQUEST)
-	  {
-	    FD_SET (j->fd, &rd);
-	    n = MAX (n, j->fd);
-	  }
-	if (j->http_state == HTTP_STATE_RESPONSE)
-	  {
-	    FD_SET (j->fd, &wr);
-	    n = MAX (n, j->fd);
-	  }
+        if (j->listen_socket)
+          {
+            FD_SET (j->fd, &rd);
+            n = MAX (n, j->fd);
+          }
+        if (j->http_state == HTTP_STATE_REQUEST)
+          {
+            FD_SET (j->fd, &rd);
+            n = MAX (n, j->fd);
+          }
+        if (j->http_state == HTTP_STATE_RESPONSE)
+          {
+            FD_SET (j->fd, &wr);
+            n = MAX (n, j->fd);
+          }
       }
       lloopend (listener_list, j);
 
 /* core operation */
       n = select (n + 1, &rd, &wr, NULL, NULL);
       if (n == -1 && errno == EINTR)
-	continue;
+        continue;
       if (n < 0)
-	{
-	  perror ("select()");
-	  exit (1);
-	}
+        {
+          perror ("select()");
+          exit (1);
+        }
 
 /* read or write to each connection as indicated by select()'s return argument */
       lloopstart (listener_list, j)
       {
 
-	/* a new connection has arrived */
-	if (FD_ISSET (j->fd, &rd) && j->listen_socket)
-	  {
-	    gnutls_session_t tls_session;
+        /* a new connection has arrived */
+        if (FD_ISSET (j->fd, &rd) && j->listen_socket)
+          {
+            gnutls_session_t tls_session;
 
-	    tls_session = initialize_session ();
+            tls_session = initialize_session ();
 
-	    calen = sizeof (client_address);
-	    memset (&client_address, 0, calen);
-	    accept_fd = accept (j->fd, (struct sockaddr *) &client_address,
-				&calen);
+            calen = sizeof (client_address);
+            memset (&client_address, 0, calen);
+            accept_fd = accept (j->fd, (struct sockaddr *) &client_address,
+                                &calen);
 
-	    if (accept_fd < 0)
-	      {
-		perror ("accept()");
-	      }
-	    else
-	      {
-		time_t tt;
-		char *ctt;
+            if (accept_fd < 0)
+              {
+                perror ("accept()");
+              }
+            else
+              {
+                time_t tt;
+                char *ctt;
 
-		/* new list entry for the connection */
-		lappend (listener_list);
-		j = listener_list.tail;
-		j->http_request = (char *) strdup ("");
-		j->http_state = HTTP_STATE_REQUEST;
-		j->fd = accept_fd;
+                /* new list entry for the connection */
+                lappend (listener_list);
+                j = listener_list.tail;
+                j->http_request = (char *) strdup ("");
+                j->http_state = HTTP_STATE_REQUEST;
+                j->fd = accept_fd;
 
-		j->tls_session = tls_session;
-		gnutls_transport_set_ptr (tls_session,
-					  (gnutls_transport_ptr_t)
-					  gl_fd_to_handle (accept_fd));
-		j->handshake_ok = 0;
+                j->tls_session = tls_session;
+                gnutls_transport_set_ptr (tls_session,
+                                          (gnutls_transport_ptr_t)
+                                          gl_fd_to_handle (accept_fd));
+                j->handshake_ok = 0;
 
-		if (verbose == 0)
-		  {
-		    tt = time (0);
-		    ctt = ctime (&tt);
-		    ctt[strlen (ctt) - 1] = 0;
+                if (verbose == 0)
+                  {
+                    tt = time (0);
+                    ctt = ctime (&tt);
+                    ctt[strlen (ctt) - 1] = 0;
 
-		    /*
-		      printf("\n* connection from %s, port %d\n",
-		      inet_ntop(AF_INET, &client_address.sin_addr, topbuf,
-		      sizeof(topbuf)), ntohs(client_address.sin_port));
-		    */
+                    printf ("\n* Accepted connection from %s on %s\n",
+                            human_addr ((struct sockaddr *)
+                                        &client_address, calen, topbuf,
+                                        sizeof (topbuf)), ctt);
+                  }
+              }
+          }
 
-		  }
-	      }
-	  }
-
-	if (FD_ISSET (j->fd, &rd) && !j->listen_socket)
-	  {
+        if (FD_ISSET (j->fd, &rd) && !j->listen_socket)
+          {
 /* read partial GET request */
-	    char buf[1024];
-	    int r, ret;
+            char buf[1024];
+            int r, ret;
 
-	    if (j->handshake_ok == 0)
-	      {
-		r = gnutls_handshake (j->tls_session);
-		if (r < 0 && gnutls_error_is_fatal (r) == 0)
-		  {
-		    check_alert (j->tls_session, r);
-		    /* nothing */
-		  }
-		else if (r < 0 && gnutls_error_is_fatal (r) == 1)
-		  {
-		    check_alert (j->tls_session, r);
-		    fprintf (stderr, "Error in handshake\n");
-		    GERR (r);
+            if (j->handshake_ok == 0)
+              {
+                r = gnutls_handshake (j->tls_session);
+                if (r < 0 && gnutls_error_is_fatal (r) == 0)
+                  {
+                    check_alert (j->tls_session, r);
+                    /* nothing */
+                  }
+                else if (r < 0 && gnutls_error_is_fatal (r) == 1)
+                  {
+                    check_alert (j->tls_session, r);
+                    fprintf (stderr, "Error in handshake\n");
+                    GERR (r);
 
-		    do
-		      {
-			ret =
-			  gnutls_alert_send_appropriate (j->tls_session, r);
-		      }
-		    while (ret == GNUTLS_E_AGAIN);
-		    j->http_state = HTTP_STATE_CLOSING;
-		  }
-		else if (r == 0)
-		  {
-		    if (gnutls_session_is_resumed (j->tls_session) != 0
-			&& verbose == 0)
-		      printf ("*** This is a resumed session\n");
+                    do
+                      {
+                        ret =
+                          gnutls_alert_send_appropriate (j->tls_session, r);
+                      }
+                    while (ret == GNUTLS_E_AGAIN
+                           || ret == GNUTLS_E_INTERRUPTED);
+                    j->http_state = HTTP_STATE_CLOSING;
+                  }
+                else if (r == 0)
+                  {
+                    if (gnutls_session_is_resumed (j->tls_session) != 0
+                        && verbose == 0)
+                      printf ("*** This is a resumed session\n");
 
-		    if (verbose == 0)
-		      {
-			printf ("\n* connection from %s, port %d\n",
-				addr_ntop ((struct sockaddr *)
-					   &client_address, calen, topbuf,
-					   sizeof (topbuf)),
-				get_port ((struct sockaddr *)
-					  &client_address));
-			print_info (j->tls_session, NULL, 1);
-		      }
-		    j->handshake_ok = 1;
-		  }
-	      }
+                    if (verbose == 0)
+                      {
+                        printf ("\n* Successful handshake from %s\n",
+                                human_addr ((struct sockaddr *)
+                                            &client_address, calen, topbuf,
+                                            sizeof (topbuf)));
+                        print_info (j->tls_session, NULL, 1);
+                      }
+                    j->handshake_ok = 1;
+                  }
+              }
 
-	    if (j->handshake_ok == 1)
-	      {
-		r = gnutls_record_recv (j->tls_session, buf,
-					MIN (1024, SMALL_READ_TEST));
-		if (r == GNUTLS_E_INTERRUPTED || r == GNUTLS_E_AGAIN)
-		  {
-		    /* do nothing */
-		  }
-		else if (r <= 0)
-		  {
-		    j->http_state = HTTP_STATE_CLOSING;
-		    if (r < 0 && r != GNUTLS_E_UNEXPECTED_PACKET_LENGTH)
-		      {
-			check_alert (j->tls_session, r);
-			fprintf (stderr, "Error while receiving data\n");
-			GERR (r);
-		      }
+            if (j->handshake_ok == 1)
+              {
+                r = gnutls_record_recv (j->tls_session, buf,
+                                        MIN (1024, SMALL_READ_TEST));
+                if (r == GNUTLS_E_INTERRUPTED || r == GNUTLS_E_AGAIN)
+                  {
+                    /* do nothing */
+                  }
+                else if (r <= 0)
+                  {
+                    if (r == GNUTLS_E_REHANDSHAKE)
+                      {
+                        fprintf (stderr, "*** Received hello message\n");
+                        do
+                          {
+                            r = gnutls_handshake (j->tls_session);
+                          }
+                        while (r == GNUTLS_E_INTERRUPTED
+                               || r == GNUTLS_E_AGAIN);
 
-		  }
-		else
-		  {
-		    j->http_request =
-		      realloc (j->http_request, j->request_length + r + 1);
-		    if (j->http_request != NULL)
-		      {
-			memcpy (j->http_request + j->request_length, buf, r);
-			j->request_length += r;
-			j->http_request[j->request_length] = '\0';
-		      }
-		    else
-		      j->http_state = HTTP_STATE_CLOSING;
+                        if (r < 0)
+                          {
+                            do
+                              {
+                                ret = gnutls_alert_send_appropriate
+                                  (j->tls_session, r);
+                              }
+                            while (ret == GNUTLS_E_AGAIN
+                                   || ret == GNUTLS_E_INTERRUPTED);
 
-		  }
+                            GERR (r);
+                            j->http_state = HTTP_STATE_CLOSING;
+                          }
+                      }
+                    else
+                      {
+                        j->http_state = HTTP_STATE_CLOSING;
+                        if (r < 0 && r != GNUTLS_E_UNEXPECTED_PACKET_LENGTH)
+                          {
+                            check_alert (j->tls_session, r);
+                            fprintf (stderr, "Error while receiving data\n");
+                            GERR (r);
+                          }
+                      }
+                  }
+                else
+                  {
+                    j->http_request =
+                      realloc (j->http_request, j->request_length + r + 1);
+                    if (j->http_request != NULL)
+                      {
+                        memcpy (j->http_request + j->request_length, buf, r);
+                        j->request_length += r;
+                        j->http_request[j->request_length] = '\0';
+                      }
+                    else
+                      j->http_state = HTTP_STATE_CLOSING;
+
+                  }
 /* check if we have a full HTTP header */
 
-		j->http_response = NULL;
-		if (j->http_request != NULL)
-		  {
-		    if ((http == 0 && strchr (j->http_request, '\n'))
-			|| strstr (j->http_request, "\r\n\r\n")
-			|| strstr (j->http_request, "\n\n"))
-		      {
-			get_response (j->tls_session, j->http_request,
-				      &j->http_response, &j->response_length);
-			j->http_state = HTTP_STATE_RESPONSE;
-			j->response_written = 0;
-		      }
-		  }
-	      }
-	  }
-	if (FD_ISSET (j->fd, &wr))
-	  {
+                j->http_response = NULL;
+                if (j->http_request != NULL)
+                  {
+                    if ((http == 0 && strchr (j->http_request, '\n'))
+                        || strstr (j->http_request, "\r\n\r\n")
+                        || strstr (j->http_request, "\n\n"))
+                      {
+                        get_response (j->tls_session, j->http_request,
+                                      &j->http_response, &j->response_length);
+                        j->http_state = HTTP_STATE_RESPONSE;
+                        j->response_written = 0;
+                      }
+                  }
+              }
+          }
+        if (FD_ISSET (j->fd, &wr))
+          {
 /* write partial response request */
-	    int r;
+            int r;
 
-	    if (j->handshake_ok == 0)
-	      {
-		r = gnutls_handshake (j->tls_session);
-		if (r < 0 && gnutls_error_is_fatal (r) == 0)
-		  {
-		    check_alert (j->tls_session, r);
-		    /* nothing */
-		  }
-		else if (r < 0 && gnutls_error_is_fatal (r) == 1)
-		  {
-		    int ret;
+            if (j->handshake_ok == 0)
+              {
+                r = gnutls_handshake (j->tls_session);
+                if (r < 0 && gnutls_error_is_fatal (r) == 0)
+                  {
+                    check_alert (j->tls_session, r);
+                    /* nothing */
+                  }
+                else if (r < 0 && gnutls_error_is_fatal (r) == 1)
+                  {
+                    int ret;
 
-		    j->http_state = HTTP_STATE_CLOSING;
-		    check_alert (j->tls_session, r);
-		    fprintf (stderr, "Error in handshake\n");
-		    GERR (r);
+                    j->http_state = HTTP_STATE_CLOSING;
+                    check_alert (j->tls_session, r);
+                    fprintf (stderr, "Error in handshake\n");
+                    GERR (r);
 
-		    do
-		      {
-			ret =
-			  gnutls_alert_send_appropriate (j->tls_session, r);
-		      }
-		    while (ret == GNUTLS_E_AGAIN);
-		  }
-		else if (r == 0)
-		  {
-		    if (gnutls_session_is_resumed (j->tls_session) != 0
-			&& verbose == 0)
-		      printf ("*** This is a resumed session\n");
-		    if (verbose == 0)
-		      {
-			printf ("- connection from %s, port %d\n",
-				addr_ntop ((struct sockaddr *)
-					   &client_address, calen, topbuf,
-					   sizeof (topbuf)),
-				get_port ((struct sockaddr *)
-					  &client_address));
+                    do
+                      {
+                        ret =
+                          gnutls_alert_send_appropriate (j->tls_session, r);
+                      }
+                    while (ret == GNUTLS_E_AGAIN);
+                  }
+                else if (r == 0)
+                  {
+                    if (gnutls_session_is_resumed (j->tls_session) != 0
+                        && verbose == 0)
+                      printf ("*** This is a resumed session\n");
+                    if (verbose == 0)
+                      {
+                        printf ("- connection from %s\n",
+                                human_addr ((struct sockaddr *)
+                                            &client_address, calen, topbuf,
+                                            sizeof (topbuf)));
 
-			print_info (j->tls_session, NULL, 1);
-		      }
-		    j->handshake_ok = 1;
-		  }
-	      }
+                        print_info (j->tls_session, NULL, 1);
+                      }
+                    j->handshake_ok = 1;
+                  }
+              }
 
-	    if (j->handshake_ok == 1)
-	      {
-		/* FIXME if j->http_response == NULL? */
-		r = gnutls_record_send (j->tls_session,
-					j->http_response +
-					j->response_written,
-					MIN (j->response_length -
-					     j->response_written,
-					     SMALL_READ_TEST));
-		if (r == GNUTLS_E_INTERRUPTED || r == GNUTLS_E_AGAIN)
-		  {
-		    /* do nothing */
-		  }
-		else if (r <= 0)
-		  {
-		    if (http != 0)
-		      j->http_state = HTTP_STATE_CLOSING;
-		    else
-		      {
-			j->http_state = HTTP_STATE_REQUEST;
-			free (j->http_response);
-			j->response_length = 0;
-			j->request_length = 0;
-			j->http_request[0] = 0;
-		      }
+            if (j->handshake_ok == 1 && j->http_response != NULL)
+              {
+                /* FIXME if j->http_response == NULL? */
+                r = gnutls_record_send (j->tls_session,
+                                        j->http_response +
+                                        j->response_written,
+                                        MIN (j->response_length -
+                                             j->response_written,
+                                             SMALL_READ_TEST));
+                if (r == GNUTLS_E_INTERRUPTED || r == GNUTLS_E_AGAIN)
+                  {
+                    /* do nothing */
+                  }
+                else if (r <= 0)
+                  {
+                    if (http != 0)
+                      j->http_state = HTTP_STATE_CLOSING;
+                    else
+                      {
+                        j->http_state = HTTP_STATE_REQUEST;
+                        free (j->http_response);
+                        j->response_length = 0;
+                        j->request_length = 0;
+                        j->http_request[0] = 0;
+                      }
 
-		    if (r < 0)
-		      {
-			fprintf (stderr, "Error while sending data\n");
-			GERR (r);
-		      }
-		    check_alert (j->tls_session, r);
-		  }
-		else
-		  {
-		    j->response_written += r;
+                    if (r < 0)
+                      {
+                        fprintf (stderr, "Error while sending data\n");
+                        GERR (r);
+                      }
+                    check_alert (j->tls_session, r);
+                  }
+                else
+                  {
+                    j->response_written += r;
 /* check if we have written a complete response */
-		    if (j->response_written == j->response_length)
-		      {
-			if (http != 0)
-			  j->http_state = HTTP_STATE_CLOSING;
-			else
-			  {
-			    j->http_state = HTTP_STATE_REQUEST;
-			    free (j->http_response);
-			    j->response_length = 0;
-			    j->request_length = 0;
-			    j->http_request[0] = 0;
-			  }
-		      }
-		  }
-	      }
-	  }
+                    if (j->response_written == j->response_length)
+                      {
+                        if (http != 0)
+                          j->http_state = HTTP_STATE_CLOSING;
+                        else
+                          {
+                            j->http_state = HTTP_STATE_REQUEST;
+                            free (j->http_response);
+                            j->response_length = 0;
+                            j->request_length = 0;
+                            j->http_request[0] = 0;
+                          }
+                      }
+                  }
+              }
+            else
+              {
+                j->request_length = 0;
+                j->http_request[0] = 0;
+                j->http_state = HTTP_STATE_REQUEST;
+              }
+          }
       }
       lloopend (listener_list, j);
 
 /* loop through all connections, closing those that are in error */
       lloopstart (listener_list, j)
       {
-	if (j->http_state == HTTP_STATE_CLOSING)
-	  {
-	    ldeleteinc (listener_list, j);
-	  }
+        if (j->http_state == HTTP_STATE_CLOSING)
+          {
+            ldeleteinc (listener_list, j);
+          }
       }
       lloopend (listener_list, j);
     }
@@ -1379,6 +1419,11 @@ main (int argc, char **argv)
   gnutls_anon_free_server_credentials (dh_cred);
 #endif
 
+#ifdef ENABLE_SESSION_TICKET
+  if (noticket == 0)
+    gnutls_free (session_ticket_key.data);
+#endif
+
   if (nodb == 0)
     wrap_db_deinit ();
   gnutls_global_deinit ();
@@ -1393,7 +1438,7 @@ gaa_parser (int argc, char **argv)
   if (gaa (argc, argv, &info) != -1)
     {
       fprintf (stderr,
-	       "Error in the arguments. Use the --help or -h parameters to get more information.\n");
+               "Error in the arguments. Use the --help or -h parameters to get more information.\n");
       exit (1);
     }
 
@@ -1402,6 +1447,7 @@ gaa_parser (int argc, char **argv)
   debug = info.debug;
   verbose = info.quiet;
   nodb = info.nodb;
+  noticket = info.noticket;
 
   if (info.http == 0)
     http = 0;
@@ -1436,16 +1482,9 @@ gaa_parser (int argc, char **argv)
   psk_passwd = info.psk_passwd;
 
   pgp_keyring = info.pgp_keyring;
-
-  parse_protocols (info.proto, info.nproto, protocol_priority);
-  parse_ciphers (info.ciphers, info.nciphers, cipher_priority);
-  parse_macs (info.macs, info.nmacs, mac_priority);
-  parse_ctypes (info.ctype, info.nctype, cert_type_priority);
-  parse_kx (info.kx, info.nkx, kx_priority);
-  parse_comp (info.comp, info.ncomp, comp_priority);
 }
 
-extern void serv_version(void);
+extern void serv_version (void);
 
 void
 serv_version (void)
@@ -1454,7 +1493,7 @@ serv_version (void)
   if (strcmp (gnutls_check_version (NULL), PACKAGE_VERSION) != 0)
     p = PACKAGE_STRING;
   version_etc (stdout, program_name, p, gnutls_check_version (NULL),
-	       "Nikos Mavrogiannopoulos", (char *) NULL);
+               "Nikos Mavrogiannopoulos", (char *) NULL);
 }
 
 /* session resuming support */
@@ -1522,18 +1561,18 @@ wrap_db_fetch (void *dbf, gnutls_datum_t key)
   for (i = 0; i < ssl_session_cache; i++)
     {
       if (key.size == cache_db[i].session_id_size &&
-	  memcmp (key.data, cache_db[i].session_id, key.size) == 0)
-	{
-	  res.size = cache_db[i].session_data_size;
+          memcmp (key.data, cache_db[i].session_id, key.size) == 0)
+        {
+          res.size = cache_db[i].session_data_size;
 
-	  res.data = gnutls_malloc (res.size);
-	  if (res.data == NULL)
-	    return res;
+          res.data = gnutls_malloc (res.size);
+          if (res.data == NULL)
+            return res;
 
-	  memcpy (res.data, cache_db[i].session_data, res.size);
+          memcpy (res.data, cache_db[i].session_data, res.size);
 
-	  return res;
-	}
+          return res;
+        }
     }
   return res;
 }
@@ -1549,14 +1588,14 @@ wrap_db_delete (void *dbf, gnutls_datum_t key)
   for (i = 0; i < ssl_session_cache; i++)
     {
       if (key.size == (unsigned int) cache_db[i].session_id_size &&
-	  memcmp (key.data, cache_db[i].session_id, key.size) == 0)
-	{
+          memcmp (key.data, cache_db[i].session_id, key.size) == 0)
+        {
 
-	  cache_db[i].session_id_size = 0;
-	  cache_db[i].session_data_size = 0;
+          cache_db[i].session_id_size = 0;
+          cache_db[i].session_data_size = 0;
 
-	  return 0;
-	}
+          return 0;
+        }
     }
 
   return -1;

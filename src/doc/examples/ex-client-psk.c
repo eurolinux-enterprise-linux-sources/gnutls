@@ -1,7 +1,7 @@
 /* This example code is placed in the public domain. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -30,13 +30,13 @@ main (void)
   char buffer[MAX_BUF + 1];
   const char *err;
   gnutls_psk_client_credentials_t pskcred;
-  const gnutls_datum_t key = { (char*) "DEADBEEF", 8 };
+  const gnutls_datum_t key = { (char *) "DEADBEEF", 8 };
 
   gnutls_global_init ();
 
   gnutls_psk_allocate_client_credentials (&pskcred);
   gnutls_psk_set_client_credentials (pskcred, "test", &key,
-				     GNUTLS_PSK_KEY_HEX);
+                                     GNUTLS_PSK_KEY_HEX);
 
   /* Initialize TLS session
    */
@@ -47,9 +47,9 @@ main (void)
   if (ret < 0)
     {
       if (ret == GNUTLS_E_INVALID_REQUEST)
-	{
-	  fprintf (stderr, "Syntax error at: %s\n", err);
-	}
+        {
+          fprintf (stderr, "Syntax error at: %s\n", err);
+        }
       exit (1);
     }
 

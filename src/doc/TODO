@@ -5,16 +5,11 @@ in order to avoid having people working on the same thing.
 Current list:
 + Support PKCS#8 AES and DES-MD5 (tests/enc3pkcs8.pem) encrypted keys.
 * Implement Datagram-TLS (DTLS).
-* Correct TLS 1.2 support.
-* Cleanup pkix.asn and remove unused (by the certificate api) structures.
-  That way memory used will be reduced.
-* Improve or rewrite libtasn1 to make it easier to maintain.
+* Implement TLS-PSK with PKCS #11.
 * Verify added CRLs (is it really needed?)
 * Add support for generating empty CRLs
 * Document the format for the supported DN attributes.
 * Audit the code
-- Support OpenSSL encrypted PKCS#1 RSA keys, for compatibility (new
-  applications should use PKCS#8 instead).
 - Allow verifying of certificates on their reception.
 - Add gnutls_certificate_set_openpgp_keyring()
   function, similar to gnutls_certificate_set_openpgp_key().
@@ -24,8 +19,6 @@ Current list:
 - Clean up name space of helper functions in library (memmem,
    firstElement, bit_mask, ...) for platforms that libtool's
    -export-symbols-regex doesn't work.
-- Allow sending V2 Hello messages. It seems that some (old) broken 
-  implementations require that.
 - Add Kerberos ciphersuites
 - Certificate chain validation improvements:
   - Implement "correct" DN comparison (instead of memcmp).
@@ -40,7 +33,6 @@ Current list:
   - Check path length constraints.
   - Check keyCertSign key usages.
   - Reject extensions in v1 certificates.
-- Support for cryptodev (and thus hardware accelerators)
 - Exhaustive test suite, using NIST's PKI Test vectors,
   see http://csrc.nist.gov/pki/testing/x509paths_old.html
   and http://csrc.nist.gov/pki/testing/x509paths.html
@@ -50,7 +42,6 @@ Current list:
   be able to execve a new process that take over the current
   living socket (using the fcntl close-on-exec flag) and
   continue the TLS session as well.
-- Implement draft-salowey-tls-ticket-05, useful for (e.g.) EAP-FAST.
 - Reduce memory footprint
   - Inside gnutls_global_init, the library allocates about 64 kb of
     memory in almost 4000 calls to malloc. On my desktop, there are 22
@@ -76,14 +67,6 @@ Current list:
   TLS.
 - Make gnutls_certificate_get_ours return a zero-terminated array (or
   add a new API that return the size of the array).
-- Debug why www-s.uiuc.edu:443 refuse to negotiate sslv3 when we propose
-  sslv3+tls1.
-- Investigate why failed client authentication results in weird error
-  messages.  See http://permalink.gmane.org/gmane.network.gnutls.general/875
-- Print X.509 DN in the proper order.
-- Debug why connections to smtp.hispeed.ch fails (Debian #429183).
-  Most likely the server is buggy, but it would be useful to document
-  the problem better.
 
 (+) Means high priority 
 (*) Means medium priority

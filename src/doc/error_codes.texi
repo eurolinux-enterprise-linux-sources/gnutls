@@ -50,14 +50,29 @@ Error in the certificate.
 @item GNUTLS_E_CERTIFICATE_KEY_MISMATCH:
 The certificate and the given key do not match.
 
+@item GNUTLS_E_CERTIFICATE_LIST_UNSORTED:
+The provided X.509 certificate list is not sorted (in subject to issuer order)
+
+@item GNUTLS_E_CHANNEL_BINDING_NOT_AVAILABLE:
+Channel binding data not available
+
 @item GNUTLS_E_COMPRESSION_FAILED:
 Compression of the TLS record packet has failed.
 
 @item GNUTLS_E_CONSTRAINT_ERROR:
 Some constraint limits were reached.
 
+@item GNUTLS_E_CRYPTODEV_DEVICE_ERROR:
+Error opening /dev/crypto
+
+@item GNUTLS_E_CRYPTODEV_IOCTL_ERROR:
+Error interfacing with /dev/crypto
+
 @item GNUTLS_E_CRYPTO_ALREADY_REGISTERED:
 There is already a crypto algorithm with lower priority.
+
+@item GNUTLS_E_CRYPTO_INIT_FAILED:
+The initialization of crypto backend has failed.
 
 @item GNUTLS_E_DB_ERROR:
 Error in Database backend.
@@ -107,6 +122,9 @@ The gcrypt library version is too old.
 @item GNUTLS_E_INCOMPATIBLE_LIBTASN1_LIBRARY:
 The tasn1 library version is too old.
 
+@item GNUTLS_E_INCOMPAT_DSA_KEY_WITH_TLS_PROTOCOL:
+The given DSA key is incompatible with the selected TLS protocol.
+
 @item GNUTLS_E_INIT_LIBEXTRA:
 The initialization of GnuTLS-extra has failed.
 
@@ -136,6 +154,9 @@ A large TLS record packet was received.
 
 @item GNUTLS_E_LIBRARY_VERSION_MISMATCH:
 The GnuTLS library version does not match the GnuTLS-extra library version.
+
+@item GNUTLS_E_LOCKING_ERROR:
+Thread locking error
 
 @item GNUTLS_E_LZO_INIT_FAILED:
 The initialization of LZO has failed.
@@ -176,11 +197,62 @@ Could not get OpenPGP key.
 @item GNUTLS_E_OPENPGP_KEYRING_ERROR:
 Error loading the keyring.
 
+@item GNUTLS_E_OPENPGP_PREFERRED_KEY_ERROR:
+The OpenPGP key has not a preferred key set.
+
 @item GNUTLS_E_OPENPGP_SUBKEY_ERROR:
 Could not find OpenPGP subkey.
 
 @item GNUTLS_E_OPENPGP_UID_REVOKED:
 The OpenPGP User ID is revoked.
+
+@item GNUTLS_E_PARSING_ERROR:
+Error in parsing.
+
+@item GNUTLS_E_PKCS11_ATTRIBUTE_ERROR:
+PKCS #11 error in attribute
+
+@item GNUTLS_E_PKCS11_DATA_ERROR:
+PKCS #11 error in data
+
+@item GNUTLS_E_PKCS11_DEVICE_ERROR:
+PKCS #11 error in device
+
+@item GNUTLS_E_PKCS11_ERROR:
+PKCS #11 error.
+
+@item GNUTLS_E_PKCS11_KEY_ERROR:
+PKCS #11 error in key
+
+@item GNUTLS_E_PKCS11_LOAD_ERROR:
+PKCS #11 initialization error.
+
+@item GNUTLS_E_PKCS11_PIN_ERROR:
+PKCS #11 error in PIN.
+
+@item GNUTLS_E_PKCS11_PIN_EXPIRED:
+PKCS #11 PIN expired
+
+@item GNUTLS_E_PKCS11_PIN_LOCKED:
+PKCS #11 PIN locked
+
+@item GNUTLS_E_PKCS11_SESSION_ERROR:
+PKCS #11 error in session
+
+@item GNUTLS_E_PKCS11_SIGNATURE_ERROR:
+PKCS #11 error in signature
+
+@item GNUTLS_E_PKCS11_SLOT_ERROR:
+PKCS #11 error in slot
+
+@item GNUTLS_E_PKCS11_TOKEN_ERROR:
+PKCS #11 error in token
+
+@item GNUTLS_E_PKCS11_UNSUPPORTED_FEATURE_ERROR:
+PKCS #11 unsupported feature
+
+@item GNUTLS_E_PKCS11_USER_ERROR:
+PKCS #11 user error
 
 @item GNUTLS_E_PKCS1_WRONG_PAD:
 Wrong padding in PKCS1 packet.
@@ -220,6 +292,9 @@ Rehandshake was requested by the peer.
 
 @item GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE:
 The requested data were not available.
+
+@item GNUTLS_E_SAFE_RENEGOTIATION_FAILED:
+Safe renegotiation failed.
 
 @item GNUTLS_E_SHORT_MEMORY_BUFFER:
 The given memory buffer is too short to hold parameters.
@@ -269,8 +344,17 @@ The PKCS structure's content type is unknown.
 @item GNUTLS_E_UNKNOWN_PK_ALGORITHM:
 An unknown public key algorithm was encountered.
 
+@item GNUTLS_E_UNKNOWN_SRP_USERNAME:
+The SRP username supplied is unknown.
+
+@item GNUTLS_E_UNSAFE_RENEGOTIATION_DENIED:
+Unsafe renegotiation denied.
+
 @item GNUTLS_E_UNSUPPORTED_CERTIFICATE_TYPE:
 The certificate type is not supported.
+
+@item GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM:
+The signature algorithm is not supported.
 
 @item GNUTLS_E_UNSUPPORTED_VERSION_PACKET:
 A record packet with illegal version was received.

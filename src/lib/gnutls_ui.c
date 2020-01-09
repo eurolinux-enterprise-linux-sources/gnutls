@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2009, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -39,7 +40,7 @@
 /* ANON & DHE */
 
 /**
- * gnutls_dh_set_prime_bits - Used to set the bits for a DH ciphersuite
+ * gnutls_dh_set_prime_bits:
  * @session: is a #gnutls_session_t structure.
  * @bits: is the number of bits
  *
@@ -63,14 +64,14 @@ gnutls_dh_set_prime_bits (gnutls_session_t session, unsigned int bits)
 
 
 /**
- * gnutls_dh_get_group - return the group of the DH authentication
+ * gnutls_dh_get_group:
  * @session: is a gnutls session
  * @raw_gen: will hold the generator.
  * @raw_prime: will hold the prime.
  *
  * This function will return the group parameters used in the last
- * Diffie-Hellman authentication with the peer.  These are the prime
- * and the generator used.  This function should be used for both
+ * Diffie-Hellman key exchange with the peer.  These are the prime and
+ * the generator used.  This function should be used for both
  * anonymous and ephemeral Diffie-Hellman.  The output parameters must
  * be freed with gnutls_free().
  *
@@ -79,7 +80,7 @@ gnutls_dh_set_prime_bits (gnutls_session_t session, unsigned int bits)
  **/
 int
 gnutls_dh_get_group (gnutls_session_t session,
-		     gnutls_datum_t * raw_gen, gnutls_datum_t * raw_prime)
+                     gnutls_datum_t * raw_gen, gnutls_datum_t * raw_prime)
 {
   dh_info_st *dh;
   int ret;
@@ -92,19 +93,19 @@ gnutls_dh_get_group (gnutls_session_t session,
     case GNUTLS_CRD_ANON:
       anon_info = _gnutls_get_auth_info (session);
       if (anon_info == NULL)
-	return GNUTLS_E_INTERNAL_ERROR;
+        return GNUTLS_E_INTERNAL_ERROR;
       dh = &anon_info->dh;
       break;
     case GNUTLS_CRD_PSK:
       psk_info = _gnutls_get_auth_info (session);
       if (psk_info == NULL)
-	return GNUTLS_E_INTERNAL_ERROR;
+        return GNUTLS_E_INTERNAL_ERROR;
       dh = &psk_info->dh;
       break;
     case GNUTLS_CRD_CERTIFICATE:
       cert_info = _gnutls_get_auth_info (session);
       if (cert_info == NULL)
-	return GNUTLS_E_INTERNAL_ERROR;
+        return GNUTLS_E_INTERNAL_ERROR;
       dh = &cert_info->dh;
       break;
     default:
@@ -131,14 +132,14 @@ gnutls_dh_get_group (gnutls_session_t session,
 }
 
 /**
- * gnutls_dh_get_pubkey - return the peer's public key used in DH authentication
+ * gnutls_dh_get_pubkey:
  * @session: is a gnutls session
  * @raw_key: will hold the public key.
  *
  * This function will return the peer's public key used in the last
- * Diffie-Hellman authentication.  This function should be used for
- * both anonymous and ephemeral Diffie-Hellman.  The output parameters
- * must be freed with gnutls_free().
+ * Diffie-Hellman key exchange.  This function should be used for both
+ * anonymous and ephemeral Diffie-Hellman.  The output parameters must
+ * be freed with gnutls_free().
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
  *   an error code is returned.
@@ -155,28 +156,28 @@ gnutls_dh_get_pubkey (gnutls_session_t session, gnutls_datum_t * raw_key)
     {
     case GNUTLS_CRD_ANON:
       {
-	anon_info = _gnutls_get_auth_info (session);
-	if (anon_info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	dh = &anon_info->dh;
-	break;
+        anon_info = _gnutls_get_auth_info (session);
+        if (anon_info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        dh = &anon_info->dh;
+        break;
       }
     case GNUTLS_CRD_PSK:
       {
-	psk_info = _gnutls_get_auth_info (session);
-	if (psk_info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	dh = &psk_info->dh;
-	break;
+        psk_info = _gnutls_get_auth_info (session);
+        if (psk_info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        dh = &psk_info->dh;
+        break;
       }
     case GNUTLS_CRD_CERTIFICATE:
       {
 
-	cert_info = _gnutls_get_auth_info (session);
-	if (cert_info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	dh = &cert_info->dh;
-	break;
+        cert_info = _gnutls_get_auth_info (session);
+        if (cert_info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        dh = &cert_info->dh;
+        break;
       }
     default:
       gnutls_assert ();
@@ -184,11 +185,11 @@ gnutls_dh_get_pubkey (gnutls_session_t session, gnutls_datum_t * raw_key)
     }
 
   return _gnutls_set_datum (raw_key, dh->public_key.data,
-			    dh->public_key.size);
+                            dh->public_key.size);
 }
 
 /**
- * gnutls_rsa_export_get_pubkey - return the peer's public key used in RSA-EXPORT authentication
+ * gnutls_rsa_export_get_pubkey:
  * @session: is a gnutls session
  * @exponent: will hold the exponent.
  * @modulus: will hold the modulus.
@@ -202,8 +203,8 @@ gnutls_dh_get_pubkey (gnutls_session_t session, gnutls_datum_t * raw_key)
  **/
 int
 gnutls_rsa_export_get_pubkey (gnutls_session_t session,
-			      gnutls_datum_t * exponent,
-			      gnutls_datum_t * modulus)
+                              gnutls_datum_t * exponent,
+                              gnutls_datum_t * modulus)
 {
   cert_auth_info_t info;
   int ret;
@@ -212,24 +213,24 @@ gnutls_rsa_export_get_pubkey (gnutls_session_t session,
     {
       info = _gnutls_get_auth_info (session);
       if (info == NULL)
-	return GNUTLS_E_INTERNAL_ERROR;
+        return GNUTLS_E_INTERNAL_ERROR;
 
       ret = _gnutls_set_datum (modulus, info->rsa_export.modulus.data,
-			       info->rsa_export.modulus.size);
+                               info->rsa_export.modulus.size);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  return ret;
-	}
+        {
+          gnutls_assert ();
+          return ret;
+        }
 
       ret = _gnutls_set_datum (exponent, info->rsa_export.exponent.data,
-			       info->rsa_export.exponent.size);
+                               info->rsa_export.exponent.size);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  _gnutls_free_datum (modulus);
-	  return ret;
-	}
+        {
+          gnutls_assert ();
+          _gnutls_free_datum (modulus);
+          return ret;
+        }
 
       return 0;
     }
@@ -239,12 +240,12 @@ gnutls_rsa_export_get_pubkey (gnutls_session_t session,
 
 
 /**
- * gnutls_dh_get_secret_bits - return the bits used in DH authentication
+ * gnutls_dh_get_secret_bits:
  * @session: is a gnutls session
  *
  * This function will return the bits used in the last Diffie-Hellman
- * authentication with the peer.  Should be used for both anonymous
- * and ephemeral Diffie-Hellman.
+ * key exchange with the peer.  Should be used for both anonymous and
+ * ephemeral Diffie-Hellman.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
  *   an error code is returned.
@@ -256,31 +257,31 @@ gnutls_dh_get_secret_bits (gnutls_session_t session)
     {
     case GNUTLS_CRD_ANON:
       {
-	anon_auth_info_t info;
+        anon_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	return info->dh.secret_bits;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        return info->dh.secret_bits;
       }
     case GNUTLS_CRD_PSK:
       {
-	psk_auth_info_t info;
+        psk_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	return info->dh.secret_bits;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        return info->dh.secret_bits;
       }
     case GNUTLS_CRD_CERTIFICATE:
       {
-	cert_auth_info_t info;
+        cert_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
 
-	return info->dh.secret_bits;
+        return info->dh.secret_bits;
       }
     default:
       gnutls_assert ();
@@ -289,7 +290,7 @@ gnutls_dh_get_secret_bits (gnutls_session_t session)
 }
 
 static int
-mpi_buf2bits (gnutls_datum_t *mpi_buf)
+mpi_buf2bits (gnutls_datum_t * mpi_buf)
 {
   bigint_t mpi;
   int rc;
@@ -308,17 +309,17 @@ mpi_buf2bits (gnutls_datum_t *mpi_buf)
 }
 
 /**
- * gnutls_dh_get_prime_bits - return the bits used in DH authentication
+ * gnutls_dh_get_prime_bits:
  * @session: is a gnutls session
  *
  * This function will return the bits of the prime used in the last
- * Diffie-Hellman authentication with the peer.  Should be used for
- * both anonymous and ephemeral Diffie-Hellman.  Note that some
- * ciphers, like RSA and DSA without DHE, does not use a
- * Diffie-Hellman exchange, and then this function will return 0.
+ * Diffie-Hellman key exchange with the peer.  Should be used for both
+ * anonymous and ephemeral Diffie-Hellman.  Note that some ciphers,
+ * like RSA and DSA without DHE, does not use a Diffie-Hellman key
+ * exchange, and then this function will return 0.
  *
  * Returns: The Diffie-Hellman bit strength is returned, or 0 if no
- *   Diffie-Hellman exchange was done, or a negative error code on
+ *   Diffie-Hellman key exchange was done, or a negative error code on
  *   failure.
  **/
 int
@@ -330,34 +331,34 @@ gnutls_dh_get_prime_bits (gnutls_session_t session)
     {
     case GNUTLS_CRD_ANON:
       {
-	anon_auth_info_t info;
+        anon_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	dh = &info->dh;
-	break;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        dh = &info->dh;
+        break;
       }
     case GNUTLS_CRD_PSK:
       {
-	psk_auth_info_t info;
+        psk_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
-	dh = &info->dh;
-	break;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
+        dh = &info->dh;
+        break;
       }
     case GNUTLS_CRD_CERTIFICATE:
       {
-	cert_auth_info_t info;
+        cert_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
 
-	dh = &info->dh;
-	break;
+        dh = &info->dh;
+        break;
       }
     default:
       gnutls_assert ();
@@ -368,7 +369,7 @@ gnutls_dh_get_prime_bits (gnutls_session_t session)
 }
 
 /**
- * gnutls_rsa_export_get_modulus_bits - return the bits used in RSA-export key exchange
+ * gnutls_rsa_export_get_modulus_bits:
  * @session: is a gnutls session
  *
  * Get the export RSA parameter's modulus size.
@@ -389,14 +390,14 @@ gnutls_rsa_export_get_modulus_bits (gnutls_session_t session)
 }
 
 /**
- * gnutls_dh_get_peers_public_bits - return the bits used in DH authentication
+ * gnutls_dh_get_peers_public_bits:
  * @session: is a gnutls session
  *
  * Get the Diffie-Hellman public key bit size.  Can be used for both
  * anonymous and ephemeral Diffie-Hellman.
  *
  * Returns: the public key bit size used in the last Diffie-Hellman
- * authentication with the peer, or a negative value in case of error.
+ *   key exchange with the peer, or a negative value in case of error.
  **/
 int
 gnutls_dh_get_peers_public_bits (gnutls_session_t session)
@@ -407,36 +408,36 @@ gnutls_dh_get_peers_public_bits (gnutls_session_t session)
     {
     case GNUTLS_CRD_ANON:
       {
-	anon_auth_info_t info;
+        anon_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
 
-	dh = &info->dh;
-	break;
+        dh = &info->dh;
+        break;
       }
     case GNUTLS_CRD_PSK:
       {
-	psk_auth_info_t info;
+        psk_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
 
-	dh = &info->dh;
-	break;
+        dh = &info->dh;
+        break;
       }
     case GNUTLS_CRD_CERTIFICATE:
       {
-	cert_auth_info_t info;
+        cert_auth_info_t info;
 
-	info = _gnutls_get_auth_info (session);
-	if (info == NULL)
-	  return GNUTLS_E_INTERNAL_ERROR;
+        info = _gnutls_get_auth_info (session);
+        if (info == NULL)
+          return GNUTLS_E_INTERNAL_ERROR;
 
-	dh = &info->dh;
-	break;
+        dh = &info->dh;
+        break;
       }
     default:
       gnutls_assert ();
@@ -449,7 +450,7 @@ gnutls_dh_get_peers_public_bits (gnutls_session_t session)
 /* CERTIFICATE STUFF */
 
 /**
- * gnutls_certificate_get_ours - return the raw certificate sent in the last handshake
+ * gnutls_certificate_get_ours:
  * @session: is a gnutls session
  *
  * Get the certificate as sent to the peer, in the last handshake.
@@ -482,7 +483,7 @@ gnutls_certificate_get_ours (gnutls_session_t session)
 }
 
 /**
- * gnutls_certificate_get_peers - return the peer's raw certificate
+ * gnutls_certificate_get_peers:
  * @session: is a gnutls session
  * @list_size: is the length of the certificate list
  *
@@ -501,7 +502,7 @@ gnutls_certificate_get_ours (gnutls_session_t session)
  **/
 const gnutls_datum_t *
 gnutls_certificate_get_peers (gnutls_session_t
-			      session, unsigned int *list_size)
+                              session, unsigned int *list_size)
 {
   cert_auth_info_t info;
 
@@ -517,14 +518,14 @@ gnutls_certificate_get_peers (gnutls_session_t
 
 
 /**
- * gnutls_certificate_client_get_request_status - return the certificate request status
+ * gnutls_certificate_client_get_request_status:
  * @session: is a gnutls session
  *
  * Get whether client certificate is requested or not.
  *
  * Returns: 0 if the peer (server) did not request client
- * authentication or 1 otherwise, or a negative value in case of
- * error.
+ *   authentication or 1 otherwise, or a negative value in case of
+ *   error.
  **/
 int
 gnutls_certificate_client_get_request_status (gnutls_session_t session)
@@ -533,7 +534,7 @@ gnutls_certificate_client_get_request_status (gnutls_session_t session)
 }
 
 /**
- * gnutls_fingerprint - calculate the fingerprint of the given data
+ * gnutls_fingerprint:
  * @algo: is a digest algorithm
  * @data: is the data
  * @result: is the place where the result will be copied (may be null).
@@ -554,8 +555,8 @@ gnutls_certificate_client_get_request_status (gnutls_session_t session)
  **/
 int
 gnutls_fingerprint (gnutls_digest_algorithm_t algo,
-		    const gnutls_datum_t * data, void *result,
-		    size_t * result_size)
+                    const gnutls_datum_t * data, void *result,
+                    size_t * result_size)
 {
   digest_hd_st td;
   int hash_len = _gnutls_hash_get_algo_len (HASH2MAC (algo));
@@ -571,10 +572,10 @@ gnutls_fingerprint (gnutls_digest_algorithm_t algo,
     {
       int ret = _gnutls_hash_init (&td, HASH2MAC (algo));
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  return ret;
-	}
+        {
+          gnutls_assert ();
+          return ret;
+        }
 
       _gnutls_hash (&td, data->data, data->size);
 
@@ -586,7 +587,7 @@ gnutls_fingerprint (gnutls_digest_algorithm_t algo,
 
 
 /**
- * gnutls_certificate_set_dh_params - set the DH parameters for a server to use
+ * gnutls_certificate_set_dh_params:
  * @res: is a gnutls_certificate_credentials_t structure
  * @dh_params: is a structure that holds Diffie-Hellman parameters.
  *
@@ -600,31 +601,30 @@ gnutls_fingerprint (gnutls_digest_algorithm_t algo,
  **/
 void
 gnutls_certificate_set_dh_params (gnutls_certificate_credentials_t res,
-				  gnutls_dh_params_t dh_params)
+                                  gnutls_dh_params_t dh_params)
 {
   res->dh_params = dh_params;
 }
 
 /**
- * gnutls_certificate_set_params_function - set the DH or RSA parameters callback
+ * gnutls_certificate_set_params_function:
  * @res: is a gnutls_certificate_credentials_t structure
  * @func: is the function to be called
  *
  * This function will set a callback in order for the server to get
  * the Diffie-Hellman or RSA parameters for certificate
  * authentication.  The callback should return zero on success.
- *
  **/
 void
 gnutls_certificate_set_params_function (gnutls_certificate_credentials_t res,
-					gnutls_params_function * func)
+                                        gnutls_params_function * func)
 {
   res->params_func = func;
 }
 
 
 /**
- * gnutls_certificate_set_verify_flags - set the flags to be used at certificate verification
+ * gnutls_certificate_set_verify_flags:
  * @res: is a gnutls_certificate_credentials_t structure
  * @flags: are the flags
  *
@@ -635,13 +635,13 @@ gnutls_certificate_set_params_function (gnutls_certificate_credentials_t res,
  **/
 void
 gnutls_certificate_set_verify_flags (gnutls_certificate_credentials_t
-				     res, unsigned int flags)
+                                     res, unsigned int flags)
 {
   res->verify_flags = flags;
 }
 
 /**
- * gnutls_certificate_set_verify_limits - set the upper limits to be used at certificate verification
+ * gnutls_certificate_set_verify_limits:
  * @res: is a gnutls_certificate_credentials structure
  * @max_bits: is the number of bits of an acceptable certificate (default 8200)
  * @max_depth: is maximum depth of the verification of a certificate chain (default 5)
@@ -653,15 +653,15 @@ gnutls_certificate_set_verify_flags (gnutls_certificate_credentials_t
  **/
 void
 gnutls_certificate_set_verify_limits (gnutls_certificate_credentials_t res,
-				      unsigned int max_bits,
-				      unsigned int max_depth)
+                                      unsigned int max_bits,
+                                      unsigned int max_depth)
 {
   res->verify_depth = max_depth;
   res->verify_bits = max_bits;
 }
 
 /**
- * gnutls_certificate_set_rsa_export_params - set the RSA parameters for a server to use
+ * gnutls_certificate_set_rsa_export_params:
  * @res: is a gnutls_certificate_credentials_t structure
  * @rsa_params: is a structure that holds temporary RSA parameters.
  *
@@ -671,29 +671,29 @@ gnutls_certificate_set_verify_limits (gnutls_certificate_credentials_t res,
  **/
 void
 gnutls_certificate_set_rsa_export_params (gnutls_certificate_credentials_t
-					  res, gnutls_rsa_params_t rsa_params)
+                                          res, gnutls_rsa_params_t rsa_params)
 {
   res->rsa_params = rsa_params;
 }
 
 /**
- * gnutls_psk_set_params_function - set the DH or RSA parameters callback
+ * gnutls_psk_set_params_function:
  * @res: is a gnutls_psk_server_credentials_t structure
  * @func: is the function to be called
  *
  * This function will set a callback in order for the server to get
- * the Diffie-Hellman or RSA parameters for psk authentication.  The
+ * the Diffie-Hellman or RSA parameters for PSK authentication.  The
  * callback should return zero on success.
  **/
 void
 gnutls_psk_set_params_function (gnutls_psk_server_credentials_t res,
-				gnutls_params_function * func)
+                                gnutls_params_function * func)
 {
   res->params_func = func;
 }
 
 /**
- * gnutls_anon_set_params_function - set the DH or RSA parameters callback
+ * gnutls_anon_set_params_function:
  * @res: is a gnutls_anon_server_credentials_t structure
  * @func: is the function to be called
  *
@@ -703,7 +703,7 @@ gnutls_psk_set_params_function (gnutls_psk_server_credentials_t res,
  **/
 void
 gnutls_anon_set_params_function (gnutls_anon_server_credentials_t res,
-				 gnutls_params_function * func)
+                                 gnutls_params_function * func)
 {
   res->params_func = func;
 }

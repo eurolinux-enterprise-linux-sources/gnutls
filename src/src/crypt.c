@@ -1,22 +1,22 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Simon Josefsson
- * Copyright (C) 2001,2003 Nikos Mavrogiannopoulos
- * Copyright (C) 2004 Free Software Foundation
+ * Copyright (C) 2001, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+ * Free Software Foundation, Inc.
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * GnuTLS is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *               
- * GNUTLS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *                               
+ *
+ * GnuTLS is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see
+ * <http://www.gnu.org/licenses/>.
  */
 
 #include <config.h>
@@ -27,16 +27,16 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/extra.h>
 #include <crypt-gaa.h>
-#include "../lib/random.h"	/* for random */
+#include "../lib/random.h"      /* for random */
 
 #include <sys/types.h>
 #include <sys/stat.h>
 
 #ifndef _WIN32
-# include <pwd.h>
-# include <unistd.h>
+#include <pwd.h>
+#include <unistd.h>
 #else
-# include <windows.h>
+#include <windows.h>
 #endif
 
 /* Gnulib portability files. */
@@ -50,13 +50,13 @@
  */
 
 int crypt_int (const char *username, const char *passwd, int salt,
-	       char *tpasswd_conf, char *tpasswd, int uindex);
+               char *tpasswd_conf, char *tpasswd, int uindex);
 static int read_conf_values (gnutls_datum_t * g, gnutls_datum_t * n,
-			     char *str);
+                             char *str);
 static int _verify_passwd_int (const char *username, const char *passwd,
-			       char *verifier, char *salt,
-			       const gnutls_datum_t * g,
-			       const gnutls_datum_t * n);
+                               char *verifier, char *salt,
+                               const gnutls_datum_t * g,
+                               const gnutls_datum_t * n);
 
 static void
 print_num (const char *msg, const gnutls_datum_t * num)
@@ -68,9 +68,9 @@ print_num (const char *msg, const gnutls_datum_t * num)
   for (i = 0; i < num->size; i++)
     {
       if (i != 0 && i % 12 == 0)
-	printf ("\n\t");
+        printf ("\n\t");
       else if (i != 0 && i != num->size)
-	printf (":");
+        printf (":");
       printf ("%.2x", num->data[i]);
     }
   printf ("\n\n");
@@ -97,36 +97,36 @@ generate_create_conf (char *tpasswd_conf)
     {
 
       if (index == 1)
-	{
-	  n = gnutls_srp_1024_group_prime;
-	  g = gnutls_srp_1024_group_generator;
-	}
+        {
+          n = gnutls_srp_1024_group_prime;
+          g = gnutls_srp_1024_group_generator;
+        }
       else if (index == 2)
-	{
-	  n = gnutls_srp_1536_group_prime;
-	  g = gnutls_srp_1536_group_generator;
-	}
+        {
+          n = gnutls_srp_1536_group_prime;
+          g = gnutls_srp_1536_group_generator;
+        }
       else
-	{
-	  n = gnutls_srp_2048_group_prime;
-	  g = gnutls_srp_2048_group_generator;
-	}
+        {
+          n = gnutls_srp_2048_group_prime;
+          g = gnutls_srp_2048_group_generator;
+        }
 
       printf ("\nGroup %d, of %d bits:\n", index, n.size * 8);
       print_num ("Generator", &g);
       print_num ("Prime", &n);
 
       if (gnutls_srp_base64_encode_alloc (&n, &str_n) < 0)
-	{
-	  fprintf (stderr, "Could not encode\n");
-	  return -1;
-	}
+        {
+          fprintf (stderr, "Could not encode\n");
+          return -1;
+        }
 
       if (gnutls_srp_base64_encode_alloc (&g, &str_g) < 0)
-	{
-	  fprintf (stderr, "Could not encode\n");
-	  return -1;
-	}
+        {
+          fprintf (stderr, "Could not encode\n");
+          return -1;
+        }
 
       sprintf (line, "%d:%s:%s\n", index, str_n.data, str_g.data);
 
@@ -150,8 +150,8 @@ generate_create_conf (char *tpasswd_conf)
  */
 static int
 _verify_passwd_int (const char *username, const char *passwd,
-		    char *verifier, char *salt,
-		    const gnutls_datum_t * g, const gnutls_datum_t * n)
+                    char *verifier, char *salt,
+                    const gnutls_datum_t * g, const gnutls_datum_t * n)
 {
   char _salt[1024];
   gnutls_datum_t tmp, raw_salt, new_verifier;
@@ -160,6 +160,12 @@ _verify_passwd_int (const char *username, const char *passwd,
 
   if (salt == NULL || verifier == NULL)
     return -1;
+
+  if (strlen(salt) >= sizeof(_salt))
+    {
+      fprintf (stderr, "Too long salt.\n");
+      return -1;
+    }
 
   /* copy salt, and null terminate after the ':' */
   strcpy (_salt, salt);
@@ -236,7 +242,7 @@ filecopy (char *src, char *dst)
     {
       p = fgets (line, sizeof (line) - 1, fd2);
       if (p == NULL)
-	break;
+        break;
 
       fputs (line, fd);
     }
@@ -269,17 +275,17 @@ find_strchr (char *username, char *file)
       /* move to first ':' */
       i = 0;
       while ((line[i] != ':') && (line[i] != '\0') && (i < sizeof (line)))
-	{
-	  i++;
-	}
+        {
+          i++;
+        }
       if (strncmp (username, line, MAX (i, strlen (username))) == 0)
-	{
-	  /* find the index */
-	  pos = strrchr (line, ':');
-	  pos++;
-	  fclose (fd);
-	  return atoi (pos);
-	}
+        {
+          /* find the index */
+          pos = strrchr (line, ':');
+          pos++;
+          fclose (fd);
+          return atoi (pos);
+        }
     }
 
   fclose (fd);
@@ -291,7 +297,7 @@ find_strchr (char *username, char *file)
  */
 static int
 verify_passwd (char *conffile, char *tpasswd, char *username,
-	       const char *passwd)
+               const char *passwd)
 {
   FILE *fd;
   char line[5 * 1024];
@@ -349,36 +355,36 @@ verify_passwd (char *conffile, char *tpasswd, char *username,
        */
       i = 0;
       while ((line[i] != ':') && (line[i] != '\0') && (i < sizeof (line)))
-	{
-	  i++;
-	}
+        {
+          i++;
+        }
       if (strncmp (username, line, MAX (i, strlen (username))) == 0)
-	{
-	  char *verifier_pos, *salt_pos;
+        {
+          char *verifier_pos, *salt_pos;
 
-	  pos = strchr (line, ':');
-	  fclose (fd);
-	  if (pos == NULL)
-	    {
-	      fprintf (stderr, "Cannot parse conf file '%s'\n", conffile);
-	      return -1;
-	    }
-	  pos++;
-	  verifier_pos = pos;
+          pos = strchr (line, ':');
+          fclose (fd);
+          if (pos == NULL)
+            {
+              fprintf (stderr, "Cannot parse conf file '%s'\n", conffile);
+              return -1;
+            }
+          pos++;
+          verifier_pos = pos;
 
-	  /* Move to the salt */
-	  pos = strchr (pos, ':');
-	  if (pos == NULL)
-	    {
-	      fprintf (stderr, "Cannot parse conf file '%s'\n", conffile);
-	      return -1;
-	    }
-	  pos++;
-	  salt_pos = pos;
+          /* Move to the salt */
+          pos = strchr (pos, ':');
+          if (pos == NULL)
+            {
+              fprintf (stderr, "Cannot parse conf file '%s'\n", conffile);
+              return -1;
+            }
+          pos++;
+          salt_pos = pos;
 
-	  return _verify_passwd_int (username, passwd,
-				     verifier_pos, salt_pos, &g, &n);
-	}
+          return _verify_passwd_int (username, passwd,
+                                     verifier_pos, salt_pos, &g, &n);
+        }
     }
 
   fclose (fd);
@@ -389,13 +395,20 @@ verify_passwd (char *conffile, char *tpasswd, char *username,
 #define KPASSWD "/etc/tpasswd"
 #define KPASSWD_CONF "/etc/tpasswd.conf"
 
-int
-main (int argc, char **argv)
+static void
+tls_log_func (int level, const char *str)
+{
+  fprintf (stderr, "|<%d>| %s", level, str);
+}
+
+int main (int argc, char **argv)
 {
   gaainfo info;
   const char *passwd;
-  int salt, ret;
-  struct passwd *pwd;
+  int salt_size, ret;
+#ifndef _WIN32
+   struct passwd *pwd;
+#endif
 
   set_program_name (argv[0]);
 
@@ -413,7 +426,8 @@ main (int argc, char **argv)
       return -1;
     }
 
-  salt = info.salt;
+  gnutls_global_set_log_function (tls_log_func);
+  gnutls_global_set_log_level (info.debug);
 
   if (info.create_conf != NULL)
     {
@@ -421,9 +435,9 @@ main (int argc, char **argv)
     }
 
   if (info.passwd == NULL)
-    info.passwd = (char*) KPASSWD;
+    info.passwd = (char *) KPASSWD;
   if (info.passwd_conf == NULL)
-    info.passwd_conf = (char*) KPASSWD_CONF;
+    info.passwd_conf = (char *) KPASSWD_CONF;
 
   if (info.username == NULL)
     {
@@ -431,10 +445,10 @@ main (int argc, char **argv)
       pwd = getpwuid (getuid ());
 
       if (pwd == NULL)
-	{
-	  fprintf (stderr, "No such user\n");
-	  return -1;
-	}
+        {
+          fprintf (stderr, "No such user\n");
+          return -1;
+        }
 
       info.username = pwd->pw_name;
 #else
@@ -443,7 +457,7 @@ main (int argc, char **argv)
 #endif
     }
 
-  salt = 16;
+  salt_size = 16;
 
   passwd = getpass ("Enter password: ");
   if (passwd == NULL)
@@ -456,18 +470,18 @@ main (int argc, char **argv)
   if (info.verify != 0)
     {
       return verify_passwd (info.passwd_conf, info.passwd,
-			    info.username, passwd);
+                            info.username, passwd);
     }
 
 
-  return crypt_int (info.username, passwd, salt,
-		    info.passwd_conf, info.passwd, info.index);
+  return crypt_int (info.username, passwd, salt_size,
+                    info.passwd_conf, info.passwd, info.index);
 
 }
 
 static char *
 _srp_crypt (const char *username, const char *passwd, int salt_size,
-	    const gnutls_datum_t * g, const gnutls_datum_t * n)
+            const gnutls_datum_t * g, const gnutls_datum_t * n)
 {
   char salt[128];
   static char result[1024];
@@ -479,7 +493,7 @@ _srp_crypt (const char *username, const char *passwd, int salt_size,
 
   /* generate the salt
    */
-  if (_gnutls_rnd (GNUTLS_RND_NONCE, salt, salt_size) < 0)
+  if (gnutls_rnd (GNUTLS_RND_NONCE, salt, salt_size) < 0)
     {
       fprintf (stderr, "Could not create nonce\n");
       return NULL;
@@ -521,7 +535,7 @@ _srp_crypt (const char *username, const char *passwd, int salt_size,
 
 int
 crypt_int (const char *username, const char *passwd, int salt_size,
-	   char *tpasswd_conf, char *tpasswd, int uindex)
+           char *tpasswd_conf, char *tpasswd, int uindex)
 {
   FILE *fd;
   char *cr;
@@ -539,7 +553,7 @@ crypt_int (const char *username, const char *passwd, int salt_size,
     }
 
   do
-    {				/* find the specified uindex in file */
+    {                           /* find the specified uindex in file */
       p = fgets (line, sizeof (line) - 1, fd);
       iindex = atoi (p);
     }
@@ -573,69 +587,69 @@ crypt_int (const char *username, const char *passwd, int salt_size,
       int put;
 
       if (strlen (tpasswd) > sizeof (tmpname) + 5)
-	{
-	  fprintf (stderr, "file '%s' is tooooo long\n", tpasswd);
-	  return -1;
-	}
+        {
+          fprintf (stderr, "file '%s' is tooooo long\n", tpasswd);
+          return -1;
+        }
       strcpy (tmpname, tpasswd);
       strcat (tmpname, ".tmp");
 
       if (stat (tmpname, &st) != -1)
-	{
-	  fprintf (stderr, "file '%s' is locked\n", tpasswd);
-	  return -1;
-	}
+        {
+          fprintf (stderr, "file '%s' is locked\n", tpasswd);
+          return -1;
+        }
 
       if (filecopy (tpasswd, tmpname) != 0)
-	{
-	  fprintf (stderr, "Cannot copy '%s' to '%s'\n", tpasswd, tmpname);
-	  return -1;
-	}
+        {
+          fprintf (stderr, "Cannot copy '%s' to '%s'\n", tpasswd, tmpname);
+          return -1;
+        }
 
       fd = fopen (tpasswd, "w");
       if (fd == NULL)
-	{
-	  fprintf (stderr, "Cannot open '%s' for write\n", tpasswd);
-	  remove (tmpname);
-	  return -1;
-	}
+        {
+          fprintf (stderr, "Cannot open '%s' for write\n", tpasswd);
+          remove (tmpname);
+          return -1;
+        }
 
       fd2 = fopen (tmpname, "r");
       if (fd2 == NULL)
-	{
-	  fprintf (stderr, "Cannot open '%s' for read\n", tmpname);
-	  remove (tmpname);
-	  return -1;
-	}
+        {
+          fprintf (stderr, "Cannot open '%s' for read\n", tmpname);
+          remove (tmpname);
+          return -1;
+        }
 
       put = 0;
       do
-	{
-	  p = fgets (line, sizeof (line) - 1, fd2);
-	  if (p == NULL)
-	    break;
+        {
+          p = fgets (line, sizeof (line) - 1, fd2);
+          if (p == NULL)
+            break;
 
-	  pp = strchr (line, ':');
-	  if (pp == NULL)
-	    continue;
+          pp = strchr (line, ':');
+          if (pp == NULL)
+            continue;
 
-	  if (strncmp (p, username,
-		       MAX (strlen (username), (unsigned int) (pp - p))) == 0)
-	    {
-	      put = 1;
-	      fprintf (fd, "%s:%s:%u\n", username, cr, iindex);
-	    }
-	  else
-	    {
-	      fputs (line, fd);
-	    }
-	}
+          if (strncmp (p, username,
+                       MAX (strlen (username), (unsigned int) (pp - p))) == 0)
+            {
+              put = 1;
+              fprintf (fd, "%s:%s:%u\n", username, cr, iindex);
+            }
+          else
+            {
+              fputs (line, fd);
+            }
+        }
       while (1);
 
       if (put == 0)
-	{
-	  fprintf (fd, "%s:%s:%u\n", username, cr, iindex);
-	}
+        {
+          fprintf (fd, "%s:%s:%u\n", username, cr, iindex);
+        }
 
       fclose (fd);
       fclose (fd2);
@@ -663,7 +677,7 @@ read_conf_values (gnutls_datum_t * g, gnutls_datum_t * n, char *str)
 
   index = atoi (str);
 
-  p = strrchr (str, ':');	/* we have g */
+  p = strrchr (str, ':');       /* we have g */
   if (p == NULL)
     {
       return -1;
@@ -688,7 +702,7 @@ read_conf_values (gnutls_datum_t * g, gnutls_datum_t * n, char *str)
     }
 
   /* now go for n - modulo */
-  p = strrchr (str, ':');	/* we have n */
+  p = strrchr (str, ':');       /* we have n */
   if (p == NULL)
     {
       return -1;
@@ -712,7 +726,7 @@ read_conf_values (gnutls_datum_t * g, gnutls_datum_t * n, char *str)
   return index;
 }
 
-extern void srptool_version(void);
+extern void srptool_version (void);
 
 void
 srptool_version (void)
@@ -721,5 +735,5 @@ srptool_version (void)
   if (strcmp (gnutls_check_version (NULL), PACKAGE_VERSION) != 0)
     p = PACKAGE_STRING;
   version_etc (stdout, "srptool", p, gnutls_check_version (NULL),
-	       "Nikos Mavrogiannopoulos", (char *) NULL);
+               "Nikos Mavrogiannopoulos", (char *) NULL);
 }

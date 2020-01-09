@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -22,24 +23,26 @@
  *
  */
 #ifndef GNUTLS_COMPRESS_H
-# define GNUTLS_COMPRESS_H
+#define GNUTLS_COMPRESS_H
 
 int _gnutls_m_plaintext2compressed (gnutls_session_t session,
-				    gnutls_datum_t * compressed,
-				    const gnutls_datum_t *plaintext);
+                                    gnutls_datum_t * compressed,
+                                    const gnutls_datum_t * plaintext,
+                                    const record_parameters_st * params);
 int _gnutls_m_compressed2plaintext (gnutls_session_t session,
-				    gnutls_datum_t * plain,
-				    const gnutls_datum_t* compressed);
+                                    gnutls_datum_t * plain,
+                                    const gnutls_datum_t * compressed,
+                                    const record_parameters_st * params);
 
 /* Algorithm handling. */
 int _gnutls_supported_compression_methods (gnutls_session_t session,
-					   uint8_t ** comp);
+                                           uint8_t ** comp);
 int _gnutls_compression_is_ok (gnutls_compression_method_t algorithm);
 int _gnutls_compression_get_num (gnutls_compression_method_t algorithm);
 gnutls_compression_method_t _gnutls_compression_get_id (int num);
 
 #ifdef HAVE_LIBZ
-# include <zlib.h>
+#include <zlib.h>
 #endif
 
 #define GNUTLS_COMP_FAILED NULL
@@ -54,10 +57,10 @@ comp_hd_t _gnutls_comp_init (gnutls_compression_method_t, int d);
 void _gnutls_comp_deinit (comp_hd_t handle, int d);
 
 int _gnutls_decompress (comp_hd_t handle, opaque * compressed,
-			size_t compressed_size, opaque ** plain,
-			size_t max_record_size);
+                        size_t compressed_size, opaque ** plain,
+                        size_t max_record_size);
 int _gnutls_compress (comp_hd_t, const opaque * plain, size_t plain_size,
-		      opaque ** compressed, size_t max_comp_size);
+                      opaque ** compressed, size_t max_comp_size);
 
 struct gnutls_compression_entry
 {

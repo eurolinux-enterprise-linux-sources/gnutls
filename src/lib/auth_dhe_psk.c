@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2005, 2007, 2009 Free Software Foundation
+ * Copyright (C) 2005, 2007, 2009, 2010 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -55,7 +55,7 @@ const mod_auth_st dhe_psk_auth_struct = {
   NULL,
 
   NULL,
-  NULL,				/* certificate */
+  NULL,                         /* certificate */
   proc_psk_server_kx,
   proc_psk_client_kx,
   NULL,
@@ -65,52 +65,55 @@ const mod_auth_st dhe_psk_auth_struct = {
 static int
 gen_psk_client_kx (gnutls_session_t session, opaque ** data)
 {
-  int ret;
+  int ret, free;
   opaque *tmp_data = NULL;
   int data_size, tmp_data_size;
   gnutls_psk_client_credentials_t cred;
+  gnutls_datum_t username, key;
 
   cred = (gnutls_psk_client_credentials_t)
     _gnutls_get_cred (session->key, GNUTLS_CRD_PSK, NULL);
 
   if (cred == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INSUFFICIENT_CREDENTIALS;
-    }
+    return gnutls_assert_val(GNUTLS_E_INSUFFICIENT_CREDENTIALS);
 
-  if (cred->username.data == NULL || cred->key.data == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INSUFFICIENT_CREDENTIALS;
-    }
+
+  ret = _gnutls_find_psk_key( session, cred, &username, &key, &free);
+  if (ret < 0)
+    return gnutls_assert_val(ret);
 
   /* The PSK key is set in there */
-  ret = _gnutls_gen_dh_common_client_kx (session, &tmp_data);
+  ret = _gnutls_gen_dh_common_client_kx_int (session, &tmp_data, &key);
   if (ret < 0)
     {
       gnutls_assert ();
-      return ret;
+      goto cleanup;
     }
 
   tmp_data_size = ret;
-  data_size = tmp_data_size + cred->username.size + 2;
+  data_size = tmp_data_size + username.size + 2;
 
   (*data) = gnutls_malloc (data_size);
   if ((*data) == NULL)
     {
       gnutls_assert ();
       ret = GNUTLS_E_MEMORY_ERROR;
-      goto error;
+      goto cleanup;
     }
 
-  _gnutls_write_datum16 (*data, cred->username);
-  memcpy (&(*data)[cred->username.size + 2], tmp_data, tmp_data_size);
+  _gnutls_write_datum16 (*data, username);
+  memcpy (&(*data)[username.size + 2], tmp_data, tmp_data_size);
 
   ret = data_size;
 
-error:
+cleanup:
   gnutls_free (tmp_data);
+  if (free)
+    {
+      _gnutls_free_datum(&username);
+      _gnutls_free_datum(&key);
+    }
+
   return ret;
 
 }
@@ -146,7 +149,7 @@ gen_psk_server_kx (gnutls_session_t session, opaque ** data)
 
   if ((ret =
        _gnutls_auth_info_set (session, GNUTLS_CRD_PSK,
-			      sizeof (psk_auth_info_st), 1)) < 0)
+                              sizeof (psk_auth_info_st), 1)) < 0)
     {
       gnutls_assert ();
       return ret;
@@ -166,7 +169,7 @@ gen_psk_server_kx (gnutls_session_t session, opaque ** data)
 
 static int
 proc_psk_client_kx (gnutls_session_t session, opaque * data,
-		    size_t _data_size)
+                    size_t _data_size)
 {
   int ret;
   bigint_t p, g;
@@ -188,7 +191,7 @@ proc_psk_client_kx (gnutls_session_t session, opaque * data,
 
   if ((ret =
        _gnutls_auth_info_set (session, GNUTLS_CRD_PSK,
-			      sizeof (psk_auth_info_st), 1)) < 0)
+                              sizeof (psk_auth_info_st), 1)) < 0)
     {
       gnutls_assert ();
       return ret;
@@ -217,7 +220,7 @@ proc_psk_client_kx (gnutls_session_t session, opaque * data,
    */
   info = _gnutls_get_auth_info (session);
 
-  if (username.size > MAX_SRP_USERNAME)
+  if (username.size > MAX_USERNAME_SIZE)
     {
       gnutls_assert ();
       return GNUTLS_E_ILLEGAL_SRP_USERNAME;
@@ -237,7 +240,7 @@ proc_psk_client_kx (gnutls_session_t session, opaque * data,
 
 int
 proc_psk_server_kx (gnutls_session_t session, opaque * data,
-		    size_t _data_size)
+                    size_t _data_size)
 {
 
   int ret;
@@ -245,7 +248,7 @@ proc_psk_server_kx (gnutls_session_t session, opaque * data,
   /* set auth_info */
   if ((ret =
        _gnutls_auth_info_set (session, GNUTLS_CRD_PSK,
-			      sizeof (psk_auth_info_st), 1)) < 0)
+                              sizeof (psk_auth_info_st), 1)) < 0)
     {
       gnutls_assert ();
       return ret;

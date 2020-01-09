@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -32,7 +32,7 @@
 
 
 /**
- * gnutls_psk_netconf_derive_key - derive PSK Netconf key from password
+ * gnutls_psk_netconf_derive_key:
  * @password: zero terminated string containing password.
  * @psk_identity: zero terminated string with PSK identity.
  * @psk_identity_hint: zero terminated string with PSK identity hint.
@@ -44,12 +44,16 @@
  * Returns: %GNUTLS_E_SUCCESS on success, or an error code.
  *
  * Since: 2.4.0
- **/
+ *
+ * Deprecated: The need for this interface was dropped from the
+ * standard on publication as a RFC.  The function works now but will
+ * return a hard failure in a future release.
+ */
 int
 gnutls_psk_netconf_derive_key (const char *password,
-			       const char *psk_identity,
-			       const char *psk_identity_hint,
-			       gnutls_datum_t * output_key)
+                               const char *psk_identity,
+                               const char *psk_identity_hint,
+                               gnutls_datum_t * output_key)
 {
   const char netconf_key_pad[] = "Key Pad for Netconf";
   size_t sha1len = _gnutls_hash_get_algo_len (GNUTLS_DIG_SHA1);

@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,14 +23,15 @@
  */
 
 #ifndef RANDOM_H
-# define RANDOM_H
+#define RANDOM_H
 
 #include <gnutls/crypto.h>
 
 extern int crypto_rnd_prio;
 extern gnutls_crypto_rnd_st _gnutls_rnd_ops;
 
-int _gnutls_rnd (int level, void *data, size_t len);
+int _gnutls_rnd (gnutls_rnd_level_t level, void *data, size_t len);
+#define _gnutls_rnd gnutls_rnd
 void _gnutls_rnd_deinit (void);
 int _gnutls_rnd_init (void);
 

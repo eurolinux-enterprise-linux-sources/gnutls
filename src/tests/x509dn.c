@@ -1,39 +1,42 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Parts copied from GnuTLS example programs. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#if !defined(_WIN32)
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
+#endif
 #include <unistd.h>
 #include <gnutls/gnutls.h>
 
@@ -109,10 +112,10 @@ const gnutls_datum_t key = { key_pem, sizeof (key_pem) };
 #define EXPECT_RDN0 "GnuTLS test CA"
 
 static int
-cert_callback (gnutls_session session,
-	       const gnutls_datum * req_ca_rdn, int nreqs,
-	       const gnutls_pk_algorithm * sign_algos,
-	       int sign_algos_length, gnutls_retr_st * st)
+cert_callback (gnutls_session_t session,
+               const gnutls_datum_t * req_ca_rdn, int nreqs,
+               const gnutls_pk_algorithm_t * sign_algos,
+               int sign_algos_length, gnutls_retr2_st * st)
 {
   int result;
   gnutls_x509_dn_t dn;
@@ -123,7 +126,8 @@ cert_callback (gnutls_session session,
       return -1;
     }
 
-  success ("client: invoked to provide client cert.\n");
+  if (debug)
+    success ("client: invoked to provide client cert.\n");
 
   result = gnutls_x509_dn_init (&dn);
   if (result < 0)
@@ -137,29 +141,32 @@ cert_callback (gnutls_session session,
     {
       gnutls_x509_ava_st val;
 
-      success ("client: imported DN.\n");
+      if (debug)
+        success ("client: imported DN.\n");
 
       if (gnutls_x509_dn_get_rdn_ava (dn, 0, 0, &val) == 0)
-	{
-	  success ("client: got RDN 0.\n");
+        {
+          if (debug)
+            success ("client: got RDN 0.\n");
 
-	  if (val.value.size == strlen (EXPECT_RDN0)
-	      && strncmp (val.value.data, EXPECT_RDN0, val.value.size) == 0)
-	    {
-	      success ("client: RND 0 correct.\n");
-	    }
-	  else
-	    {
-	      fail ("client: RND 0 bad: %.*s\n",
-		    val.value.size, val.value.data);
-	      return -1;
-	    }
-	}
+          if (val.value.size == strlen (EXPECT_RDN0)
+              && strncmp (val.value.data, EXPECT_RDN0, val.value.size) == 0)
+            {
+              if (debug)
+                success ("client: RND 0 correct.\n");
+            }
+          else
+            {
+              fail ("client: RND 0 bad: %.*s\n",
+                    val.value.size, val.value.data);
+              return -1;
+            }
+        }
       else
-	{
-	  fail ("client: could not retrieve RDN 0.\n");
-	  return -1;
-	}
+        {
+          fail ("client: could not retrieve RDN 0.\n");
+          return -1;
+        }
 
       gnutls_x509_dn_deinit (dn);
     }
@@ -192,7 +199,7 @@ client (void)
    */
   gnutls_certificate_set_x509_trust_mem (xcred, &ca, GNUTLS_X509_FMT_PEM);
 
-  gnutls_certificate_client_set_retrieve_function (xcred, cert_callback);
+  gnutls_certificate_set_retrieve_function (xcred, cert_callback);
 
   /* Initialize TLS session
    */
@@ -223,21 +230,26 @@ client (void)
     }
   else
     {
-      success ("client: Handshake was completed\n");
+      if (debug)
+        success ("client: Handshake was completed\n");
     }
 
-  success ("client: TLS version is: %s\n",
-	   gnutls_protocol_get_name (gnutls_protocol_get_version (session)));
+  if (debug)
+    success ("client: TLS version is: %s\n",
+             gnutls_protocol_get_name (gnutls_protocol_get_version
+                                       (session)));
 
   /* see the Getting peer's information example */
-  print_info (session);
+  if (debug)
+    print_info (session);
 
   gnutls_record_send (session, MSG, strlen (MSG));
 
   ret = gnutls_record_recv (session, buffer, MAX_BUF);
   if (ret == 0)
     {
-      success ("client: Peer has closed the TLS connection\n");
+      if (debug)
+        success ("client: Peer has closed the TLS connection\n");
       goto end;
     }
   else if (ret < 0)
@@ -246,12 +258,15 @@ client (void)
       goto end;
     }
 
-  printf ("- Received %d bytes: ", ret);
-  for (ii = 0; ii < ret; ii++)
+  if (debug)
     {
-      fputc (buffer[ii], stdout);
+      printf ("- Received %d bytes: ", ret);
+      for (ii = 0; ii < ret; ii++)
+        {
+          fputc (buffer[ii], stdout);
+        }
+      fputs ("\n", stdout);
     }
-  fputs ("\n", stdout);
 
   gnutls_bye (session, GNUTLS_SHUT_RDWR);
 
@@ -271,7 +286,7 @@ end:
 
 #define SA struct sockaddr
 #define MAX_BUF 1024
-#define PORT 5556		/* listen to 5556 port */
+#define PORT 5556               /* listen to 5556 port */
 #define DH_BITS 1024
 
 /* These are global */
@@ -305,7 +320,7 @@ static gnutls_dh_params_t dh_params;
 static int
 generate_dh_params (void)
 {
-  const gnutls_datum_t p3 = { (char*) pkcs3, strlen (pkcs3) };
+  const gnutls_datum_t p3 = { (char *) pkcs3, strlen (pkcs3) };
   /* Generate Diffie-Hellman parameters - for use with DHE
    * kx algorithms. These should be discarded and regenerated
    * once a day, once a week or once a month. Depending on the
@@ -383,9 +398,10 @@ server_start (void)
   memset (&sa_serv, '\0', sizeof (sa_serv));
   sa_serv.sin_family = AF_INET;
   sa_serv.sin_addr.s_addr = INADDR_ANY;
-  sa_serv.sin_port = htons (PORT);	/* Server Port number */
+  sa_serv.sin_port = htons (PORT);      /* Server Port number */
 
-  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval, sizeof (int));
+  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval,
+              sizeof (int));
 
   err = bind (listen_sd, (SA *) & sa_serv, sizeof (sa_serv));
   if (err == -1)
@@ -403,7 +419,8 @@ server_start (void)
       return;
     }
 
-  success ("server: ready. Listening to port '%d'.\n", PORT);
+  if (debug)
+    success ("server: ready. Listening to port '%d'.\n", PORT);
 }
 
 static void
@@ -421,9 +438,10 @@ server (void)
   gnutls_certificate_set_x509_trust_mem (x509_cred, &ca, GNUTLS_X509_FMT_PEM);
 
   gnutls_certificate_set_x509_key_mem (x509_cred, &server_cert, &server_key,
-				       GNUTLS_X509_FMT_PEM);
+                                       GNUTLS_X509_FMT_PEM);
 
-  success ("Launched, generating DH parameters...\n");
+  if (debug)
+    success ("Launched, generating DH parameters...\n");
 
   generate_dh_params ();
 
@@ -435,9 +453,10 @@ server (void)
 
   sd = accept (listen_sd, (SA *) & sa_cli, &client_len);
 
-  success ("server: connection from %s, port %d\n",
-	   inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
-		      sizeof (topbuf)), ntohs (sa_cli.sin_port));
+  if (debug)
+    success ("server: connection from %s, port %d\n",
+             inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
+                        sizeof (topbuf)), ntohs (sa_cli.sin_port));
 
   gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
   ret = gnutls_handshake (session);
@@ -448,13 +467,17 @@ server (void)
       fail ("server: Handshake has failed (%s)\n\n", gnutls_strerror (ret));
       return;
     }
-  success ("server: Handshake was completed\n");
+  if (debug)
+    success ("server: Handshake was completed\n");
 
-  success ("server: TLS version is: %s\n",
-	   gnutls_protocol_get_name (gnutls_protocol_get_version (session)));
+  if (debug)
+    success ("server: TLS version is: %s\n",
+             gnutls_protocol_get_name (gnutls_protocol_get_version
+                                       (session)));
 
   /* see the Getting peer's information example */
-  print_info (session);
+  if (debug)
+    print_info (session);
 
   i = 0;
   for (;;)
@@ -463,21 +486,22 @@ server (void)
       ret = gnutls_record_recv (session, buffer, MAX_BUF);
 
       if (ret == 0)
-	{
-	  success ("server: Peer has closed the GNUTLS connection\n");
-	  break;
-	}
+        {
+          if (debug)
+            success ("server: Peer has closed the GnuTLS connection\n");
+          break;
+        }
       else if (ret < 0)
-	{
-	  fail ("server: Received corrupted data(%d). Closing...\n", ret);
-	  break;
-	}
+        {
+          fail ("server: Received corrupted data(%d). Closing...\n", ret);
+          break;
+        }
       else if (ret > 0)
-	{
-	  /* echo data back to the client
-	   */
-	  gnutls_record_send (session, buffer, strlen (buffer));
-	}
+        {
+          /* echo data back to the client
+           */
+          gnutls_record_send (session, buffer, strlen (buffer));
+        }
     }
   /* do not wait for the peer to close the connection.
    */
@@ -494,7 +518,8 @@ server (void)
 
   gnutls_global_deinit ();
 
-  success ("server: finished\n");
+  if (debug)
+    success ("server: finished\n");
 }
 
 
@@ -522,18 +547,18 @@ doit (void)
 
 #if defined WIFEXITED && defined WEXITSTATUS
       if (WIFEXITED (status) && WEXITSTATUS (status))
-	{
-	  fail ("server: client failed with exit status %d\n",
-		WEXITSTATUS (status));
-	}
+        {
+          fail ("server: client failed with exit status %d\n",
+                WEXITSTATUS (status));
+        }
 #endif
 
 #if defined WIFSIGNALED && defined WTERMSIG
       if (WIFSIGNALED (status))
-	{
-	  fail ("server: client failed with fatal signal %d\n",
-		WTERMSIG (status));
-	}
+        {
+          fail ("server: client failed with fatal signal %d\n",
+                WTERMSIG (status));
+        }
 #endif
 
     }

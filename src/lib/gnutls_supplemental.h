@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2007 Free Software Foundation
+ * Copyright (C) 2007, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -25,7 +25,6 @@
 #include <gnutls_int.h>
 
 int _gnutls_parse_supplemental (gnutls_session_t session,
-				const uint8_t *data,
-				int data_size);
+                                const uint8_t * data, int data_size);
 int _gnutls_gen_supplemental (gnutls_session_t session,
-			      gnutls_buffer *buf);
+                              gnutls_buffer_st * buf);

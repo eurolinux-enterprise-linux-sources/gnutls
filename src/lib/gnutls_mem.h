@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,9 +24,9 @@
  */
 
 #ifndef GNUTLS_MEM_H
-# define GNUTLS_MEM_H
+#define GNUTLS_MEM_H
 
-typedef void svoid;		/* for functions that allocate using gnutls_secure_malloc */
+typedef void svoid;             /* for functions that allocate using gnutls_secure_malloc */
 
 extern int (*_gnutls_is_secure_memory) (const void *);
 

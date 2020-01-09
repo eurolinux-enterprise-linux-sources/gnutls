@@ -5,9 +5,9 @@ void cfg_init (void);
 int template_parse (const char *template);
 
 void read_crt_set (gnutls_x509_crt_t crt, const char *input_str,
-		   const char *oid);
+                   const char *oid);
 void read_crq_set (gnutls_x509_crq_t crq, const char *input_str,
-		   const char *oid);
+                   const char *oid);
 int read_int (const char *input_str);
 const char *read_str (const char *input_str);
 int read_yesno (const char *input_str);
@@ -31,7 +31,7 @@ int get_days (void);
 int get_ca_status (void);
 int get_crl_number (void);
 int get_path_len (void);
-int get_crq_extensions_status(void);
+int get_crq_extensions_status (void);
 const char *get_pkcs12_key_name (void);
 int get_tls_client_status (void);
 int get_tls_server_status (void);
@@ -43,10 +43,10 @@ int get_crl_sign_status (void);
 int get_cert_sign_status (void);
 int get_encrypt_status (int server);
 int get_sign_status (int server);
-void get_ip_addr_set (int type, void* crt);
-void get_dns_name_set (int type, void* crt);
-void get_email_set (int type, void* crt);
-
+void get_ip_addr_set (int type, void *crt);
+void get_dns_name_set (int type, void *crt);
+void get_email_set (int type, void *crt);
+int get_ipsec_ike_status (void);
 
 void get_cn_crq_set (gnutls_x509_crq_t crq);
 void get_uid_crq_set (gnutls_x509_crq_t crq);
@@ -56,4 +56,4 @@ void get_unit_crq_set (gnutls_x509_crq_t crq);
 void get_organization_crq_set (gnutls_x509_crq_t crq);
 void get_country_crq_set (gnutls_x509_crq_t crq);
 void get_oid_crq_set (gnutls_x509_crq_t crq);
-const char *get_proxy_policy (char **policy, size_t *policylen);
+const char *get_proxy_policy (char **policy, size_t * policylen);

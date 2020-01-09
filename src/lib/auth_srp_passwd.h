@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -36,9 +37,9 @@ typedef struct
 
 /* this is locally allocated. It should be freed using the provided function */
 int _gnutls_srp_pwd_read_entry (gnutls_session_t state, char *username,
-				SRP_PWD_ENTRY **);
+                                SRP_PWD_ENTRY **);
 void _gnutls_srp_entry_free (SRP_PWD_ENTRY * entry);
 int _gnutls_sbase64_decode (uint8_t * data, size_t data_size,
-			    uint8_t ** result);
+                            uint8_t ** result);
 
 #endif /* ENABLE_SRP */

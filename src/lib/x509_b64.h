@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,13 +24,13 @@
  */
 
 int _gnutls_base64_encode (const uint8_t * data, size_t data_size,
-			   uint8_t ** result);
+                           uint8_t ** result);
 int _gnutls_fbase64_encode (const char *msg, const uint8_t * data,
-			    int data_size, uint8_t ** result);
+                            int data_size, uint8_t ** result);
 int _gnutls_base64_decode (const uint8_t * data, size_t data_size,
-			   uint8_t ** result);
+                           uint8_t ** result);
 int _gnutls_fbase64_decode (const char *header, const uint8_t * data,
-			    size_t data_size, uint8_t ** result);
+                            size_t data_size, uint8_t ** result);
 
 #define B64SIZE( data_size) ((data_size%3==0)?((data_size*4)/3):(4+((data_size/3)*4)))
 

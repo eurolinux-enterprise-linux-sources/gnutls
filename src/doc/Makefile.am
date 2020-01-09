@@ -1,9 +1,10 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+# 2009, 2010 Free Software Foundation, Inc.
 #
 # Author: Nikos Mavrogiannopoulos
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -19,9 +20,8 @@
 # along with this file; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-EXTRA_DIST = TODO README.gaa certtool.cfg gnutls.ps gnutls.pdf	\
-	gnutls.html extract-guile-c-doc.scm doxygen/Doxyfile.in	\
-	doxygen/Doxyfile.orig texinfo.css
+EXTRA_DIST = TODO certtool.cfg gnutls.ps gnutls.pdf gnutls.html	\
+	doxygen/Doxyfile.in doxygen/Doxyfile.orig texinfo.css
 
 SUBDIRS = examples cyclo scripts manpages credentials
 if ENABLE_GTK_DOC
@@ -29,34 +29,37 @@ SUBDIRS += reference
 endif
 
 info_TEXINFOS = gnutls.texi
-gnutls_TEXINFOS = gnutls.texi						\
-	fdl-1.3.texi lgpl-2.1.texi gpl-3.0.texi				\
-	gnutls-api.texi gnutls-extra-api.texi ia-api.texi		\
-	x509-api.texi pgp-api.texi					\
-	examples/ex-client1.c examples/ex-client2.c			\
+gnutls_TEXINFOS = gnutls.texi fdl-1.3.texi lgpl-2.1.texi gpl-3.0.texi	\
+	cha-auth.texi cha-bib.texi cha-cert-auth.texi			\
+	cha-ciphersuites.texi cha-copying.texi cha-functions.texi	\
+	cha-gtls-app.texi cha-internals.texi cha-intro-tls.texi		\
+	cha-library.texi cha-preface.texi cha-programs.texi		\
+	cha-tls-app.texi
+
+# Examples.
+gnutls_TEXINFOS += examples/ex-client1.c examples/ex-client2.c		\
 	examples/ex-session-info.c examples/ex-verify.c			\
 	examples/ex-cert-select.c examples/ex-client-resume.c		\
-	examples/ex-client-srp.c examples/ex-client-tlsia.c		\
-	examples/ex-rfc2818.c examples/ex-serv1.c			\
-	examples/ex-serv-export.c examples/ex-serv-anon.c		\
+	examples/ex-client-srp.c examples/ex-rfc2818.c			\
+	examples/ex-serv1.c examples/ex-serv-anon.c			\
 	examples/ex-serv-pgp.c examples/ex-serv-srp.c			\
 	examples/ex-alert.c examples/ex-x509-info.c examples/ex-crq.c	\
-	examples/ex-pkcs12.c guile.texi $(guile_texi)
-
-# Generated texinfos.
-gnutls_TEXINFOS += error_codes.texi algorithms.texi
-MAINTAINERCLEANFILES = error_codes.texi algorithms.texi
+	examples/ex-pkcs12.c
 
 # Images.  Make sure there are eps + png + pdf of each, plus the source dia.
 gnutls_TEXINFOS += gnutls-internals.dia gnutls-internals.eps		\
                    gnutls-internals.png gnutls-internals.pdf
 gnutls_TEXINFOS += gnutls-layers.dia gnutls-layers.eps			\
                    gnutls-layers.png gnutls-layers.pdf
+gnutls_TEXINFOS += gnutls-crypto-layers.dia gnutls-crypto-layers.eps	\
+                   gnutls-crypto-layers.png gnutls-crypto-layers.pdf
 gnutls_TEXINFOS += gnutls-pgp.dia gnutls-pgp.eps gnutls-pgp.png		\
                    gnutls-pgp.pdf
 gnutls_TEXINFOS += gnutls-x509.dia gnutls-x509.eps gnutls-x509.png	\
                    gnutls-x509.pdf
 gnutls_TEXINFOS += gnutls-logo.eps gnutls-logo.png gnutls-logo.pdf
+gnutls_TEXINFOS += pkcs11-vision.dia pkcs11-vision.eps	\
+                   pkcs11-vision.png pkcs11-vision.pdf
 
 # Images.  Make sure there are eps + png + pdf of each, plus the source dia.
 gnutls_TEXINFOS += gnutls-certificate-user-use-case.dia	\
@@ -86,44 +89,84 @@ images_DATA = gnutls-certificate-user-use-case.png		\
 	gnutls-layers.png gnutls-mod_auth_st.png gnutls-pgp.png	\
 	gnutls-client-server-use-case.png			\
 	gnutls-handshake-sequence.png gnutls-internals.png	\
-	gnutls-logo.png gnutls-objects.png gnutls-x509.png
+	gnutls-logo.png gnutls-objects.png gnutls-x509.png	\
+	pkcs11-vision.png
 
 AM_MAKEINFOFLAGS = -I $(top_srcdir)/doc
 TEXI2DVI = texi2dvi $(AM_MAKEINFOFLAGS)
 AM_MAKEINFOHTMLFLAGS = $(AM_MAKEINFOFLAGS) \
 	--no-split --css-include=$(srcdir)/texinfo.css
 
-../lib/gnutls-api.texi:
-	cd ../lib && make gnutls-api.texi
-
-../libextra/gnutls-extra-api.texi:
-	cd ../libextra && make gnutls-extra-api.texi
-
-../lib/x509/x509-api.texi:
-	cd ../lib/x509 && make x509-api.texi
-
-../lib/openpgp/pgp-api.texi:
-	cd ../lib/openpgp && make pgp-api.texi
-
-../libextra/ia-api.texi:
-	cd ../libextra && make ia-api.texi
-
-gnutls-api.texi: ../lib/gnutls-api.texi
-	-$(srcdir)/scripts/sort2.pl < ../lib/gnutls-api.texi > gnutls-api.texi
-
-gnutls-extra-api.texi: ../libextra/gnutls-extra-api.texi
-	-$(srcdir)/scripts/sort2.pl < ../libextra/gnutls-extra-api.texi > gnutls-extra-api.texi
-
-x509-api.texi: ../lib/x509/x509-api.texi
-	-$(srcdir)/scripts/sort2.pl < ../lib/x509/x509-api.texi > x509-api.texi
-
-pgp-api.texi: ../lib/openpgp/pgp-api.texi
-	-$(srcdir)/scripts/sort2.pl < ../lib/openpgp/pgp-api.texi > pgp-api.texi
-
-ia-api.texi: ../libextra/ia-api.texi
-	-$(srcdir)/scripts/sort2.pl < ../libextra/ia-api.texi > ia-api.texi
+MAINTAINERCLEANFILES =
 
 # Generated texinfos.
+
+gnutls_TEXINFOS += gnutls-api.texi extra-api.texi ia-api.texi	\
+	x509-api.texi pgp-api.texi
+MAINTAINERCLEANFILES += gnutls-api.texi extra-api.texi ia-api.texi	\
+	x509-api.texi pgp-api.texi
+
+gnutls-api.texi: $(srcdir)/../lib/*.c
+	echo "" > $@-tmp
+	for i in $^; do \
+		echo -n "Creating documentation for file $$i... " && \
+		$(srcdir)/scripts/gdoc -texinfo $$i >> $@-tmp && \
+		echo "ok"; \
+	done
+	$(srcdir)/scripts/sort2.pl < $@-tmp > $@-tmp2
+	rm -f $@-tmp
+	mv -f $@-tmp2 $@
+
+x509-api.texi: $(srcdir)/../lib/x509/*.c
+	echo "" > $@-tmp
+	for i in $^; do \
+		echo -n "Creating documentation for file $$i... " && \
+		$(srcdir)/scripts/gdoc -texinfo $$i >> $@-tmp && \
+		echo "ok"; \
+	done
+	$(srcdir)/scripts/sort2.pl < $@-tmp > $@-tmp2
+	rm -f $@-tmp
+	mv -f $@-tmp2 $@
+
+pgp-api.texi: $(srcdir)/../lib/openpgp/*.c
+	echo "" > $@-tmp
+	for i in $^; do \
+		echo -n "Creating documentation for file $$i... " && \
+		$(srcdir)/scripts/gdoc -texinfo $$i >> $@-tmp && \
+		echo "ok"; \
+	done
+	$(srcdir)/scripts/sort2.pl < $@-tmp > $@-tmp2
+	rm -f $@-tmp
+	mv -f $@-tmp2 $@
+
+extra-api.texi: $(srcdir)/../libextra/gnutls_extra.c
+	echo "" > $@-tmp
+	for i in $^; do \
+		echo -n "Creating documentation for file $$i... " && \
+		$(srcdir)/scripts/gdoc -texinfo $$i >> $@-tmp && \
+		echo "ok"; \
+	done
+	$(srcdir)/scripts/sort2.pl < $@-tmp > $@-tmp2
+	rm -f $@-tmp
+	mv -f $@-tmp2 $@
+
+ia-api.texi: $(srcdir)/../libextra/gnutls_ia.c
+	echo "" > $@-tmp
+	for i in $^; do \
+		echo -n "Creating documentation for file $$i... " && \
+		$(srcdir)/scripts/gdoc -texinfo $$i >> $@-tmp && \
+		echo "ok"; \
+	done
+	$(srcdir)/scripts/sort2.pl < $@-tmp > $@-tmp2
+	rm -f $@-tmp
+	mv -f $@-tmp2 $@
+
+# Generated texinfos.
+
+gnutls_TEXINFOS += error_codes.texi algorithms.texi
+MAINTAINERCLEANFILES += error_codes.texi algorithms.texi
+
+AM_CPPFLAGS = -I$(top_srcdir)/lib/includes -I$(top_builddir)/lib/includes
 
 noinst_PROGRAMS = errcodes printlist
 
@@ -133,28 +176,25 @@ errcodes_LDADD = ../lib/libgnutls.la ../gl/libgnu.la
 printlist_SOURCES = printlist.c
 printlist_LDADD = ../lib/libgnutls.la ../gl/libgnu.la
 
-AM_CPPFLAGS = -I$(top_srcdir)/lib/includes -I$(top_builddir)/lib/includes
-
 error_codes.texi: $(top_srcdir)/lib/gnutls_errors.c $(srcdir)/errcodes.c
 	make $(builddir)/errcodes
-	$(builddir)/errcodes > error_codes.texi-tmp && \
-		mv error_codes.texi-tmp error_codes.texi
+	$(builddir)/errcodes > $@-tmp
+	mv -f $@-tmp $@
 
 algorithms.texi: $(srcdir)/printlist.c
 	make $(builddir)/printlist
-	$(builddir)/printlist > algorithms.texi-tmp && \
-		mv algorithms.texi-tmp algorithms.texi
+	$(builddir)/printlist > $@-tmp
+	mv -f $@-tmp $@
+
+# Guile texinfos.
 
 guile_texi           = core.c.texi extra.c.texi
+gnutls_TEXINFOS      += guile.texi $(guile_texi)
 BUILT_SOURCES        = $(guile_texi)
 MAINTAINERCLEANFILES += $(guile_texi)
-EXTRA_DIST           += $(guile_texi)
+EXTRA_DIST           += $(guile_texi) extract-guile-c-doc.scm
 
 if HAVE_GUILE
-
-#
-# Guile documentation extraction from C code.
-#
 
 GUILE_FOR_BUILD =				\
   GUILE_AUTO_COMPILE=0				\

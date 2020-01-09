@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2007, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Timo Schulz, Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -32,7 +33,7 @@
 #include <gnutls_num.h>
 
 /**
- * gnutls_openpgp_crt_verify_ring - Verify all signatures in the key
+ * gnutls_openpgp_crt_verify_ring:
  * @key: the structure that holds the key.
  * @keyring: holds the keyring to check against
  * @flags: unused (should be 0)
@@ -57,10 +58,10 @@
  **/
 int
 gnutls_openpgp_crt_verify_ring (gnutls_openpgp_crt_t key,
-				gnutls_openpgp_keyring_t keyring,
-				unsigned int flags, unsigned int *verify)
+                                gnutls_openpgp_keyring_t keyring,
+                                unsigned int flags, unsigned int *verify)
 {
-  gnutls_openpgp_keyid_t id;
+  uint8_t id[GNUTLS_OPENPGP_KEYID_SIZE];
   cdk_error_t rc;
   int status;
 
@@ -100,15 +101,15 @@ gnutls_openpgp_crt_verify_ring (gnutls_openpgp_crt_t key,
     {
       rc = gnutls_openpgp_crt_get_key_id (key, id);
       if (rc < 0)
-	{
-	  gnutls_assert ();
-	  return rc;
-	}
+        {
+          gnutls_assert ();
+          return rc;
+        }
 
       rc = gnutls_openpgp_keyring_check_id (keyring, id, 0);
       /* If it exists in the keyring don't treat it as unknown. */
       if (rc == 0 && *verify & GNUTLS_CERT_SIGNER_NOT_FOUND)
-	*verify ^= GNUTLS_CERT_SIGNER_NOT_FOUND;
+        *verify ^= GNUTLS_CERT_SIGNER_NOT_FOUND;
     }
 
   return 0;
@@ -116,7 +117,7 @@ gnutls_openpgp_crt_verify_ring (gnutls_openpgp_crt_t key,
 
 
 /**
- * gnutls_openpgp_crt_verify_self - Verify the self signature on the key
+ * gnutls_openpgp_crt_verify_self:
  * @key: the structure that holds the key.
  * @flags: unused (should be 0)
  * @verify: will hold the key verification output.
@@ -131,10 +132,12 @@ gnutls_openpgp_crt_verify_ring (gnutls_openpgp_crt_t key,
  **/
 int
 gnutls_openpgp_crt_verify_self (gnutls_openpgp_crt_t key,
-				unsigned int flags, unsigned int *verify)
+                                unsigned int flags, unsigned int *verify)
 {
   int status;
   cdk_error_t rc;
+
+  *verify = 0;
 
   rc = cdk_pk_check_self_sig (key->knode, &status);
   if (rc || status != CDK_KEY_VALID)

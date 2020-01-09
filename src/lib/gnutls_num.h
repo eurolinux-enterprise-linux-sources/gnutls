@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,7 +24,7 @@
  */
 
 #ifndef GNUTLS_NUM_H
-# define GNUTLS_NUM_H
+#define GNUTLS_NUM_H
 
 #include <gnutls_int.h>
 
@@ -42,7 +43,7 @@ void _gnutls_write_uint16 (uint16_t num, opaque * data);
 uint32_t _gnutls_uint64touint32 (const uint64 *);
 
 int _gnutls_uint64pp (uint64 *);
-# define _gnutls_uint64zero(x) x.i[0] = x.i[1] = x.i[2] = x.i[3] = x.i[4] = x.i[5] = x.i[6] = x.i[7] = 0
-# define UINT64DATA(x) x.i
+#define _gnutls_uint64zero(x) x.i[0] = x.i[1] = x.i[2] = x.i[3] = x.i[4] = x.i[5] = x.i[6] = x.i[7] = 0
+#define UINT64DATA(x) (x.i)
 
 #endif /* GNUTLS_NUM_H */

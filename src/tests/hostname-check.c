@@ -1,34 +1,43 @@
 /*
- * Copyright (C) 2007 Free Software Foundation
+ * Copyright (C) 2007, 2009, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <string.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
+#ifdef ENABLE_OPENPGP
+#include <gnutls/openpgp.h>
+#endif
 
 #include "utils.h"
+
+/*
+  A self-test of the RFC 2818 hostname matching algorithm.  Used to
+  detect regressions of the bug reported in:
+  http://lists.gnupg.org/pipermail/gnutls-dev/2007-February/001385.html
+*/
 
 /* Certificate with no SAN nor CN. */
 char pem1[] =
@@ -271,69 +280,6 @@ char pem4[] =
   "FAMjWofnMxAyEViiu/HlWoiHu4AbtrsSGMsV1Tr8meRCWrpF\n"
   "-----END CERTIFICATE-----\n";
 
-/* Certificate with ipaddress CN but no SAN. */
-char pem5[] =
-  "X.509 Certificate Information:"
-  "        Version: 3\n"
-  "        Serial Number (hex): 00\n"
-  "        Issuer: CN=www.example.org\n"
-  "        Validity:\n"
-  "                Not Before: Fri Feb 16 13:44:29 UTC 2007\n"
-  "                Not After: Fri Mar 30 13:44:30 UTC 2007\n"
-  "        Subject: CN=www.example.org\n"
-  "        Subject Public Key Algorithm: RSA\n"
-  "                Modulus (bits 1024):\n"
-  "                        be:ec:98:7a:1d:6f:7e:6b:25:9e:e8:20:78:42:a0:64\n"
-  "                        05:66:43:99:6d:49:d5:18:ec:7d:b9:58:64:b2:80:a3\n"
-  "                        14:61:9d:0a:4f:be:2f:f0:2e:fc:d2:ab:5c:36:df:53\n"
-  "                        ec:43:c7:fc:de:91:bc:1e:01:a6:b7:6c:b2:07:10:2e\n"
-  "                        cb:61:47:75:ca:03:ce:23:6e:38:f1:34:27:1a:1a:cd\n"
-  "                        f7:96:f3:b3:f0:0d:67:7f:ca:77:84:3f:9c:29:f4:62\n"
-  "                        91:f6:12:5b:62:5a:cc:ba:ed:08:2e:32:44:26:ac:fd\n"
-  "                        23:ce:53:1b:bb:f2:87:fe:dc:78:93:7c:59:bf:a1:75\n"
-  "                Exponent:\n"
-  "                        01:00:01\n"
-  "        Extensions:\n"
-  "                Basic Constraints (critical):\n"
-  "                        Certificate Authority (CA): TRUE\n"
-  "                Subject Alternative Name (not critical):\n"
-  "                        IPAddress: 1.2.3.4\n"
-  "                Key Purpose (not critical):\n"
-  "                        TLS WWW Server.\n"
-  "                Subject Key Identifier (not critical):\n"
-  "                        e93c1cfbad926ee606a4562ca2e1c05327c8f295\n"
-  "        Signature Algorithm: RSA-SHA\n"
-  "        Signature:\n"
-  "                66:b1:32:9f:6e:06:d7:da:28:bf:3a:d7:56:d5:b6:fe\n"
-  "                78:40:f0:48:92:3a:19:8a:1c:37:ad:59:6f:bc:af:f2\n"
-  "                f0:89:81:33:33:01:a8:e4:1a:c1:31:a7:3c:6d:4a:9f\n"
-  "                a5:86:6d:22:6e:5b:8b:69:65:83:28:b5:b8:68:72:c5\n"
-  "                2b:af:99:89:dd:48:ad:fc:f6:90:55:c3:a5:41:f3:d7\n"
-  "                bc:a2:57:56:25:f1:d1:12:fb:08:70:58:d5:45:57:86\n"
-  "                1b:aa:f2:d4:63:62:c6:fd:b3:04:64:60:9c:77:c3:4b\n"
-  "                d1:e4:c7:77:00:17:79:d2:2b:1f:14:ad:e9:34:c8:da\n"
-  "Other Information:\n"
-  "        MD5 fingerprint:\n"
-  "                cdffe1ac9bf42a4f04a15298f9d18bf6\n"
-  "        SHA-1 fingerprint:\n"
-  "                4fa47b29e928499142c88c598ea175b9453957f7\n"
-  "        Public Key Id:\n"
-  "                e93c1cfbad926ee606a4562ca2e1c05327c8f295\n"
-  "\n"
-  "-----BEGIN CERTIFICATE-----\n"
-  "MIIB/jCCAWmgAwIBAgIBADALBgkqhkiG9w0BAQUwGjEYMBYGA1UEAxMPd3d3LmV4\n"
-  "YW1wbGUub3JnMB4XDTA3MDIxNjEzNDQyOVoXDTA3MDMzMDEzNDQzMFowGjEYMBYG\n"
-  "A1UEAxMPd3d3LmV4YW1wbGUub3JnMIGcMAsGCSqGSIb3DQEBAQOBjAAwgYgCgYC+\n"
-  "7Jh6HW9+ayWe6CB4QqBkBWZDmW1J1RjsfblYZLKAoxRhnQpPvi/wLvzSq1w231Ps\n"
-  "Q8f83pG8HgGmt2yyBxAuy2FHdcoDziNuOPE0JxoazfeW87PwDWd/yneEP5wp9GKR\n"
-  "9hJbYlrMuu0ILjJEJqz9I85TG7vyh/7ceJN8Wb+hdQIDAQABo1swWTAPBgNVHRMB\n"
-  "Af8EBTADAQH/MBIGA1UdEQQLMAmHBzEuMi4zLjQwEwYDVR0lBAwwCgYIKwYBBQUH\n"
-  "AwEwHQYDVR0OBBYEFOk8HPutkm7mBqRWLKLhwFMnyPKVMAsGCSqGSIb3DQEBBQOB\n"
-  "gQBmsTKfbgbX2ii/OtdW1bb+eEDwSJI6GYocN61Zb7yv8vCJgTMzAajkGsExpzxt\n"
-  "Sp+lhm0ibluLaWWDKLW4aHLFK6+Zid1Irfz2kFXDpUHz17yiV1Yl8dES+whwWNVF\n"
-  "V4YbqvLUY2LG/bMEZGCcd8NL0eTHdwAXedIrHxSt6TTI2g==\n"
-  "-----END CERTIFICATE-----\n";
-
 /* Certificate with multiple wildcards SAN but no CN. */
 char pem6[] =
   "X.509 Certificate Information:\n"
@@ -478,11 +424,195 @@ char pem8[] =
   "WJg09Z7H6I70RPvAYGsK9t9qJ/4TPoYTGYQgsTbVpkv13O54O6jzemd8Zws/xMH5\n"
   "7/q6C7P5OUmGOtfVe7UVDY0taQM=\n" "-----END CERTIFICATE-----\n";
 
+/* Certificate with SAN and CN but for different names. */
+char pem9[] =
+  "X.509 Certificate Information:\n"
+  "	Version: 3\n"
+  "	Serial Number (hex): 4a827d5c\n"
+  "	Issuer: O=GnuTLS hostname check test CA,CN=foo.example.org\n"
+  "	Validity:\n"
+  "		Not Before: Wed Aug 12 08:29:17 UTC 2009\n"
+  "		Not After: Thu Aug 13 08:29:23 UTC 2009\n"
+  "	Subject: O=GnuTLS hostname check test CA,CN=foo.example.org\n"
+  "	Subject Public Key Algorithm: RSA\n"
+  "		Modulus (bits 1024):\n"
+  "			bb:66:43:f5:f2:c5:d7:b6:8c:cc:c5:df:f5:88:3b:b1\n"
+  "			c9:4b:6a:0e:a1:ad:20:50:40:08:80:a1:4f:5c:a3:d0\n"
+  "			f8:6c:cf:e6:3c:f7:ec:04:76:13:17:8b:64:89:22:5b\n"
+  "			c0:dd:53:7c:3b:ed:7c:04:bb:80:b9:28:be:8e:9b:c6\n"
+  "			8e:a0:a5:12:cb:f5:57:1e:a2:e7:bb:b7:33:49:9f:e3\n"
+  "			bb:4a:ae:6a:4d:68:ff:c9:11:e2:32:8d:ce:3d:80:0b\n"
+  "			8d:75:ef:d8:00:81:8f:28:04:03:a0:22:8d:61:04:07\n"
+  "			fa:b6:37:7d:21:07:49:d2:09:61:69:98:90:a3:58:a9\n"
+  "		Exponent (bits 24):\n"
+  "			01:00:01\n"
+  "	Extensions:\n"
+  "		Basic Constraints (critical):\n"
+  "			Certificate Authority (CA): TRUE\n"
+  "		Subject Alternative Name (not critical):\n"
+  "			DNSname: bar.example.org\n"
+  "		Key Purpose (not critical):\n"
+  "			TLS WWW Server.\n"
+  "		Subject Key Identifier (not critical):\n"
+  "			4cb90a9bfa1d34e37edecbd20715fea1dacb6891\n"
+  "	Signature Algorithm: RSA-SHA\n"
+  "	Signature:\n"
+  "		a2:1f:d2:90:5f:c9:1c:6f:92:1d:c5:0b:ac:b0:17:23\n"
+  "		c5:67:46:94:6f:0f:62:7d:66:4c:28:ff:b7:10:73:60\n"
+  "		ae:0e:a2:47:82:83:bb:89:0d:f1:16:5e:f9:5b:35:4b\n"
+  "		ce:ee:5e:d0:ad:b5:8b:cc:37:b3:ac:4d:1b:58:c2:4f\n"
+  "		1c:7f:c6:ac:3d:25:18:67:37:f0:27:11:9b:2c:20:b6\n"
+  "		78:24:21:a6:77:44:e7:1a:e5:f6:bf:45:84:32:81:67\n"
+  "		af:8d:96:26:f7:39:31:6b:63:c5:15:9d:e0:a0:9a:1e\n"
+  "		96:12:cb:ad:85:cb:a7:d4:86:ac:d8:f5:e9:a4:2b:20\n"
+  "Other Information:\n"
+  "	MD5 fingerprint:\n"
+  "		f27b18092c7497f206e70f504eee0f8e\n"
+  "	SHA-1 fingerprint:\n"
+  "		bebdac9d0dd54e8f044642e0f065fae5d75ca6e5\n"
+  "	Public Key Id:\n"
+  "		4cb90a9bfa1d34e37edecbd20715fea1dacb6891\n"
+  "\n"
+  "-----BEGIN CERTIFICATE-----\n"
+  "MIICWTCCAcSgAwIBAgIESoJ9XDALBgkqhkiG9w0BAQUwQjEmMCQGA1UEChMdR251\n"
+  "VExTIGhvc3RuYW1lIGNoZWNrIHRlc3QgQ0ExGDAWBgNVBAMTD2Zvby5leGFtcGxl\n"
+  "Lm9yZzAeFw0wOTA4MTIwODI5MTdaFw0wOTA4MTMwODI5MjNaMEIxJjAkBgNVBAoT\n"
+  "HUdudVRMUyBob3N0bmFtZSBjaGVjayB0ZXN0IENBMRgwFgYDVQQDEw9mb28uZXhh\n"
+  "bXBsZS5vcmcwgZwwCwYJKoZIhvcNAQEBA4GMADCBiAKBgLtmQ/Xyxde2jMzF3/WI\n"
+  "O7HJS2oOoa0gUEAIgKFPXKPQ+GzP5jz37AR2ExeLZIkiW8DdU3w77XwEu4C5KL6O\n"
+  "m8aOoKUSy/VXHqLnu7czSZ/ju0quak1o/8kR4jKNzj2AC41179gAgY8oBAOgIo1h\n"
+  "BAf6tjd9IQdJ0glhaZiQo1ipAgMBAAGjYzBhMA8GA1UdEwEB/wQFMAMBAf8wGgYD\n"
+  "VR0RBBMwEYIPYmFyLmV4YW1wbGUub3JnMBMGA1UdJQQMMAoGCCsGAQUFBwMBMB0G\n"
+  "A1UdDgQWBBRMuQqb+h00437ey9IHFf6h2stokTALBgkqhkiG9w0BAQUDgYEAoh/S\n"
+  "kF/JHG+SHcULrLAXI8VnRpRvD2J9Zkwo/7cQc2CuDqJHgoO7iQ3xFl75WzVLzu5e\n"
+  "0K21i8w3s6xNG1jCTxx/xqw9JRhnN/AnEZssILZ4JCGmd0TnGuX2v0WEMoFnr42W\n"
+  "Jvc5MWtjxRWd4KCaHpYSy62Fy6fUhqzY9emkKyA=\n" "-----END CERTIFICATE-----\n";
+
+/* Certificate with SAN and CN that match iff you truncate the SAN to
+   the embedded NUL.
+   See <http://thread.gmane.org/gmane.network.gnutls.general/1735>. */
+char pem10[] =
+  "X.509 Certificate Information:\n"
+  "	Version: 3\n"
+  "	Serial Number (hex): 0b5d0a870d09\n"
+  "	Issuer: C=NN,O=Edel Curl Arctic Illudium Research Cloud,CN=Nothern Nowhere Trust Anchor\n"
+  "	Validity:\n"
+  "		Not Before: Tue Aug 04 22:07:33 UTC 2009\n"
+  "		Not After: Sat Oct 21 22:07:33 UTC 2017\n"
+  "	Subject: C=NN,O=Edel Curl Arctic Illudium Research Cloud,CN=localhost\n"
+  "	Subject Public Key Algorithm: RSA\n"
+  "		Modulus (bits 1024):\n"
+  "			be:67:3b:b4:ea:c0:85:b4:c3:56:c1:a4:96:23:36:f5\n"
+  "			c6:77:aa:ad:e5:c1:dd:ce:c1:9a:97:07:dd:16:90:eb\n"
+  "			f0:38:b5:95:6b:a6:0f:b9:73:4e:7d:82:57:ab:5f:b5\n"
+  "			ba:5c:a0:48:8c:82:77:fd:67:d8:53:44:61:86:a5:06\n"
+  "			19:bf:73:51:68:2e:1a:0a:c5:05:39:ca:3d:ca:83:ed\n"
+  "			07:fe:ae:b7:73:1d:60:dd:ab:9e:0e:7e:02:f3:68:42\n"
+  "			93:27:c8:5f:c5:fa:cb:a9:84:06:2f:f3:66:bd:de:7d\n"
+  "			29:82:57:47:e4:a9:df:bf:8b:bc:c0:46:33:5a:7b:87\n"
+  "		Exponent (bits 24):\n"
+  "			01:00:01\n"
+  "	Extensions:\n"
+  "		Subject Alternative Name (not critical):\n"
+  "warning: SAN contains an embedded NUL, replacing with '!'\n"
+  "			DNSname: localhost!h\n"
+  "		Key Usage (not critical):\n"
+  "			Key encipherment.\n"
+  "		Key Purpose (not critical):\n"
+  "			TLS WWW Server.\n"
+  "		Subject Key Identifier (not critical):\n"
+  "			0c37a3db0f73b3388a69d36eb3a7d6d8774eda67\n"
+  "		Authority Key Identifier (not critical):\n"
+  "			126b24d24a68b7a1b01ccdbfd64ccc405b7fe040\n"
+  "		Basic Constraints (critical):\n"
+  "			Certificate Authority (CA): FALSE\n"
+  "	Signature Algorithm: RSA-SHA\n"
+  "	Signature:\n"
+  "		88:a0:17:77:77:bf:c1:8a:18:4e:a3:94:6e:45:18:31\n"
+  "		fa:2f:7b:1f:ee:95:20:d1:cd:40:df:ee:f0:45:2e:e9\n"
+  "		e6:cf:c8:77:bd:85:16:d7:9f:18:52:78:3f:ea:9c:86\n"
+  "		62:6e:db:90:b0:cd:f1:c1:6f:2d:87:4a:a0:be:b3:dc\n"
+  "		6d:e4:6b:d1:da:b9:10:25:7e:35:1f:1b:aa:a7:09:2f\n"
+  "		84:77:27:b0:48:a8:6d:54:57:38:35:22:34:03:0f:d4\n"
+  "		5d:ab:1c:72:15:b1:d9:89:56:10:12:fb:7d:0d:18:12\n"
+  "		a9:0a:38:dc:93:cf:69:ff:75:86:9e:e3:6b:eb:92:6c\n"
+  "		55:16:d5:65:8b:d7:9c:5e:4b:82:c8:92:6c:8b:e6:18\n"
+  "		a2:f8:8c:65:aa:b6:eb:23:ed:cb:99:db:fc:8b:8e:1d\n"
+  "		7a:39:c9:f5:7b:7f:58:7b:ed:01:6c:3c:40:ec:e3:a9\n"
+  "		5f:c4:3d:cb:81:17:03:6d:2d:d7:bd:00:5f:c4:79:f2\n"
+  "		fb:ab:c6:0e:a2:01:8b:a1:42:73:de:96:29:3e:bf:d7\n"
+  "		d9:51:a7:d4:98:07:7f:f0:f4:cd:00:a1:e1:ac:6c:05\n"
+  "		ac:ab:93:1b:b0:5c:2c:13:ad:ff:27:dc:80:99:34:66\n"
+  "		bd:e3:31:54:d5:b6:3f:ce:d4:08:a3:52:28:61:5e:bd\n"
+  "Other Information:\n"
+  "	MD5 fingerprint:\n"
+  "		0b4d6d944200cdd1639008b24dc0fe0a\n"
+  "	SHA-1 fingerprint:\n"
+  "		ce85660f5451b0cc12f525577f0eb9411a20c76b\n"
+  "	Public Key Id:\n"
+  "		a1d18c15e65c7c4935512eeea7ca5d3e6baad4e1\n"
+  "\n"
+  "-----BEGIN CERTIFICATE-----\n"
+  "MIIDQzCCAiugAwIBAgIGC10Khw0JMA0GCSqGSIb3DQEBBQUAMGcxCzAJBgNVBAYT\n"
+  "Ak5OMTEwLwYDVQQKDChFZGVsIEN1cmwgQXJjdGljIElsbHVkaXVtIFJlc2VhcmNo\n"
+  "IENsb3VkMSUwIwYDVQQDDBxOb3RoZXJuIE5vd2hlcmUgVHJ1c3QgQW5jaG9yMB4X\n"
+  "DTA5MDgwNDIyMDczM1oXDTE3MTAyMTIyMDczM1owVDELMAkGA1UEBhMCTk4xMTAv\n"
+  "BgNVBAoMKEVkZWwgQ3VybCBBcmN0aWMgSWxsdWRpdW0gUmVzZWFyY2ggQ2xvdWQx\n"
+  "EjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA\n"
+  "vmc7tOrAhbTDVsGkliM29cZ3qq3lwd3OwZqXB90WkOvwOLWVa6YPuXNOfYJXq1+1\n"
+  "ulygSIyCd/1n2FNEYYalBhm/c1FoLhoKxQU5yj3Kg+0H/q63cx1g3aueDn4C82hC\n"
+  "kyfIX8X6y6mEBi/zZr3efSmCV0fkqd+/i7zARjNae4cCAwEAAaOBizCBiDAWBgNV\n"
+  "HREEDzANggtsb2NhbGhvc3QAaDALBgNVHQ8EBAMCBSAwEwYDVR0lBAwwCgYIKwYB\n"
+  "BQUHAwEwHQYDVR0OBBYEFAw3o9sPc7M4imnTbrOn1th3TtpnMB8GA1UdIwQYMBaA\n"
+  "FBJrJNJKaLehsBzNv9ZMzEBbf+BAMAwGA1UdEwEB/wQCMAAwDQYJKoZIhvcNAQEF\n"
+  "BQADggEBAIigF3d3v8GKGE6jlG5FGDH6L3sf7pUg0c1A3+7wRS7p5s/Id72FFtef\n"
+  "GFJ4P+qchmJu25CwzfHBby2HSqC+s9xt5GvR2rkQJX41HxuqpwkvhHcnsEiobVRX\n"
+  "ODUiNAMP1F2rHHIVsdmJVhAS+30NGBKpCjjck89p/3WGnuNr65JsVRbVZYvXnF5L\n"
+  "gsiSbIvmGKL4jGWqtusj7cuZ2/yLjh16Ocn1e39Ye+0BbDxA7OOpX8Q9y4EXA20t\n"
+  "170AX8R58vurxg6iAYuhQnPelik+v9fZUafUmAd/8PTNAKHhrGwFrKuTG7BcLBOt\n"
+  "/yfcgJk0Zr3jMVTVtj/O1AijUihhXr0=\n" "-----END CERTIFICATE-----\n";
+
+#ifdef ENABLE_OPENPGP
+/* Check basic OpenPGP comparison too.
+   <http://thread.gmane.org/gmane.comp.encryption.gpg.gnutls.devel/3812>. */
+char pem11[] =
+  "-----BEGIN PGP PUBLIC KEY BLOCK-----\n"
+  "Version: GnuPG v1.4.6 (GNU/Linux)\n"
+  "\n"
+  "mQGiBEXInlgRBAD0teb6ohIlchkHcFlmmvtVW1KXexlDfXExf8T+fOz5z354GPOX\n"
+  "sDq98ztCEE3hnPEOFj4NT0X3nEtrvLkhmZqrDHSbuJACB4qxeHwEbGFx7OIDW8+u\n"
+  "4sKxpaza1GVf1NQ7VIaQiXaGHy8Esn9SW7oNhK6z5l4TIRlm3OBt3cxU3wCgjnnO\n"
+  "jpGJeeo0OnZzSH+xsNLJQEcEAOmUc+7N9OhpT/gqddIgzYRr/FD0Ad6HBfABol6Q\n"
+  "wWCapzIxggnZJ9i+lHujpcA8idtrBU/DGhkGtW95QaHwQ8d5SvetM7Wc/xoHEP3o\n"
+  "HGvSGoXtfqlofastcC7eso39EBD10cpIB+gUmhe1MpaXm7A6m+KJO+2CkqE1vMkc\n"
+  "tmKHBACzDRrWgkV+AtGWKl3ge9RkYHKxAPc0FBrpzDrvmvvNMaIme2u/+WP/xa4T\n"
+  "nTjgys+pfeplHVfCO/n6nKWrVepMPE0+ZeNWzY6CsfhL7VjSN99vm7qzNHswBiJS\n"
+  "gCSwJXRmQcJcS9hxqLciUyVEB32zPqX24QHnsyPYaSCzEBgOnLQPdGVzdC5nbnV0\n"
+  "bHMub3JniF8EExECACAFAkXInlgCGwMGCwkIBwMCBBUCCAMEFgIDAQIeAQIXgAAK\n"
+  "CRCuX60+XR0U2FcfAJ9eZDmhk5a9k4K/zu+a5xFwb9SWsgCXTkDnOIQmueZPHg5U\n"
+  "VgKnazckK7kCDQRFyJ51EAgAozi9Vk9R5I2AtRcqV4jLfpzh3eiBYSUt4U3ZLxff\n"
+  "LAyvGMUXA7OATGGhuKphNQLux17AGpRN4nugnIWMLE9akyrxXqg/165UFKbwwVsl\n"
+  "po7KzPvEXHmOYDgVEqS0sZNWmkJeMPdCVsD2wifPkocufUu2Ux8CmrvT1nEgoiVu\n"
+  "kUjplJOralQBdsPkIEk8LMVtF3IW2aHCEET0yrJ2Y2q0i/u1K4bxSUi5ESrN0UNa\n"
+  "WT7wtCegdwWlObwJEgwcu/8YtjMnfBI855gXVdJiRLdOJvkU+65I/jnPQG5QEIQM\n"
+  "weLty/+GHkXVN2xw5OGUIryIPUHi8+EDGOGqoxqNUMTzvwADBQf/bTPc0z3oHp+X\n"
+  "hsj3JP/AMCSQV87peKqFYEnRIubsN4Y4tTwVjEkRA3s5u+qTNvdypE1tvAEmdspa\n"
+  "CL/EKfMCEltcW3WUwqUIULQ2Z0t9tBuVfMEH1Z1jjb68IOVwTJYz+iBtmbq5Wxoq\n"
+  "lc5woOCDVL9qaKR6hOuAukTl6L3wQL+5zGBE4k5UfLf8UVJEa4ZTqsoMi3iyQAFO\n"
+  "/h7WzqUATH3aQSz9tpilJ760wadDhc+Sdt2a0W6cC+SBmJaU/ym9seTd26nyWHG+\n"
+  "03G+ynCHf5pBAXHhfCNhA0lMv5h3eJECNElcCh0sYGmo19jOzbnlRSGKRqrflOtO\n"
+  "YwhQXK9y/ohJBBgRAgAJBQJFyJ51AhsMAAoJEK5frT5dHRTYDDgAn2bLaS5n3Xy8\n"
+  "Z/V2Me1st/9pqPfZAJ4+9YBnyjCq/0vosIoZabi+s92m7g==\n"
+  "=NkXV\n" "-----END PGP PUBLIC KEY BLOCK-----\n";
+#endif
 
 void
 doit (void)
 {
-  gnutls_x509_crt_t cert;
+  gnutls_x509_crt_t x509;
+#ifdef ENABLE_OPENPGP
+  gnutls_openpgp_crt_t pgp;
+#endif
   gnutls_datum_t data;
   int ret;
 
@@ -490,219 +620,210 @@ doit (void)
   if (ret < 0)
     fail ("gnutls_global_init: %d\n", ret);
 
-  ret = gnutls_x509_crt_init (&cert);
+  ret = gnutls_x509_crt_init (&x509);
   if (ret < 0)
     fail ("gnutls_x509_crt_init: %d\n", ret);
 
-  success ("Testing pem1...\n");
+#ifdef ENABLE_OPENPGP
+  ret = gnutls_openpgp_crt_init (&pgp);
+  if (ret < 0)
+    fail ("gnutls_openpgp_crt_init: %d\n", ret);
+#endif
+
+  if (debug)
+    success ("Testing pem1...\n");
   data.data = pem1;
   data.size = strlen (pem1);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  success ("Testing pem2...\n");
+  if (debug)
+    success ("Testing pem2...\n");
   data.data = pem2;
   data.size = strlen (pem2);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "*.example.org");
+  ret = gnutls_x509_crt_check_hostname (x509, "*.example.org");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  success ("Testing pem3...\n");
+  if (debug)
+    success ("Testing pem3...\n");
   data.data = pem3;
   data.size = strlen (pem3);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "*.example.org");
+  ret = gnutls_x509_crt_check_hostname (x509, "*.example.org");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  success ("Testing pem4...\n");
+  if (debug)
+    success ("Testing pem4...\n");
   data.data = pem4;
   data.size = strlen (pem4);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "foo.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo.example.com");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo.example.com");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  success ("Testing pem5...\n");
-  data.data = pem5;
-  data.size = strlen (pem5);
-
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
-  if (ret < 0)
-    fail ("gnutls_x509_crt_import: %d\n", ret);
-
-  ret = gnutls_x509_crt_check_hostname (cert, "foo");
-  if (ret)
-    fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
-
-  ret = gnutls_x509_crt_check_hostname (cert, "1.2.3.4");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
-    fail ("Hostname incorrectly does not match (%d)\n", ret);
-
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.org");
-  if (ret)
-    fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
-
-  success ("Testing pem6...\n");
+  if (debug)
+    success ("Testing pem6...\n");
   data.data = pem6;
   data.size = strlen (pem6);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo.example.org");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo.example.org");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "bar.foo.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "bar.foo.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  success ("Testing pem7...\n");
+  if (debug)
+    success ("Testing pem7...\n");
   data.data = pem7;
   data.size = strlen (pem7);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foo.bar.example.org");
+  ret = gnutls_x509_crt_check_hostname (x509, "foo.bar.example.org");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foobar.bar.example.org");
+  ret = gnutls_x509_crt_check_hostname (x509, "foobar.bar.example.org");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foobar.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "foobar.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "foobazbar.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "foobazbar.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  success ("Testing pem8...\n");
+  if (debug)
+    success ("Testing pem8...\n");
   data.data = pem8;
   data.size = strlen (pem8);
 
-  ret = gnutls_x509_crt_import (cert, &data, GNUTLS_X509_FMT_PEM);
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
   if (ret < 0)
     fail ("gnutls_x509_crt_import: %d\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.org");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.org");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.com");
-  if (ret)
-    success ("Hostname correctly matches (%d)\n", ret);
-  else
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.com");
+  if (!ret)
     fail ("Hostname incorrectly does not match (%d)\n", ret);
 
-  ret = gnutls_x509_crt_check_hostname (cert, "www.example.foo.com");
+  ret = gnutls_x509_crt_check_hostname (x509, "www.example.foo.com");
   if (ret)
     fail ("Hostname incorrectly matches (%d)\n", ret);
-  else
-    success ("Hostname correctly does not match (%d)\n", ret);
 
-  gnutls_x509_crt_deinit (cert);
+  if (debug)
+    success ("Testing pem9...\n");
+  data.data = pem9;
+  data.size = strlen (pem9);
+
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
+  if (ret < 0)
+    fail ("gnutls_x509_crt_import: %d\n", ret);
+
+  ret = gnutls_x509_crt_check_hostname (x509, "foo.example.org");
+  if (ret)
+    fail ("Hostname incorrectly matches (%d)\n", ret);
+
+  ret = gnutls_x509_crt_check_hostname (x509, "bar.example.org");
+  if (!ret)
+    fail ("Hostname incorrectly does not match (%d)\n", ret);
+
+  if (debug)
+    success ("Testing pem10...\n");
+  data.data = pem10;
+  data.size = strlen (pem10);
+
+  ret = gnutls_x509_crt_import (x509, &data, GNUTLS_X509_FMT_PEM);
+  if (ret < 0)
+    fail ("gnutls_x509_crt_import: %d\n", ret);
+
+  ret = gnutls_x509_crt_check_hostname (x509, "localhost");
+  if (ret)
+    fail ("Hostname incorrectly matches (%d)\n", ret);
+
+#ifdef ENABLE_OPENPGP
+  if (debug)
+    success ("Testing pem11...\n");
+  data.data = pem11;
+  data.size = strlen (pem11);
+
+  ret = gnutls_openpgp_crt_import (pgp, &data, GNUTLS_OPENPGP_FMT_BASE64);
+  if (ret < 0)
+    fail ("gnutls_openpgp_crt_import: %d\n", ret);
+
+  ret = gnutls_openpgp_crt_check_hostname (pgp, "test.gnutls.org");
+  if (!ret)
+    fail ("Hostname incorrectly does not match (%d)\n", ret);
+
+  gnutls_openpgp_crt_deinit (pgp);
+#endif
+  gnutls_x509_crt_deinit (x509);
 
   gnutls_global_deinit ();
 }

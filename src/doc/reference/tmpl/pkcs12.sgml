@@ -9,14 +9,15 @@ pkcs12
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
 
 
 <!-- ##### STRUCT gnutls_pkcs12_int ##### -->
@@ -156,6 +157,7 @@ pkcs12
 @GNUTLS_BAG_PKCS8_KEY: 
 @GNUTLS_BAG_CERTIFICATE: 
 @GNUTLS_BAG_CRL: 
+@GNUTLS_BAG_SECRET: 
 @GNUTLS_BAG_ENCRYPTED: 
 @GNUTLS_BAG_UNKNOWN: 
 

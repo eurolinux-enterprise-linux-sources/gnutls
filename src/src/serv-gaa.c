@@ -124,24 +124,25 @@ static void __gaa_helpsingle(char short_name, char *name,
 
 void gaa_help(void)
 {
-	printf("GNU TLS test server\nUsage: gnutls-serv [options]\n\n\n");
+	printf("GnuTLS test server\nUsage: gnutls-serv [options]\n\n\n");
 	__gaa_helpsingle('d', "debug", "integer ", "Enable debugging");
-	__gaa_helpsingle('g', "generate", "", "Generate Diffie-Hellman Parameters.");
+	__gaa_helpsingle('g', "generate", "", "Generate Diffie-Hellman and RSA-EXPORT Parameters.");
 	__gaa_helpsingle('p', "port", "integer ", "The port to connect to.");
 	__gaa_helpsingle('q', "quiet", "", "Suppress some messages.");
 	__gaa_helpsingle(0, "nodb", "", "Does not use the resume database.");
+	__gaa_helpsingle(0, "noticket", "", "Does not issue session tickets.");
 	__gaa_helpsingle(0, "http", "", "Act as an HTTP Server.");
 	__gaa_helpsingle(0, "echo", "", "Act as an Echo Server.");
 	__gaa_helpsingle(0, "dhparams", "FILE ", "DH params file to use.");
 	__gaa_helpsingle(0, "x509fmtder", "", "Use DER format for certificates");
-	__gaa_helpsingle(0, "x509cafile", "FILE ", "Certificate file to use.");
+	__gaa_helpsingle(0, "x509cafile", "FILE ", "Certificate file or PKCS #11 URL to use.");
 	__gaa_helpsingle(0, "x509crlfile", "FILE ", "CRL file to use.");
 	__gaa_helpsingle(0, "pgpkeyring", "FILE ", "PGP Key ring file to use.");
 	__gaa_helpsingle(0, "pgpkeyfile", "FILE ", "PGP Key file to use.");
 	__gaa_helpsingle(0, "pgpcertfile", "FILE ", "PGP Public Key (certificate) file to use.");
 	__gaa_helpsingle(0, "pgpsubkey", "HEX|auto ", "PGP subkey to use.");
-	__gaa_helpsingle(0, "x509keyfile", "FILE ", "X.509 key file to use.");
-	__gaa_helpsingle(0, "x509certfile", "FILE ", "X.509 Certificate file to use.");
+	__gaa_helpsingle(0, "x509keyfile", "FILE ", "X.509 key file or PKCS #11 URL to use.");
+	__gaa_helpsingle(0, "x509certfile", "FILE ", "X.509 Certificate file or PKCS #11 URL to use.");
 	__gaa_helpsingle(0, "x509dsakeyfile", "FILE ", "Alternative X.509 key file to use.");
 	__gaa_helpsingle(0, "x509dsacertfile", "FILE ", "Alternative X.509 certificate file to use.");
 	__gaa_helpsingle('r', "require-cert", "", "Require a valid certificate.");
@@ -151,12 +152,6 @@ void gaa_help(void)
 	__gaa_helpsingle(0, "srppasswd", "FILE ", "SRP password file to use.");
 	__gaa_helpsingle(0, "srppasswdconf", "FILE ", "SRP password conf file to use.");
 	__gaa_helpsingle(0, "opaque-prf-input", "DATA ", "Use Opaque PRF Input DATA.");
-	__gaa_helpsingle(0, "ciphers", "cipher1 cipher2... ", "Ciphers to enable.");
-	__gaa_helpsingle(0, "protocols", "protocol1 protocol2... ", "Protocols to enable.");
-	__gaa_helpsingle(0, "comp", "comp1 comp2... ", "Compression methods to enable.");
-	__gaa_helpsingle(0, "macs", "mac1 mac2... ", "MACs to enable.");
-	__gaa_helpsingle(0, "kx", "kx1 kx2... ", "Key exchange methods to enable.");
-	__gaa_helpsingle(0, "ctypes", "certType1 certType2... ", "Certificate types to enable.");
 	__gaa_helpsingle(0, "priority", "PRIORITY STRING ", "Priorities string.");
 	__gaa_helpsingle('l', "list", "", "Print a list of the supported algorithms  and modes.");
 	__gaa_helpsingle('h', "help", "", "prints this help");
@@ -175,72 +170,50 @@ typedef struct _gaainfo gaainfo;
 
 struct _gaainfo
 {
-#line 112 "serv.gaa"
+#line 91 "serv.gaa"
 	char *priorities;
-#line 109 "serv.gaa"
-	char **ctype;
-#line 108 "serv.gaa"
-	int nctype;
-#line 105 "serv.gaa"
-	char **kx;
-#line 104 "serv.gaa"
-	int nkx;
-#line 101 "serv.gaa"
-	char **macs;
-#line 100 "serv.gaa"
-	int nmacs;
-#line 97 "serv.gaa"
-	char **comp;
-#line 96 "serv.gaa"
-	int ncomp;
-#line 93 "serv.gaa"
-	char **proto;
-#line 92 "serv.gaa"
-	int nproto;
-#line 89 "serv.gaa"
-	char **ciphers;
 #line 88 "serv.gaa"
-	int nciphers;
-#line 85 "serv.gaa"
 	char *opaque_prf_input;
-#line 82 "serv.gaa"
+#line 85 "serv.gaa"
 	char *srp_passwd_conf;
-#line 79 "serv.gaa"
+#line 82 "serv.gaa"
 	char *srp_passwd;
-#line 76 "serv.gaa"
+#line 79 "serv.gaa"
 	char *psk_hint;
-#line 73 "serv.gaa"
+#line 76 "serv.gaa"
 	char *psk_passwd;
-#line 70 "serv.gaa"
+#line 73 "serv.gaa"
 	int disable_client_cert;
-#line 67 "serv.gaa"
+#line 70 "serv.gaa"
 	int require_cert;
-#line 64 "serv.gaa"
+#line 67 "serv.gaa"
 	char *x509_dsacertfile;
-#line 61 "serv.gaa"
+#line 64 "serv.gaa"
 	char *x509_dsakeyfile;
-#line 58 "serv.gaa"
+#line 61 "serv.gaa"
 	char *x509_certfile;
-#line 55 "serv.gaa"
+#line 58 "serv.gaa"
 	char *x509_keyfile;
-#line 52 "serv.gaa"
+#line 55 "serv.gaa"
 	char *pgp_subkey;
-#line 49 "serv.gaa"
+#line 52 "serv.gaa"
 	char *pgp_certfile;
-#line 46 "serv.gaa"
+#line 49 "serv.gaa"
 	char *pgp_keyfile;
-#line 43 "serv.gaa"
+#line 46 "serv.gaa"
 	char *pgp_keyring;
-#line 40 "serv.gaa"
+#line 43 "serv.gaa"
 	char *x509_crlfile;
-#line 37 "serv.gaa"
+#line 40 "serv.gaa"
 	char *x509_cafile;
-#line 34 "serv.gaa"
+#line 37 "serv.gaa"
 	int fmtder;
-#line 31 "serv.gaa"
+#line 34 "serv.gaa"
 	char *dh_params_file;
-#line 27 "serv.gaa"
+#line 30 "serv.gaa"
 	int http;
+#line 27 "serv.gaa"
+	int noticket;
 #line 24 "serv.gaa"
 	int nodb;
 #line 21 "serv.gaa"
@@ -305,43 +278,38 @@ static int gaa_error = 0;
 #define GAA_MULTIPLE_OPTION     3
 
 #define GAA_REST                0
-#define GAA_NB_OPTION           36
+#define GAA_NB_OPTION           31
 #define GAAOPTID_version	1
 #define GAAOPTID_help	2
 #define GAAOPTID_list	3
 #define GAAOPTID_priority	4
-#define GAAOPTID_ctypes	5
-#define GAAOPTID_kx	6
-#define GAAOPTID_macs	7
-#define GAAOPTID_comp	8
-#define GAAOPTID_protocols	9
-#define GAAOPTID_ciphers	10
-#define GAAOPTID_opaque_prf_input	11
-#define GAAOPTID_srppasswdconf	12
-#define GAAOPTID_srppasswd	13
-#define GAAOPTID_pskhint	14
-#define GAAOPTID_pskpasswd	15
-#define GAAOPTID_disable_client_cert	16
-#define GAAOPTID_require_cert	17
-#define GAAOPTID_x509dsacertfile	18
-#define GAAOPTID_x509dsakeyfile	19
-#define GAAOPTID_x509certfile	20
-#define GAAOPTID_x509keyfile	21
-#define GAAOPTID_pgpsubkey	22
-#define GAAOPTID_pgpcertfile	23
-#define GAAOPTID_pgpkeyfile	24
-#define GAAOPTID_pgpkeyring	25
-#define GAAOPTID_x509crlfile	26
-#define GAAOPTID_x509cafile	27
-#define GAAOPTID_x509fmtder	28
-#define GAAOPTID_dhparams	29
-#define GAAOPTID_echo	30
-#define GAAOPTID_http	31
-#define GAAOPTID_nodb	32
-#define GAAOPTID_quiet	33
-#define GAAOPTID_port	34
-#define GAAOPTID_generate	35
-#define GAAOPTID_debug	36
+#define GAAOPTID_opaque_prf_input	5
+#define GAAOPTID_srppasswdconf	6
+#define GAAOPTID_srppasswd	7
+#define GAAOPTID_pskhint	8
+#define GAAOPTID_pskpasswd	9
+#define GAAOPTID_disable_client_cert	10
+#define GAAOPTID_require_cert	11
+#define GAAOPTID_x509dsacertfile	12
+#define GAAOPTID_x509dsakeyfile	13
+#define GAAOPTID_x509certfile	14
+#define GAAOPTID_x509keyfile	15
+#define GAAOPTID_pgpsubkey	16
+#define GAAOPTID_pgpcertfile	17
+#define GAAOPTID_pgpkeyfile	18
+#define GAAOPTID_pgpkeyring	19
+#define GAAOPTID_x509crlfile	20
+#define GAAOPTID_x509cafile	21
+#define GAAOPTID_x509fmtder	22
+#define GAAOPTID_dhparams	23
+#define GAAOPTID_echo	24
+#define GAAOPTID_http	25
+#define GAAOPTID_noticket	26
+#define GAAOPTID_nodb	27
+#define GAAOPTID_quiet	28
+#define GAAOPTID_port	29
+#define GAAOPTID_generate	30
+#define GAAOPTID_debug	31
 
 #line 168 "gaa.skel"
 
@@ -501,53 +469,36 @@ static int gaa_getint(char *arg)
     return tmp;
 }
 
+static char gaa_getchar(char *arg)
+{
+    if(strlen(arg) != 1)
+    {
+        printf("Option %s: '%s' isn't an character\n", gaa_current_option, arg);
+        GAAERROR(-1);
+    }
+    return arg[0];
+}
 
 static char* gaa_getstr(char *arg)
 {
     return arg;
 }
-
+static float gaa_getfloat(char *arg)
+{
+    float tmp;
+    char a;
+    if(sscanf(arg, "%f%c", &tmp, &a) < 1)
+    {
+        printf("Option %s: '%s' isn't a float number\n", gaa_current_option, arg);
+        GAAERROR(-1);
+    }
+    return tmp;
+}
 /* option structures */
 
 struct GAAOPTION_priority 
 {
 	char* arg1;
-	int size1;
-};
-
-struct GAAOPTION_ctypes 
-{
-	char** arg1;
-	int size1;
-};
-
-struct GAAOPTION_kx 
-{
-	char** arg1;
-	int size1;
-};
-
-struct GAAOPTION_macs 
-{
-	char** arg1;
-	int size1;
-};
-
-struct GAAOPTION_comp 
-{
-	char** arg1;
-	int size1;
-};
-
-struct GAAOPTION_protocols 
-{
-	char** arg1;
-	int size1;
-};
-
-struct GAAOPTION_ciphers 
-{
-	char** arg1;
 	int size1;
 };
 
@@ -689,12 +640,6 @@ static int gaa_get_option_num(char *str, int status)
         {
         case GAA_LETTER_OPTION:
 			GAA_CHECK1STR("", GAAOPTID_priority);
-			GAA_CHECK1STR("", GAAOPTID_ctypes);
-			GAA_CHECK1STR("", GAAOPTID_kx);
-			GAA_CHECK1STR("", GAAOPTID_macs);
-			GAA_CHECK1STR("", GAAOPTID_comp);
-			GAA_CHECK1STR("", GAAOPTID_protocols);
-			GAA_CHECK1STR("", GAAOPTID_ciphers);
 			GAA_CHECK1STR("", GAAOPTID_opaque_prf_input);
 			GAA_CHECK1STR("", GAAOPTID_srppasswdconf);
 			GAA_CHECK1STR("", GAAOPTID_srppasswd);
@@ -723,6 +668,7 @@ static int gaa_get_option_num(char *str, int status)
 			GAA_CHECK1STR("", GAAOPTID_x509fmtder);
 			GAA_CHECK1STR("", GAAOPTID_echo);
 			GAA_CHECK1STR("", GAAOPTID_http);
+			GAA_CHECK1STR("", GAAOPTID_noticket);
 			GAA_CHECK1STR("", GAAOPTID_nodb);
 			GAA_CHECK1STR("q", GAAOPTID_quiet);
 			GAA_CHECK1STR("g", GAAOPTID_generate);
@@ -734,12 +680,6 @@ static int gaa_get_option_num(char *str, int status)
 			GAA_CHECKSTR("help", GAAOPTID_help);
 			GAA_CHECKSTR("list", GAAOPTID_list);
 			GAA_CHECKSTR("priority", GAAOPTID_priority);
-			GAA_CHECKSTR("ctypes", GAAOPTID_ctypes);
-			GAA_CHECKSTR("kx", GAAOPTID_kx);
-			GAA_CHECKSTR("macs", GAAOPTID_macs);
-			GAA_CHECKSTR("comp", GAAOPTID_comp);
-			GAA_CHECKSTR("protocols", GAAOPTID_protocols);
-			GAA_CHECKSTR("ciphers", GAAOPTID_ciphers);
 			GAA_CHECKSTR("opaque-prf-input", GAAOPTID_opaque_prf_input);
 			GAA_CHECKSTR("srppasswdconf", GAAOPTID_srppasswdconf);
 			GAA_CHECKSTR("srppasswd", GAAOPTID_srppasswd);
@@ -761,6 +701,7 @@ static int gaa_get_option_num(char *str, int status)
 			GAA_CHECKSTR("dhparams", GAAOPTID_dhparams);
 			GAA_CHECKSTR("echo", GAAOPTID_echo);
 			GAA_CHECKSTR("http", GAAOPTID_http);
+			GAA_CHECKSTR("noticket", GAAOPTID_noticket);
 			GAA_CHECKSTR("nodb", GAAOPTID_nodb);
 			GAA_CHECKSTR("quiet", GAAOPTID_quiet);
 			GAA_CHECKSTR("port", GAAOPTID_port);
@@ -779,12 +720,6 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
     int OK = 0;
     int gaa_last_non_option;
 	struct GAAOPTION_priority GAATMP_priority;
-	struct GAAOPTION_ctypes GAATMP_ctypes;
-	struct GAAOPTION_kx GAATMP_kx;
-	struct GAAOPTION_macs GAATMP_macs;
-	struct GAAOPTION_comp GAATMP_comp;
-	struct GAAOPTION_protocols GAATMP_protocols;
-	struct GAAOPTION_ciphers GAATMP_ciphers;
 	struct GAAOPTION_opaque_prf_input GAATMP_opaque_prf_input;
 	struct GAAOPTION_srppasswdconf GAATMP_srppasswdconf;
 	struct GAAOPTION_srppasswd GAATMP_srppasswd;
@@ -825,21 +760,21 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
     {
 	case GAAOPTID_version:
 	OK = 0;
-#line 118 "serv.gaa"
+#line 97 "serv.gaa"
 { serv_version(); exit(0); ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_help:
 	OK = 0;
-#line 116 "serv.gaa"
+#line 95 "serv.gaa"
 { gaa_help(); exit(0); ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_list:
 	OK = 0;
-#line 115 "serv.gaa"
+#line 94 "serv.gaa"
 { print_list(0); exit(0); ;};
 
 		return GAA_OK;
@@ -849,56 +784,8 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_priority.arg1, gaa_getstr, GAATMP_priority.size1);
 		gaa_index++;
-#line 113 "serv.gaa"
+#line 92 "serv.gaa"
 { gaaval->priorities = GAATMP_priority.arg1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_ctypes:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_ctypes.arg1, gaa_getstr, char*, GAATMP_ctypes.size1);
-#line 110 "serv.gaa"
-{ gaaval->ctype = GAATMP_ctypes.arg1; gaaval->nctype = GAATMP_ctypes.size1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_kx:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_kx.arg1, gaa_getstr, char*, GAATMP_kx.size1);
-#line 106 "serv.gaa"
-{ gaaval->kx = GAATMP_kx.arg1; gaaval->nkx = GAATMP_kx.size1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_macs:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_macs.arg1, gaa_getstr, char*, GAATMP_macs.size1);
-#line 102 "serv.gaa"
-{ gaaval->macs = GAATMP_macs.arg1; gaaval->nmacs = GAATMP_macs.size1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_comp:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_comp.arg1, gaa_getstr, char*, GAATMP_comp.size1);
-#line 98 "serv.gaa"
-{ gaaval->comp = GAATMP_comp.arg1; gaaval->ncomp = GAATMP_comp.size1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_protocols:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_protocols.arg1, gaa_getstr, char*, GAATMP_protocols.size1);
-#line 94 "serv.gaa"
-{ gaaval->proto = GAATMP_protocols.arg1; gaaval->nproto = GAATMP_protocols.size1 ;};
-
-		return GAA_OK;
-		break;
-	case GAAOPTID_ciphers:
-	OK = 0;
-		GAA_LIST_FILL(GAATMP_ciphers.arg1, gaa_getstr, char*, GAATMP_ciphers.size1);
-#line 90 "serv.gaa"
-{ gaaval->ciphers = GAATMP_ciphers.arg1; gaaval->nciphers = GAATMP_ciphers.size1 ;};
 
 		return GAA_OK;
 		break;
@@ -907,7 +794,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_opaque_prf_input.arg1, gaa_getstr, GAATMP_opaque_prf_input.size1);
 		gaa_index++;
-#line 86 "serv.gaa"
+#line 89 "serv.gaa"
 { gaaval->opaque_prf_input = GAATMP_opaque_prf_input.arg1 ;};
 
 		return GAA_OK;
@@ -917,7 +804,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_srppasswdconf.arg1, gaa_getstr, GAATMP_srppasswdconf.size1);
 		gaa_index++;
-#line 83 "serv.gaa"
+#line 86 "serv.gaa"
 { gaaval->srp_passwd_conf = GAATMP_srppasswdconf.arg1 ;};
 
 		return GAA_OK;
@@ -927,7 +814,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_srppasswd.arg1, gaa_getstr, GAATMP_srppasswd.size1);
 		gaa_index++;
-#line 80 "serv.gaa"
+#line 83 "serv.gaa"
 { gaaval->srp_passwd = GAATMP_srppasswd.arg1 ;};
 
 		return GAA_OK;
@@ -937,7 +824,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pskhint.arg1, gaa_getstr, GAATMP_pskhint.size1);
 		gaa_index++;
-#line 77 "serv.gaa"
+#line 80 "serv.gaa"
 { gaaval->psk_hint = GAATMP_pskhint.arg1 ;};
 
 		return GAA_OK;
@@ -947,21 +834,21 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pskpasswd.arg1, gaa_getstr, GAATMP_pskpasswd.size1);
 		gaa_index++;
-#line 74 "serv.gaa"
+#line 77 "serv.gaa"
 { gaaval->psk_passwd = GAATMP_pskpasswd.arg1 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_disable_client_cert:
 	OK = 0;
-#line 71 "serv.gaa"
+#line 74 "serv.gaa"
 { gaaval->disable_client_cert = 1 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_require_cert:
 	OK = 0;
-#line 68 "serv.gaa"
+#line 71 "serv.gaa"
 { gaaval->require_cert = 1 ;};
 
 		return GAA_OK;
@@ -971,7 +858,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509dsacertfile.arg1, gaa_getstr, GAATMP_x509dsacertfile.size1);
 		gaa_index++;
-#line 65 "serv.gaa"
+#line 68 "serv.gaa"
 { gaaval->x509_dsacertfile = GAATMP_x509dsacertfile.arg1 ;};
 
 		return GAA_OK;
@@ -981,7 +868,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509dsakeyfile.arg1, gaa_getstr, GAATMP_x509dsakeyfile.size1);
 		gaa_index++;
-#line 62 "serv.gaa"
+#line 65 "serv.gaa"
 { gaaval->x509_dsakeyfile = GAATMP_x509dsakeyfile.arg1 ;};
 
 		return GAA_OK;
@@ -991,7 +878,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509certfile.arg1, gaa_getstr, GAATMP_x509certfile.size1);
 		gaa_index++;
-#line 59 "serv.gaa"
+#line 62 "serv.gaa"
 { gaaval->x509_certfile = GAATMP_x509certfile.arg1 ;};
 
 		return GAA_OK;
@@ -1001,7 +888,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509keyfile.arg1, gaa_getstr, GAATMP_x509keyfile.size1);
 		gaa_index++;
-#line 56 "serv.gaa"
+#line 59 "serv.gaa"
 { gaaval->x509_keyfile = GAATMP_x509keyfile.arg1 ;};
 
 		return GAA_OK;
@@ -1011,7 +898,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pgpsubkey.arg1, gaa_getstr, GAATMP_pgpsubkey.size1);
 		gaa_index++;
-#line 53 "serv.gaa"
+#line 56 "serv.gaa"
 { gaaval->pgp_subkey = GAATMP_pgpsubkey.arg1 ;};
 
 		return GAA_OK;
@@ -1021,7 +908,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pgpcertfile.arg1, gaa_getstr, GAATMP_pgpcertfile.size1);
 		gaa_index++;
-#line 50 "serv.gaa"
+#line 53 "serv.gaa"
 { gaaval->pgp_certfile = GAATMP_pgpcertfile.arg1 ;};
 
 		return GAA_OK;
@@ -1031,7 +918,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pgpkeyfile.arg1, gaa_getstr, GAATMP_pgpkeyfile.size1);
 		gaa_index++;
-#line 47 "serv.gaa"
+#line 50 "serv.gaa"
 { gaaval->pgp_keyfile = GAATMP_pgpkeyfile.arg1 ;};
 
 		return GAA_OK;
@@ -1041,7 +928,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_pgpkeyring.arg1, gaa_getstr, GAATMP_pgpkeyring.size1);
 		gaa_index++;
-#line 44 "serv.gaa"
+#line 47 "serv.gaa"
 { gaaval->pgp_keyring = GAATMP_pgpkeyring.arg1 ;};
 
 		return GAA_OK;
@@ -1051,7 +938,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509crlfile.arg1, gaa_getstr, GAATMP_x509crlfile.size1);
 		gaa_index++;
-#line 41 "serv.gaa"
+#line 44 "serv.gaa"
 { gaaval->x509_crlfile = GAATMP_x509crlfile.arg1 ;};
 
 		return GAA_OK;
@@ -1061,14 +948,14 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_x509cafile.arg1, gaa_getstr, GAATMP_x509cafile.size1);
 		gaa_index++;
-#line 38 "serv.gaa"
+#line 41 "serv.gaa"
 { gaaval->x509_cafile = GAATMP_x509cafile.arg1 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_x509fmtder:
 	OK = 0;
-#line 35 "serv.gaa"
+#line 38 "serv.gaa"
 { gaaval->fmtder = 1 ;};
 
 		return GAA_OK;
@@ -1078,22 +965,29 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_dhparams.arg1, gaa_getstr, GAATMP_dhparams.size1);
 		gaa_index++;
-#line 32 "serv.gaa"
+#line 35 "serv.gaa"
 { gaaval->dh_params_file = GAATMP_dhparams.arg1 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_echo:
 	OK = 0;
-#line 29 "serv.gaa"
+#line 32 "serv.gaa"
 { gaaval->http = 0 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_http:
 	OK = 0;
-#line 28 "serv.gaa"
+#line 31 "serv.gaa"
 { gaaval->http = 1 ;};
+
+		return GAA_OK;
+		break;
+	case GAAOPTID_noticket:
+	OK = 0;
+#line 28 "serv.gaa"
+{ gaaval->noticket = 1 ;};
 
 		return GAA_OK;
 		break;
@@ -1148,27 +1042,22 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 int gaa(int argc, char **argv, gaainfo *gaaval)
 {
     int tmp1, tmp2;
-    int l;
-    size_t i, j, k;
+    int i, j, k;
     char *opt_list;
-
-    i = 0;
 
     GAAargv = argv;
     GAAargc = argc;
 
     opt_list = (char*) gaa_malloc(GAA_NB_OPTION + 1);
 
-    for(l = 0; l < GAA_NB_OPTION + 1; l++)
-        opt_list[l] = 0;
+    for(i = 0; i < GAA_NB_OPTION + 1; i++)
+        opt_list[i] = 0;
     /* initialization */
     if(inited == 0)
     {
 
-#line 122 "serv.gaa"
-{ gaaval->generate=0; gaaval->port=5556; gaaval->http=0; gaaval->ciphers=NULL;
-	gaaval->kx=NULL; gaaval->comp=NULL; gaaval->macs=NULL; gaaval->ctype=NULL; gaaval->nciphers=0;
-	gaaval->nkx=0; gaaval->ncomp=0; gaaval->nmacs=0; gaaval->nctype = 0; gaaval->nodb = 0;
+#line 101 "serv.gaa"
+{ gaaval->generate=0; gaaval->port=5556; gaaval->http=0; gaaval->nodb = 0; gaaval->noticket = 0;
 	gaaval->x509_cafile = NULL; gaaval->pgp_keyfile=NULL; gaaval->pgp_certfile=NULL;
 	gaaval->x509_keyfile=NULL; gaaval->x509_certfile=NULL; gaaval->x509_crlfile = NULL;
 	gaaval->x509_dsakeyfile=NULL; gaaval->x509_dsacertfile=NULL; 
@@ -1187,27 +1076,27 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
       gaa_arg_used = gaa_malloc(argc * sizeof(char));
     }
 
-    for(l = 1; l < argc; l++)
-        gaa_arg_used[l] = 0;
-    for(l = 1; l < argc; l++)
+    for(i = 1; i < argc; i++)
+        gaa_arg_used[i] = 0;
+    for(i = 1; i < argc; i++)
     {
-        if(gaa_arg_used[l] == 0)
+        if(gaa_arg_used[i] == 0)
         {
             j = 0;
-            tmp1 = gaa_is_an_argument(GAAargv[l]);
+            tmp1 = gaa_is_an_argument(GAAargv[i]);
             switch(tmp1)
             {
             case GAA_WORD_OPTION:
                 j++;
             case GAA_LETTER_OPTION:
                 j++;
-                tmp2 = gaa_get_option_num(argv[l]+j, tmp1);
+                tmp2 = gaa_get_option_num(argv[i]+j, tmp1);
                 if(tmp2 == GAA_ERROR_NOMATCH)
                 {
-                    printf("Invalid option '%s'\n", argv[l]+j);
+                    printf("Invalid option '%s'\n", argv[i]+j);
                     return 0;
                 }
-                switch(gaa_try(tmp2, l+1, gaaval, opt_list))
+                switch(gaa_try(tmp2, i+1, gaaval, opt_list))
                 {
                 case GAA_ERROR_NOTENOUGH_ARGS:
                     printf("'%s': not enough arguments\n",gaa_current_option);
@@ -1220,18 +1109,18 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
                 default:
                     printf("Unknown error\n");
                 }
-                gaa_arg_used[l] = 1;
+                gaa_arg_used[i] = 1;
                 break;
             case GAA_MULTIPLE_OPTION:
-                for(j = 1; j < strlen(argv[l]); j++)
+                for(j = 1; j < strlen(argv[i]); j++)
                 {
-                    tmp2 = gaa_get_option_num(argv[l]+j, tmp1);
+                    tmp2 = gaa_get_option_num(argv[i]+j, tmp1);
                     if(tmp2 == GAA_ERROR_NOMATCH)
                     {
-                        printf("Invalid option '%c'\n", *(argv[l]+j));
+                        printf("Invalid option '%c'\n", *(argv[i]+j));
                         return 0;
                     }
-                    switch(gaa_try(tmp2, l+1, gaaval, opt_list))
+                    switch(gaa_try(tmp2, i+1, gaaval, opt_list))
                     {
                     case GAA_ERROR_NOTENOUGH_ARGS:
                         printf("'%s': not enough arguments\n",gaa_current_option);
@@ -1245,7 +1134,7 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
                         printf("Unknown error\n");
                     }
                 }
-                gaa_arg_used[l] = 1;
+                gaa_arg_used[i] = 1;
                 break;
             default: break;
             }
@@ -1272,9 +1161,9 @@ if(gaa_processing_file == 0)
     }
 #endif
 }
-    for(l = 1; l < argc; l++)
+    for(i = 1; i < argc; i++)
     {
-        if(gaa_arg_used[l] == 0)
+        if(gaa_arg_used[i] == 0)
         {
             printf("Too many arguments\n");
             return 0;
@@ -1325,7 +1214,7 @@ static int gaa_internal_get_next_str(FILE *file, gaa_str_node *tmp_str, int argc
 
         len++;
         a = fgetc( file);
-        if(a==EOF) return 0; /* a = ' '; */
+        if(a==EOF) return 0;
     }
 
     len += 1;

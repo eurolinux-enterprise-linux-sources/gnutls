@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2004, 2006, 2007, 2008, 2009 Free Software Foundation
- * Copyright (C) 2000,2001 Fabio Fiorina
+ * Copyright (C) 2000-2012 Free Software Foundation, Inc.
  *
  * This file is part of LIBTASN1.
  *
@@ -21,6 +20,7 @@
  */
 
 #include <int.h>
+#include <hash-pjw-bare.h>
 #include "parser_aux.h"
 #include "gstr.h"
 #include "structure.h"
@@ -35,7 +35,7 @@ char _asn1_identifierMissing[ASN1_MAX_NAME_SIZE + 1];	/* identifier name not fou
 /***********************************************/
 typedef struct list_struct
 {
-  ASN1_TYPE node;
+  asn1_node node;
   struct list_struct *next;
 } list_type;
 
@@ -44,7 +44,7 @@ typedef struct list_struct
 list_type *firstElement = NULL;
 
 /******************************************************/
-/* Function : _asn1_add_node                          */
+/* Function : _asn1_add_static_node                   */
 /* Description: creates a new NODE_ASN element and    */
 /* puts it in the list pointed by firstElement.       */
 /* Parameters:                                        */
@@ -52,20 +52,20 @@ list_type *firstElement = NULL;
 /*         and CONST_ constants).                     */
 /* Return: pointer to the new element.                */
 /******************************************************/
-ASN1_TYPE
-_asn1_add_node (unsigned int type)
+asn1_node
+_asn1_add_static_node (unsigned int type)
 {
   list_type *listElement;
-  ASN1_TYPE punt;
+  asn1_node punt;
 
-  punt = (ASN1_TYPE) _asn1_calloc (1, sizeof (struct node_asn_struct));
+  punt = calloc (1, sizeof (struct asn1_node_st));
   if (punt == NULL)
     return NULL;
 
-  listElement = (list_type *) _asn1_malloc (sizeof (list_type));
+  listElement = malloc (sizeof (list_type));
   if (listElement == NULL)
     {
-      _asn1_free (punt);
+      free (punt);
       return NULL;
     }
 
@@ -83,19 +83,21 @@ _asn1_add_node (unsigned int type)
  * @pointer: NODE_ASN element pointer.
  * @name: null terminated string with the element's name to find.
  *
- * Searches for an element called NAME starting from POINTER.  The
+ * Searches for an element called @name starting from @pointer.  The
  * name is composed by differents identifiers separated by dots.  When
- * *POINTER has a name, the first identifier must be the name of
- * *POINTER, otherwise it must be the name of one child of *POINTER.
+ * *@pointer has a name, the first identifier must be the name of
+ * *@pointer, otherwise it must be the name of one child of *@pointer.
  *
- * Return value: the searching result. NULL if not found.
+ * Returns: the search result, or %NULL if not found.
  **/
-ASN1_TYPE
-asn1_find_node (ASN1_TYPE pointer, const char *name)
+asn1_node
+asn1_find_node (asn1_node pointer, const char *name)
 {
-  ASN1_TYPE p;
+  asn1_node p;
   char *n_end, n[ASN1_MAX_NAME_SIZE + 1];
   const char *n_start;
+  unsigned int nsize;
+  unsigned int nhash;
 
   if (pointer == NULL)
     return NULL;
@@ -106,25 +108,30 @@ asn1_find_node (ASN1_TYPE pointer, const char *name)
   p = pointer;
   n_start = name;
 
-  if (p->name != NULL)
+  if (p->name[0] != 0)
     {				/* has *pointer got a name ? */
       n_end = strchr (n_start, '.');	/* search the first dot */
       if (n_end)
 	{
-	  memcpy (n, n_start, n_end - n_start);
-	  n[n_end - n_start] = 0;
+	  nsize = n_end - n_start;
+	  memcpy (n, n_start, nsize);
+	  n[nsize] = 0;
 	  n_start = n_end;
 	  n_start++;
+
+          nhash = hash_pjw_bare(n, nsize);
 	}
       else
 	{
-	  _asn1_str_cpy (n, sizeof (n), n_start);
+	  nsize = _asn1_str_cpy (n, sizeof (n), n_start);
+          nhash = hash_pjw_bare(n, nsize);
+
 	  n_start = NULL;
 	}
 
       while (p)
 	{
-	  if ((p->name) && (!strcmp (p->name, n)))
+	  if ((p->name) && nhash == p->name_hash && (!strcmp (p->name, n)))
 	    break;
 	  else
 	    p = p->right;
@@ -144,14 +151,18 @@ asn1_find_node (ASN1_TYPE pointer, const char *name)
       n_end = strchr (n_start, '.');	/* search the next dot */
       if (n_end)
 	{
-	  memcpy (n, n_start, n_end - n_start);
-	  n[n_end - n_start] = 0;
+	  nsize = n_end - n_start;
+	  memcpy (n, n_start, nsize);
+	  n[nsize] = 0;
 	  n_start = n_end;
 	  n_start++;
+
+          nhash = hash_pjw_bare(n, nsize);
 	}
       else
 	{
-	  _asn1_str_cpy (n, sizeof (n), n_start);
+	  nsize = _asn1_str_cpy (n, sizeof (n), n_start);
+          nhash = hash_pjw_bare(n, nsize);
 	  n_start = NULL;
 	}
 
@@ -160,7 +171,7 @@ asn1_find_node (ASN1_TYPE pointer, const char *name)
 
       p = p->down;
 
-      /* The identifier "?LAST" indicates the last element 
+      /* The identifier "?LAST" indicates the last element
          in the right chain. */
       if (!strcmp (n, "?LAST"))
 	{
@@ -173,7 +184,7 @@ asn1_find_node (ASN1_TYPE pointer, const char *name)
 	{			/* no "?LAST" */
 	  while (p)
 	    {
-	      if ((p->name) && (!strcmp (p->name, n)))
+	      if (p->name_hash == nhash && !strcmp (p->name, n))
 		break;
 	      else
 		p = p->right;
@@ -197,15 +208,15 @@ asn1_find_node (ASN1_TYPE pointer, const char *name)
 /*   len: character number of value.                              */
 /* Return: pointer to the NODE_ASN element.                       */
 /******************************************************************/
-ASN1_TYPE
-_asn1_set_value (ASN1_TYPE node, const void *value, unsigned int len)
+asn1_node
+_asn1_set_value (asn1_node node, const void *value, unsigned int len)
 {
   if (node == NULL)
     return node;
   if (node->value)
     {
       if (node->value != node->small_value)
-	_asn1_free (node->value);
+	free (node->value);
       node->value = NULL;
       node->value_len = 0;
     }
@@ -219,7 +230,7 @@ _asn1_set_value (ASN1_TYPE node, const void *value, unsigned int len)
     }
   else
     {
-      node->value = _asn1_malloc (len);
+      node->value = malloc (len);
       if (node->value == NULL)
 	return NULL;
     }
@@ -240,8 +251,8 @@ _asn1_set_value (ASN1_TYPE node, const void *value, unsigned int len)
 /*   len: character number of value.                              */
 /* Return: pointer to the NODE_ASN element.                       */
 /******************************************************************/
-ASN1_TYPE
-_asn1_set_value_octet (ASN1_TYPE node, const void *value, unsigned int len)
+asn1_node
+_asn1_set_value_octet (asn1_node node, const void *value, unsigned int len)
 {
   int len2;
   void *temp;
@@ -250,7 +261,7 @@ _asn1_set_value_octet (ASN1_TYPE node, const void *value, unsigned int len)
     return node;
 
   asn1_length_der (len, NULL, &len2);
-  temp = (unsigned char *) _asn1_malloc (len + len2);
+  temp = malloc (len + len2);
   if (temp == NULL)
     return NULL;
 
@@ -261,8 +272,8 @@ _asn1_set_value_octet (ASN1_TYPE node, const void *value, unsigned int len)
 /* the same as _asn1_set_value except that it sets an already malloc'ed
  * value.
  */
-ASN1_TYPE
-_asn1_set_value_m (ASN1_TYPE node, void *value, unsigned int len)
+asn1_node
+_asn1_set_value_m (asn1_node node, void *value, unsigned int len)
 {
   if (node == NULL)
     return node;
@@ -270,7 +281,7 @@ _asn1_set_value_m (ASN1_TYPE node, void *value, unsigned int len)
   if (node->value)
     {
       if (node->value != node->small_value)
-	_asn1_free (node->value);
+	free (node->value);
       node->value = NULL;
       node->value_len = 0;
     }
@@ -294,8 +305,8 @@ _asn1_set_value_m (ASN1_TYPE node, void *value, unsigned int len)
 /*   len: character number of value.                              */
 /* Return: pointer to the NODE_ASN element.                       */
 /******************************************************************/
-ASN1_TYPE
-_asn1_append_value (ASN1_TYPE node, const void *value, unsigned int len)
+asn1_node
+_asn1_append_value (asn1_node node, const void *value, unsigned int len)
 {
   if (node == NULL)
     return node;
@@ -304,7 +315,7 @@ _asn1_append_value (ASN1_TYPE node, const void *value, unsigned int len)
       /* value is allocated */
       int prev_len = node->value_len;
       node->value_len += len;
-      node->value = _asn1_realloc (node->value, node->value_len);
+      node->value = realloc (node->value, node->value_len);
       if (node->value == NULL)
 	{
 	  node->value_len = 0;
@@ -319,7 +330,7 @@ _asn1_append_value (ASN1_TYPE node, const void *value, unsigned int len)
       /* value is in node */
       int prev_len = node->value_len;
       node->value_len += len;
-      node->value = _asn1_malloc (node->value_len);
+      node->value = malloc (node->value_len);
       if (node->value == NULL)
 	{
 	  node->value_len = 0;
@@ -344,30 +355,52 @@ _asn1_append_value (ASN1_TYPE node, const void *value, unsigned int len)
 /*         to set.                                                */
 /* Return: pointer to the NODE_ASN element.                       */
 /******************************************************************/
-ASN1_TYPE
-_asn1_set_name (ASN1_TYPE node, const char *name)
+asn1_node
+_asn1_set_name (asn1_node node, const char *name)
 {
+unsigned int nsize;
+
   if (node == NULL)
     return node;
 
-  if (node->name)
-    {
-      _asn1_free (node->name);
-      node->name = NULL;
-    }
-
   if (name == NULL)
-    return node;
-
-  if (strlen (name))
     {
-      node->name = (char *) _asn1_strdup (name);
-      if (node->name == NULL)
-	return NULL;
+      node->name[0] = 0;
+      node->name_hash = hash_pjw_bare(node->name, 0);
+      return node;
     }
-  else
-    node->name = NULL;
+
+  nsize = _asn1_str_cpy (node->name, sizeof (node->name), name);
+  node->name_hash = hash_pjw_bare(node->name, nsize);
+
   return node;
+}
+
+/******************************************************************/
+/* Function : _asn1_cpy_name                                      */
+/* Description: copies the field NAME in a NODE_ASN element.      */
+/* Parameters:                                                    */
+/*   dst: a dest element pointer.                                 */
+/*   src: a source element pointer.                               */
+/* Return: pointer to the NODE_ASN element.                       */
+/******************************************************************/
+asn1_node
+_asn1_cpy_name (asn1_node dst, asn1_node src)
+{
+  if (dst == NULL)
+    return dst;
+
+  if (src == NULL)
+    {
+      dst->name[0] = 0;
+      dst->name_hash = hash_pjw_bare(dst->name, 0);
+      return dst;
+    }
+
+  _asn1_str_cpy (dst->name, sizeof (dst->name), src->name);
+  dst->name_hash = src->name_hash;
+
+  return dst;
 }
 
 /******************************************************************/
@@ -379,8 +412,8 @@ _asn1_set_name (ASN1_TYPE node, const char *name)
 /*          by NODE.                                              */
 /* Return: pointer to *NODE.                                      */
 /******************************************************************/
-ASN1_TYPE
-_asn1_set_right (ASN1_TYPE node, ASN1_TYPE right)
+asn1_node
+_asn1_set_right (asn1_node node, asn1_node right)
 {
   if (node == NULL)
     return node;
@@ -390,21 +423,6 @@ _asn1_set_right (ASN1_TYPE node, ASN1_TYPE right)
   return node;
 }
 
-/******************************************************************/
-/* Function : _asn1_get_right                                     */
-/* Description: returns the element pointed by the RIGHT field of */
-/*              a NODE_ASN element.                               */
-/* Parameters:                                                    */
-/*   node: NODE_ASN element pointer.                              */
-/* Return: field RIGHT of NODE.                                   */
-/******************************************************************/
-ASN1_TYPE
-_asn1_get_right (ASN1_TYPE node)
-{
-  if (node == NULL)
-    return NULL;
-  return node->right;
-}
 
 /******************************************************************/
 /* Function : _asn1_get_last_right                                */
@@ -413,10 +431,10 @@ _asn1_get_right (ASN1_TYPE node)
 /*   node: starting element pointer.                              */
 /* Return: pointer to the last element along the right chain.     */
 /******************************************************************/
-ASN1_TYPE
-_asn1_get_last_right (ASN1_TYPE node)
+asn1_node
+_asn1_get_last_right (asn1_node node)
 {
-  ASN1_TYPE p;
+  asn1_node p;
 
   if (node == NULL)
     return NULL;
@@ -427,78 +445,6 @@ _asn1_get_last_right (ASN1_TYPE node)
 }
 
 /******************************************************************/
-/* Function : _asn1_set_down                                      */
-/* Description: sets the field DOWN in a NODE_ASN element.        */
-/* Parameters:                                                    */
-/*   node: element pointer.                                       */
-/*   down: pointer to a NODE_ASN element that you want be pointed */
-/*          by NODE.                                              */
-/* Return: pointer to *NODE.                                      */
-/******************************************************************/
-ASN1_TYPE
-_asn1_set_down (ASN1_TYPE node, ASN1_TYPE down)
-{
-  if (node == NULL)
-    return node;
-  node->down = down;
-  if (down)
-    down->left = node;
-  return node;
-}
-
-/******************************************************************/
-/* Function : _asn1_get_down                                      */
-/* Description: returns the element pointed by the DOWN field of  */
-/*              a NODE_ASN element.                               */
-/* Parameters:                                                    */
-/*   node: NODE_ASN element pointer.                              */
-/* Return: field DOWN of NODE.                                    */
-/******************************************************************/
-ASN1_TYPE
-_asn1_get_down (ASN1_TYPE node)
-{
-  if (node == NULL)
-    return NULL;
-  return node->down;
-}
-
-/******************************************************************/
-/* Function : _asn1_get_name                                      */
-/* Description: returns the name of a NODE_ASN element.           */
-/* Parameters:                                                    */
-/*   node: NODE_ASN element pointer.                              */
-/* Return: a null terminated string.                              */
-/******************************************************************/
-char *
-_asn1_get_name (ASN1_TYPE node)
-{
-  if (node == NULL)
-    return NULL;
-  return node->name;
-}
-
-/******************************************************************/
-/* Function : _asn1_mod_type                                      */
-/* Description: change the field TYPE of an NODE_ASN element.     */
-/*              The new value is the old one | (bitwise or) the   */
-/*              paramener VALUE.                                  */
-/* Parameters:                                                    */
-/*   node: NODE_ASN element pointer.                              */
-/*   value: the integer value that must be or-ed with the current */
-/*          value of field TYPE.                                  */
-/* Return: NODE pointer.                                          */
-/******************************************************************/
-ASN1_TYPE
-_asn1_mod_type (ASN1_TYPE node, unsigned int value)
-{
-  if (node == NULL)
-    return node;
-  node->type |= value;
-  return node;
-}
-
-
-/******************************************************************/
 /* Function : _asn1_remove_node                                   */
 /* Description: gets free the memory allocated for an NODE_ASN    */
 /*              element (not the elements pointed by it).         */
@@ -506,16 +452,14 @@ _asn1_mod_type (ASN1_TYPE node, unsigned int value)
 /*   node: NODE_ASN element pointer.                              */
 /******************************************************************/
 void
-_asn1_remove_node (ASN1_TYPE node)
+_asn1_remove_node (asn1_node node)
 {
   if (node == NULL)
     return;
 
-  if (node->name != NULL)
-    _asn1_free (node->name);
   if (node->value != NULL && node->value != node->small_value)
-    _asn1_free (node->value);
-  _asn1_free (node);
+    free (node->value);
+  free (node);
 }
 
 /******************************************************************/
@@ -525,10 +469,10 @@ _asn1_remove_node (ASN1_TYPE node)
 /*   node: NODE_ASN element pointer.                              */
 /* Return: Null if not found.                                     */
 /******************************************************************/
-ASN1_TYPE
-_asn1_find_up (ASN1_TYPE node)
+asn1_node
+_asn1_find_up (asn1_node node)
 {
-  ASN1_TYPE p;
+  asn1_node p;
 
   if (node == NULL)
     return NULL;
@@ -555,7 +499,7 @@ _asn1_delete_list (void)
     {
       listElement = firstElement;
       firstElement = firstElement->next;
-      _asn1_free (listElement);
+      free (listElement);
     }
 }
 
@@ -574,7 +518,7 @@ _asn1_delete_list_and_nodes (void)
       listElement = firstElement;
       firstElement = firstElement->next;
       _asn1_remove_node (listElement->node);
-      _asn1_free (listElement);
+      free (listElement);
     }
 }
 
@@ -623,10 +567,10 @@ _asn1_ltostr (long v, char *str)
 /*   ASN1_ELEMENT_NOT_FOUND if NODE is NULL,                       */
 /*   otherwise ASN1_SUCCESS                                             */
 /******************************************************************/
-asn1_retCode
-_asn1_change_integer_value (ASN1_TYPE node)
+int
+_asn1_change_integer_value (asn1_node node)
 {
-  ASN1_TYPE p;
+  asn1_node p;
   unsigned char val[SIZEOF_UNSIGNED_LONG_INT];
   unsigned char val2[SIZEOF_UNSIGNED_LONG_INT + 1];
   int len;
@@ -690,10 +634,10 @@ _asn1_change_integer_value (ASN1_TYPE node)
 /*   ASN1_ELEMENT_NOT_FOUND if NODE is NULL,                       */
 /*   otherwise ASN1_SUCCESS                                             */
 /******************************************************************/
-asn1_retCode
-_asn1_expand_object_id (ASN1_TYPE node)
+int
+_asn1_expand_object_id (asn1_node node)
 {
-  ASN1_TYPE p, p2, p3, p4, p5;
+  asn1_node p, p2, p3, p4, p5;
   char name_root[ASN1_MAX_NAME_SIZE], name2[2 * ASN1_MAX_NAME_SIZE + 1];
   int move, tlen;
 
@@ -719,7 +663,8 @@ _asn1_expand_object_id (ASN1_TYPE node)
 		    {
 		      _asn1_str_cpy (name2, sizeof (name2), name_root);
 		      _asn1_str_cat (name2, sizeof (name2), ".");
-		      _asn1_str_cat (name2, sizeof (name2), p2->value);
+		      _asn1_str_cat (name2, sizeof (name2),
+				     (char *) p2->value);
 		      p3 = asn1_find_node (node, name2);
 		      if (!p3 || (type_field (p3->type) != TYPE_OBJECT_ID) ||
 			  !(p3->type & CONST_ASSIGN))
@@ -732,9 +677,9 @@ _asn1_expand_object_id (ASN1_TYPE node)
 			{
 			  if (type_field (p4->type) == TYPE_CONSTANT)
 			    {
-			      p5 = _asn1_add_node_only (TYPE_CONSTANT);
+			      p5 = _asn1_add_single_node (TYPE_CONSTANT);
 			      _asn1_set_name (p5, p4->name);
-			      tlen = strlen (p4->value);
+			      tlen = _asn1_strlen (p4->value);
 			      if (tlen > 0)
 				_asn1_set_value (p5, p4->value, tlen + 1);
 			      if (p2 == p)
@@ -805,7 +750,7 @@ _asn1_expand_object_id (ASN1_TYPE node)
 		{
 		  _asn1_str_cpy (name2, sizeof (name2), name_root);
 		  _asn1_str_cat (name2, sizeof (name2), ".");
-		  _asn1_str_cat (name2, sizeof (name2), p2->value);
+		  _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
 		  p3 = asn1_find_node (node, name2);
 		  if (!p3 || (type_field (p3->type) != TYPE_OBJECT_ID) ||
 		      !(p3->type & CONST_ASSIGN))
@@ -818,7 +763,8 @@ _asn1_expand_object_id (ASN1_TYPE node)
 			{
 			  if (name2[0])
 			    _asn1_str_cat (name2, sizeof (name2), ".");
-			  _asn1_str_cat (name2, sizeof (name2), p4->value);
+			  _asn1_str_cat (name2, sizeof (name2),
+					 (char *) p4->value);
 			}
 		      p4 = p4->right;
 		    }
@@ -871,10 +817,10 @@ _asn1_expand_object_id (ASN1_TYPE node)
 /*   ASN1_ELEMENT_NOT_FOUND if NODE is NULL,                       */
 /*   otherwise ASN1_SUCCESS                                             */
 /******************************************************************/
-asn1_retCode
-_asn1_type_set_config (ASN1_TYPE node)
+int
+_asn1_type_set_config (asn1_node node)
 {
-  ASN1_TYPE p, p2;
+  asn1_node p, p2;
   int move;
 
   if (node == NULL)
@@ -944,10 +890,10 @@ _asn1_type_set_config (ASN1_TYPE node)
 /*   ASN1_IDENTIFIER_NOT_FOUND   if an identifier is not defined, */
 /*   otherwise ASN1_SUCCESS                                       */
 /******************************************************************/
-asn1_retCode
-_asn1_check_identifier (ASN1_TYPE node)
+int
+_asn1_check_identifier (asn1_node node)
 {
-  ASN1_TYPE p, p2;
+  asn1_node p, p2;
   char name2[ASN1_MAX_NAME_SIZE * 2 + 2];
 
   if (node == NULL)
@@ -960,11 +906,14 @@ _asn1_check_identifier (ASN1_TYPE node)
 	{
 	  _asn1_str_cpy (name2, sizeof (name2), node->name);
 	  _asn1_str_cat (name2, sizeof (name2), ".");
-	  _asn1_str_cat (name2, sizeof (name2), p->value);
+	  _asn1_str_cat (name2, sizeof (name2), (char *) p->value);
 	  p2 = asn1_find_node (node, name2);
 	  if (p2 == NULL)
 	    {
-	      strcpy (_asn1_identifierMissing, p->value);
+	      if (p->value)
+  	        _asn1_strcpy (_asn1_identifierMissing, p->value);
+              else
+  	        _asn1_strcpy (_asn1_identifierMissing, "(null)");
 	      return ASN1_IDENTIFIER_NOT_FOUND;
 	    }
 	}
@@ -976,8 +925,8 @@ _asn1_check_identifier (ASN1_TYPE node)
 	    {
 	      _asn1_str_cpy (name2, sizeof (name2), node->name);
 	      _asn1_str_cat (name2, sizeof (name2), ".");
-	      _asn1_str_cat (name2, sizeof (name2), p2->value);
-	      strcpy (_asn1_identifierMissing, p2->value);
+	      _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
+	      _asn1_strcpy (_asn1_identifierMissing, p2->value);
 	      p2 = asn1_find_node (node, name2);
 	      if (!p2 || (type_field (p2->type) != TYPE_OBJECT_ID) ||
 		  !(p2->type & CONST_ASSIGN))
@@ -996,8 +945,8 @@ _asn1_check_identifier (ASN1_TYPE node)
 		{
 		  _asn1_str_cpy (name2, sizeof (name2), node->name);
 		  _asn1_str_cat (name2, sizeof (name2), ".");
-		  _asn1_str_cat (name2, sizeof (name2), p2->value);
-		  strcpy (_asn1_identifierMissing, p2->value);
+		  _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
+		  _asn1_strcpy (_asn1_identifierMissing, p2->value);
 		  p2 = asn1_find_node (node, name2);
 		  if (!p2 || (type_field (p2->type) != TYPE_OBJECT_ID) ||
 		      !(p2->type & CONST_ASSIGN))
@@ -1048,10 +997,10 @@ _asn1_check_identifier (ASN1_TYPE node)
 /*     a DEFINITIONS element,                                     */
 /*   otherwise ASN1_SUCCESS                                       */
 /******************************************************************/
-asn1_retCode
-_asn1_set_default_tag (ASN1_TYPE node)
+int
+_asn1_set_default_tag (asn1_node node)
 {
-  ASN1_TYPE p;
+  asn1_node p;
 
   if ((node == NULL) || (type_field (node->type) != TYPE_DEFINITIONS))
     return ASN1_ELEMENT_NOT_FOUND;
@@ -1094,91 +1043,4 @@ _asn1_set_default_tag (ASN1_TYPE node)
     }
 
   return ASN1_SUCCESS;
-}
-
-
-
-static const char *
-parse_version_number (const char *s, int *number)
-{
-  int val = 0;
-
-  if (*s == '0' && isdigit (s[1]))
-    return NULL;		/* leading zeros are not allowed */
-  for (; isdigit (*s); s++)
-    {
-      val *= 10;
-      val += *s - '0';
-    }
-  *number = val;
-  return val < 0 ? NULL : s;
-}
-
-/* The parse version functions were copied from libgcrypt.
- */
-static const char *
-parse_version_string (const char *s, int *major, int *minor, int *micro)
-{
-  s = parse_version_number (s, major);
-  if (!s || *s != '.')
-    return NULL;
-  s++;
-  s = parse_version_number (s, minor);
-  if (!s)
-    return NULL;
-  if (*s != '.')
-    {
-      *micro = 0;
-      return s;
-    }
-  s++;
-  s = parse_version_number (s, micro);
-  if (!s)
-    return NULL;
-  return s;			/* patchlevel */
-}
-
-/**
- * asn1_check_version - check for library version
- * @req_version: Required version number, or NULL.
- *
- * Check that the version of the library is at minimum the
- * requested one and return the version string; return %NULL if the
- * condition is not satisfied.  If a %NULL is passed to this function,
- * no check is done, but the version string is simply returned.
- *
- * See %ASN1_VERSION for a suitable @req_version string.
- *
- * Return value: Version string of run-time library, or %NULL if the
- *   run-time library does not meet the required version number.
- */
-const char *
-asn1_check_version (const char *req_version)
-{
-  const char *ver = ASN1_VERSION;
-  int my_major, my_minor, my_micro;
-  int rq_major, rq_minor, rq_micro;
-  const char *my_plvl, *rq_plvl;
-
-  if (!req_version)
-    return ver;
-
-  my_plvl = parse_version_string (ver, &my_major, &my_minor, &my_micro);
-  if (!my_plvl)
-    return NULL;		/* very strange our own version is bogus */
-  rq_plvl = parse_version_string (req_version, &rq_major, &rq_minor,
-				  &rq_micro);
-  if (!rq_plvl)
-    return NULL;		/* req version string is invalid */
-
-  if (my_major > rq_major
-      || (my_major == rq_major && my_minor > rq_minor)
-      || (my_major == rq_major && my_minor == rq_minor
-	  && my_micro > rq_micro)
-      || (my_major == rq_major && my_minor == rq_minor
-	  && my_micro == rq_micro && strcmp (my_plvl, rq_plvl) >= 0))
-    {
-      return ver;
-    }
-  return NULL;
 }

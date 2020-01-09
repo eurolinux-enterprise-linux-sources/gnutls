@@ -1,15 +1,16 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2008 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2006, 2008, 2010 Free Software Foundation,
+ * Inc.
  * Copyright (c) 2002 Andrew McDonald <andrew@mcdonald.org.uk>
  *
- * This file is part of GNUTLS-EXTRA.
+ * This file is part of GnuTLS-EXTRA.
  *
- * GNUTLS-EXTRA is free software: you can redistribute it and/or modify
+ * GnuTLS-extra is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *               
- * GNUTLS-EXTRA is distributed in the hope that it will be useful,
+ * GnuTLS-extra is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -113,7 +114,7 @@ SSL_CTX_use_PrivateKey_file (SSL_CTX * ctx, const char *keyfile, int type)
 
 void
 SSL_CTX_set_verify (SSL_CTX * ctx, int verify_mode,
-		    int (*verify_callback) (int, X509_STORE_CTX *))
+                    int (*verify_callback) (int, X509_STORE_CTX *))
 {
   ctx->verify_mode = verify_mode;
   ctx->verify_callback = verify_callback;
@@ -230,25 +231,19 @@ SSL_new (SSL_CTX * ctx)
 
   gnutls_init (&ssl->gnutls_state, ctx->method->connend);
 
-  gnutls_protocol_set_priority (ssl->gnutls_state,
-				ctx->method->protocol_priority);
-  gnutls_cipher_set_priority (ssl->gnutls_state,
-			      ctx->method->cipher_priority);
-  gnutls_compression_set_priority (ssl->gnutls_state,
-				   ctx->method->comp_priority);
-  gnutls_kx_set_priority (ssl->gnutls_state, ctx->method->kx_priority);
-  gnutls_mac_set_priority (ssl->gnutls_state, ctx->method->mac_priority);
+  gnutls_priority_set_direct (ssl->gnutls_state,
+                                ctx->method->priority_string, NULL);
 
   gnutls_credentials_set (ssl->gnutls_state, GNUTLS_CRD_CERTIFICATE,
-			  ssl->gnutls_cred);
+                          ssl->gnutls_cred);
   if (ctx->certfile)
     gnutls_certificate_set_x509_trust_file (ssl->gnutls_cred,
-					    ctx->certfile,
-					    ctx->certfile_type);
+                                            ctx->certfile,
+                                            ctx->certfile_type);
   if (ctx->keyfile)
     gnutls_certificate_set_x509_key_file (ssl->gnutls_cred,
-					  ctx->certfile, ctx->keyfile,
-					  ctx->keyfile_type);
+                                          ctx->certfile, ctx->keyfile,
+                                          ctx->keyfile_type);
   ssl->ctx = ctx;
   ssl->verify_mode = ctx->verify_mode;
   ssl->verify_callback = ctx->verify_callback;
@@ -332,7 +327,7 @@ SSL_pending (SSL * ssl)
 
 void
 SSL_set_verify (SSL * ssl, int verify_mode,
-		int (*verify_callback) (int, X509_STORE_CTX *))
+                int (*verify_callback) (int, X509_STORE_CTX *))
 {
   ssl->verify_mode = verify_mode;
   ssl->verify_callback = verify_callback;
@@ -345,7 +340,7 @@ SSL_get_peer_certificate (SSL * ssl)
   int cert_list_size = 0;
 
   cert_list = gnutls_certificate_get_peers (ssl->gnutls_state,
-					    &cert_list_size);
+                                            &cert_list_size);
 
   return cert_list;
 }
@@ -358,25 +353,19 @@ SSL_connect (SSL * ssl)
   X509_STORE_CTX *store;
   int cert_list_size = 0;
   int err;
-  int i, j;
-  int x_priority[GNUTLS_MAX_ALGORITHM_NUM];
+  char x_priority[256];
   /* take options into account before connecting */
 
   memset (x_priority, 0, sizeof (x_priority));
   if (ssl->options & SSL_OP_NO_TLSv1)
     {
-      for (i = 0, j = 0;
-	   i < GNUTLS_MAX_ALGORITHM_NUM && x_priority[i] != 0; i++, j++)
-	{
-	  if (ssl->ctx->method->protocol_priority[j] == GNUTLS_TLS1)
-	    j++;
-	  else
-	    x_priority[i] = ssl->ctx->method->protocol_priority[j];
-	}
-      if (i < GNUTLS_MAX_ALGORITHM_NUM)
-	x_priority[i] = 0;
-      gnutls_protocol_set_priority (ssl->gnutls_state,
-				    ssl->ctx->method->protocol_priority);
+      snprintf(x_priority, sizeof(x_priority), "%s:-VERS-TLS1.0", ssl->ctx->method->priority_string);
+      err = gnutls_priority_set_direct(ssl->gnutls_state, x_priority, NULL);
+      if (err < 0)
+        {
+          last_error = err;
+          return 0;
+        }
     }
 
   err = gnutls_handshake (ssl->gnutls_state);
@@ -391,7 +380,7 @@ SSL_connect (SSL * ssl)
   store = (X509_STORE_CTX *) calloc (1, sizeof (X509_STORE_CTX));
   store->ssl = ssl;
   store->cert_list = gnutls_certificate_get_peers (ssl->gnutls_state,
-						   &cert_list_size);
+                                                   &cert_list_size);
 
   if (ssl->verify_callback)
     {
@@ -413,25 +402,19 @@ SSL_accept (SSL * ssl)
   X509_STORE_CTX *store;
   int cert_list_size = 0;
   int err;
-  int i, j;
-  int x_priority[GNUTLS_MAX_ALGORITHM_NUM];
-  /* take options into account before accepting */
+  char x_priority[256];
+  /* take options into account before connecting */
 
   memset (x_priority, 0, sizeof (x_priority));
   if (ssl->options & SSL_OP_NO_TLSv1)
     {
-      for (i = 0, j = 0;
-	   i < GNUTLS_MAX_ALGORITHM_NUM && x_priority[i] != 0; i++, j++)
-	{
-	  if (ssl->ctx->method->protocol_priority[j] == GNUTLS_TLS1)
-	    j++;
-	  else
-	    x_priority[i] = ssl->ctx->method->protocol_priority[j];
-	}
-      if (i < GNUTLS_MAX_ALGORITHM_NUM)
-	x_priority[i] = 0;
-      gnutls_protocol_set_priority (ssl->gnutls_state,
-				    ssl->ctx->method->protocol_priority);
+      snprintf(x_priority, sizeof(x_priority), "%s:-VERS-TLS1.0", ssl->ctx->method->priority_string);
+      err = gnutls_priority_set_direct(ssl->gnutls_state, x_priority, NULL);
+      if (err < 0)
+        {
+          last_error = err;
+          return 0;
+        }
     }
 
   /* FIXME: dh params, do we want client cert? */
@@ -448,7 +431,7 @@ SSL_accept (SSL * ssl)
   store = (X509_STORE_CTX *) calloc (1, sizeof (X509_STORE_CTX));
   store->ssl = ssl;
   store->cert_list = gnutls_certificate_get_peers (ssl->gnutls_state,
-						   &cert_list_size);
+                                                   &cert_list_size);
 
   if (ssl->verify_callback)
     {
@@ -533,35 +516,7 @@ SSLv23_client_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_TLS1;
-  m->protocol_priority[1] = GNUTLS_SSL3;
-  m->protocol_priority[2] = 0;
-
-  m->cipher_priority[0] = GNUTLS_CIPHER_AES_128_CBC;
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_AES_256_CBC;
-#ifdef	ENABLE_CAMELLIA
-  m->cipher_priority[3] = GNUTLS_CIPHER_CAMELLIA_128_CBC;
-  m->cipher_priority[4] = GNUTLS_CIPHER_CAMELLIA_256_CBC;
-  m->cipher_priority[5] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[6] = 0;
-#else
-  m->cipher_priority[3] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[4] = 0;
-#endif
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
+  strcpy(m->priority_string, "NONE:+VERS-TLS1.0:+VERS-SSL3.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
 
   m->connend = GNUTLS_CLIENT;
 
@@ -576,36 +531,7 @@ SSLv23_server_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_TLS1;
-  m->protocol_priority[1] = GNUTLS_SSL3;
-  m->protocol_priority[2] = 0;
-
-  m->cipher_priority[0] = GNUTLS_CIPHER_AES_128_CBC;
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_AES_256_CBC;
-#ifdef	ENABLE_CAMELLIA
-  m->cipher_priority[3] = GNUTLS_CIPHER_CAMELLIA_128_CBC;
-  m->cipher_priority[4] = GNUTLS_CIPHER_CAMELLIA_256_CBC;
-  m->cipher_priority[5] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[6] = 0;
-#else
-  m->cipher_priority[3] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[4] = 0;
-#endif
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
-
+  strcpy(m->priority_string, "NONE:+VERS-TLS1.0:+VERS-SSL3.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
   m->connend = GNUTLS_SERVER;
 
   return m;
@@ -619,26 +545,7 @@ SSLv3_client_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_SSL3;
-  m->protocol_priority[2] = 0;
-
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[3] = 0;
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
-
+  strcpy(m->priority_string, "NONE:+VERS-SSL3.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
   m->connend = GNUTLS_CLIENT;
 
   return m;
@@ -652,26 +559,7 @@ SSLv3_server_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_SSL3;
-  m->protocol_priority[2] = 0;
-
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[3] = 0;
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
-
+  strcpy(m->priority_string, "NONE:+VERS-SSL3.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
   m->connend = GNUTLS_SERVER;
 
   return m;
@@ -685,35 +573,7 @@ TLSv1_client_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_TLS1;
-  m->protocol_priority[1] = 0;
-
-  m->cipher_priority[0] = GNUTLS_CIPHER_AES_128_CBC;
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_AES_256_CBC;
-#ifdef	ENABLE_CAMELLIA
-  m->cipher_priority[3] = GNUTLS_CIPHER_CAMELLIA_128_CBC;
-  m->cipher_priority[4] = GNUTLS_CIPHER_CAMELLIA_256_CBC;
-  m->cipher_priority[5] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[6] = 0;
-#else
-  m->cipher_priority[3] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[4] = 0;
-#endif
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
-
+  strcpy(m->priority_string, "NONE:+VERS-TLS1.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
   m->connend = GNUTLS_CLIENT;
 
   return m;
@@ -727,35 +587,7 @@ TLSv1_server_method (void)
   if (!m)
     return NULL;
 
-  m->protocol_priority[0] = GNUTLS_TLS1;
-  m->protocol_priority[1] = 0;
-
-  m->cipher_priority[0] = GNUTLS_CIPHER_AES_128_CBC;
-  m->cipher_priority[1] = GNUTLS_CIPHER_3DES_CBC;
-  m->cipher_priority[2] = GNUTLS_CIPHER_AES_256_CBC;
-#ifdef	ENABLE_CAMELLIA
-  m->cipher_priority[3] = GNUTLS_CIPHER_CAMELLIA_128_CBC;
-  m->cipher_priority[4] = GNUTLS_CIPHER_CAMELLIA_256_CBC;
-  m->cipher_priority[5] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[6] = 0;
-#else
-  m->cipher_priority[3] = GNUTLS_CIPHER_ARCFOUR_128;
-  m->cipher_priority[4] = 0;
-#endif
-
-  m->comp_priority[0] = GNUTLS_COMP_ZLIB;
-  m->comp_priority[1] = GNUTLS_COMP_NULL;
-  m->comp_priority[2] = 0;
-
-  m->kx_priority[0] = GNUTLS_KX_DHE_RSA;
-  m->kx_priority[1] = GNUTLS_KX_RSA;
-  m->kx_priority[2] = GNUTLS_KX_DHE_DSS;
-  m->kx_priority[3] = 0;
-
-  m->mac_priority[0] = GNUTLS_MAC_SHA1;
-  m->mac_priority[1] = GNUTLS_MAC_MD5;
-  m->mac_priority[2] = 0;
-
+  strcpy(m->priority_string, "NONE:+VERS-TLS1.0:+CIPHER-ALL:+COMP-ALL:+RSA:+DHE-RSA:+DHE-DSS:+MAC-ALL");
   m->connend = GNUTLS_SERVER;
 
   return m;
@@ -787,7 +619,7 @@ SSL_CIPHER_get_name (SSL_CIPHER * cipher)
     return ("NONE");
 
   return gnutls_cipher_suite_get_name (cipher->kx,
-				       cipher->cipher, cipher->mac);
+                                       cipher->cipher, cipher->mac);
 }
 
 int
@@ -842,14 +674,14 @@ SSL_CIPHER_description (SSL_CIPHER * cipher, char *buf, int size)
     }
 
   if (snprintf (tmpbuf, tmpsize, "%s %s %s %s",
-		gnutls_protocol_get_name (cipher->version),
-		gnutls_kx_get_name (cipher->kx),
-		gnutls_cipher_get_name (cipher->cipher),
-		gnutls_mac_get_name (cipher->mac)) == -1)
+                gnutls_protocol_get_name (cipher->version),
+                gnutls_kx_get_name (cipher->kx),
+                gnutls_cipher_get_name (cipher->cipher),
+                gnutls_mac_get_name (cipher->mac)) == -1)
     {
       if (local_alloc)
-	free (tmpbuf);
-      return (char*) "Buffer too small";
+        free (tmpbuf);
+      return (char *) "Buffer too small";
     }
 
   return tmpbuf;
@@ -887,15 +719,16 @@ X509_get_issuer_name (const X509 * cert)
 char *
 X509_NAME_oneline (gnutls_x509_dn * name, char *buf, int len)
 {
-  memset (buf, 0, len);
+  /* XXX openssl allocates buffer if buf == NULL */
   if (!buf)
     return NULL;
+  memset (buf, 0, len);
 
   snprintf (buf, len - 1,
-	    "C=%s, ST=%s, L=%s, O=%s, OU=%s, CN=%s/Email=%s",
-	    name->country, name->state_or_province_name,
-	    name->locality_name, name->organization,
-	    name->organizational_unit_name, name->common_name, name->email);
+            "C=%s, ST=%s, L=%s, O=%s, OU=%s, CN=%s/Email=%s",
+            name->country, name->state_or_province_name,
+            name->locality_name, name->organization,
+            name->organizational_unit_name, name->common_name, name->email);
   return buf;
 }
 

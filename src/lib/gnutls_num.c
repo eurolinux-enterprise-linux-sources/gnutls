@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -45,18 +46,18 @@ _gnutls_uint64pp (uint64 * x)
     {
       y = 0;
       if (x->i[i] == 0xff)
-	{
-	  x->i[i] = 0;
-	  y = 1;
-	}
+        {
+          x->i[i] = 0;
+          y = 1;
+        }
       else
-	x->i[i]++;
+        x->i[i]++;
 
       if (y == 0)
-	break;
+        break;
     }
   if (y != 0)
-    return -1;			/* over 64 bits! WOW */
+    return -1;                  /* over 64 bits! WOW */
 
   return 0;
 }

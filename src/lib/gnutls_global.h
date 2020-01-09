@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2009 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2009, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,9 +24,10 @@
  */
 
 #ifndef GNUTLS_GLOBAL_H
-# define GNUTLS_GLOBAL_H
+#define GNUTLS_GLOBAL_H
 
 #include <libtasn1.h>
+#include <gnutls/gnutls.h>
 
 int gnutls_is_secure_memory (const void *mem);
 
@@ -41,5 +43,6 @@ extern ASN1_TYPE _gnutls_gnutls_asn;
 
 extern gnutls_log_func _gnutls_log_func;
 extern int _gnutls_log_level;
+extern int gnutls_crypto_init (void);
 
 #endif

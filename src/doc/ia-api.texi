@@ -12,8 +12,7 @@ helper function is provided in order to allocate it.
 
 Adding this credential to a session will enable TLS/IA, and will
 require an Application Phase after the TLS handshake (if the server
-support TLS/IA).  Use @code{gnutls_ia_require_inner_phase()} to toggle the
-TLS/IA mode.
+support TLS/IA).  Use @code{gnutls_ia_enable()} to toggle the TLS/IA mode.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -29,8 +28,7 @@ helper function is provided in order to allocate it.
 
 Adding this credential to a session will enable TLS/IA, and will
 require an Application Phase after the TLS handshake (if the client
-support TLS/IA).  Use @code{gnutls_ia_require_inner_phase()} to toggle the
-TLS/IA mode.
+support TLS/IA).  Use @code{gnutls_ia_enable()} to toggle the TLS/IA mode.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -41,7 +39,7 @@ an error code is returned.
 @deftypefun {void} {gnutls_ia_enable} (gnutls_session_t @var{session}, int @var{allow_skip_on_resume})
 @var{session}: is a @code{gnutls_session_t} structure.
 
-@var{allow_skip_on_resume}: non-zero if local party allows to skip the
+@var{allow_skip_on_resume}: non-zero if local party allows one to skip the
 TLS/IA application phases for a resumed session.
 
 Specify whether we must advertise support for the TLS/IA extension

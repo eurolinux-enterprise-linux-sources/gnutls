@@ -1,14 +1,14 @@
 /*
- * Copyright (C) 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2008, 2010 Free Software Foundation, Inc.
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify
+ * GnuTLS is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful,
+ * GnuTLS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -19,7 +19,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -48,31 +48,37 @@ doit (void)
   else
     {
       if (memcmp (digest, "\x3c\xb0\x9d\x83\x28\x01\xef\xc0"
-		  "\x7b\xb3\xaf\x42\x69\xe5\x93\x9a", 16) == 0)
-	success ("_gnutls_hmac_fast(MD5) OK\n");
+                  "\x7b\xb3\xaf\x42\x69\xe5\x93\x9a", 16) == 0)
+        {
+          if (debug)
+            success ("_gnutls_hmac_fast(MD5) OK\n");
+        }
       else
-	{
-	  hexprint (digest, 16);
-	  fail ("_gnutls_hmac_fast(MD5) failure\n");
-	}
+        {
+          hexprint (digest, 16);
+          fail ("_gnutls_hmac_fast(MD5) failure\n");
+        }
     }
 
   err =
     _gnutls_hmac_fast (GNUTLS_MAC_SHA1, "keykeykey", 9, "abcdefgh", 8,
-		       digest);
+                       digest);
   if (err < 0)
     fail ("_gnutls_hmac_fast(SHA1) failed: %d\n", err);
   else
     {
       if (memcmp (digest, "\x58\x93\x7a\x58\xfe\xea\x82\xf8"
-		  "\x0e\x64\x62\x01\x40\x2b\x2c\xed\x5d\x54\xc1\xfa",
-		  20) == 0)
-	success ("_gnutls_hmac_fast(SHA1) OK\n");
+                  "\x0e\x64\x62\x01\x40\x2b\x2c\xed\x5d\x54\xc1\xfa",
+                  20) == 0)
+        {
+          if (debug)
+            success ("_gnutls_hmac_fast(SHA1) OK\n");
+        }
       else
-	{
-	  hexprint (digest, 20);
-	  fail ("_gnutls_hmac_fast(SHA1) failure\n");
-	}
+        {
+          hexprint (digest, 20);
+          fail ("_gnutls_hmac_fast(SHA1) failure\n");
+        }
     }
 
   err = _gnutls_pbkdf2_sha1 ("password", 8, "salt", 4, 4711, digest, 16);
@@ -81,13 +87,16 @@ doit (void)
   else
     {
       if (memcmp (digest, "\x09\xb7\x85\x57\xdd\xf6\x07\x15"
-		  "\x1c\x52\x34\xde\xba\x5c\xdc\x59", 16) == 0)
-	success ("_gnutls_pkcs5_pbkdf2_sha1() OK\n");
+                  "\x1c\x52\x34\xde\xba\x5c\xdc\x59", 16) == 0)
+        {
+          if (debug)
+            success ("_gnutls_pkcs5_pbkdf2_sha1() OK\n");
+        }
       else
-	{
-	  hexprint (digest, 16);
-	  fail ("_gnutls_pkcs5_pbkdf2_sha1() failure\n");
-	}
+        {
+          hexprint (digest, 16);
+          fail ("_gnutls_pkcs5_pbkdf2_sha1() failure\n");
+        }
     }
 
   gnutls_global_deinit ();

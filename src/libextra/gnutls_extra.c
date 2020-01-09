@@ -1,16 +1,17 @@
 /*
- * Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS-EXTRA.
+ * This file is part of GnuTLS-EXTRA.
  *
- * GNUTLS-EXTRA is free software: you can redistribute it and/or
+ * GnuTLS-extra is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
- * GNUTLS-EXTRA is distributed in the hope that it will be useful, but
+ * GnuTLS-extra is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
@@ -25,14 +26,19 @@
 #include <gnutls_extensions.h>
 #include <gnutls_algorithms.h>
 #include <ext_inner_application.h>
+
+#ifdef HAVE_GCRYPT
+#include <gcrypt.h>
+#endif
+
 #ifdef USE_LZO
-# ifdef USE_MINILZO
-#  include "minilzo/minilzo.h"
-# elif HAVE_LZO_LZO1X_H
-#  include <lzo/lzo1x.h>
-# elif HAVE_LZO1X_H
-#  include <lzo1x.h>
-# endif
+#ifdef USE_MINILZO
+#include "minilzo/minilzo.h"
+#elif HAVE_LZO_LZO1X_H
+#include <lzo/lzo1x.h>
+#elif HAVE_LZO1X_H
+#include <lzo1x.h>
+#endif
 #endif
 #include <gnutls/extra.h>
 
@@ -59,7 +65,7 @@ _gnutls_add_lzo_comp (void)
   for (i = 0; i < _gnutls_comp_algorithms_size; i++)
     {
       if (_gnutls_compression_algorithms[i].name == NULL)
-	break;
+        break;
     }
 
   if (_gnutls_compression_algorithms[i].name == NULL
@@ -75,7 +81,7 @@ _gnutls_add_lzo_comp (void)
       _gnutls_lzo1x_decompress_safe = lzo1x_decompress_safe;
       _gnutls_lzo1x_1_compress = lzo1x_1_compress;
 
-      return 0;			/* ok */
+      return 0;                 /* ok */
     }
 
 
@@ -86,7 +92,7 @@ _gnutls_add_lzo_comp (void)
 static int _gnutls_init_extra = 0;
 
 /**
- * gnutls_global_init_extra - initializes the global state of gnutls-extra
+ * gnutls_global_init_extra:
  *
  * This function initializes the global state of gnutls-extra library
  * to defaults.
@@ -120,11 +126,7 @@ gnutls_global_init_extra (void)
   if (_gnutls_init_extra != 1)
     return 0;
 
-  ret = gnutls_ext_register (GNUTLS_EXTENSION_INNER_APPLICATION,
-			     "INNER_APPLICATION",
-			     GNUTLS_EXT_TLS,
-			     _gnutls_inner_application_recv_params,
-			     _gnutls_inner_application_send_params);
+  ret = _gnutls_ext_register (&ext_mod_ia);
   if (ret != GNUTLS_E_SUCCESS)
     return ret;
 
@@ -145,11 +147,27 @@ gnutls_global_init_extra (void)
     }
 #endif
 
+
+#ifdef HAVE_GCRYPT
+#ifdef gcry_fips_mode_active
+  /* Libgcrypt manual says that gcry_version_check must be called
+     before calling gcry_fips_mode_active. */
+  gcry_check_version (NULL);
+  if (gcry_fips_mode_active ())
+    {
+      ret = gnutls_register_md5_handler ();
+      if (ret)
+        fprintf (stderr, "gnutls_register_md5_handler: %s\n",
+                 gnutls_strerror (ret));
+    }
+#endif
+#endif
+
   return 0;
 }
 
 /**
- * gnutls_extra_check_version - checks the libgnutls-extra version
+ * gnutls_extra_check_version:
  * @req_version: version string to compare with, or %NULL.
  *
  * Check GnuTLS Extra Library version.

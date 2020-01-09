@@ -1,27 +1,27 @@
 /*
- * Copyright (C) 2006, 2008 Free Software Foundation
+ * Copyright (C) 2006, 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include <gnutls/gnutls.h>
@@ -325,7 +325,8 @@ doit (void)
   if (ret != GNUTLS_E_ASN1_DER_ERROR)
     fail ("crt3_import %d\n", ret);
 
-  success ("done\n");
+  if (debug)
+    success ("done\n");
 
   gnutls_x509_crt_deinit (cert);
 

@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009, 2010
+ * Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -27,21 +28,18 @@
 #include <libtasn1.h>
 #include <gnutls_dh.h>
 #include <random.h>
-#include <gcrypt.h>
+#include <gnutls/pkcs11.h>
 
-#include <gnutls_extensions.h>	/* for _gnutls_ext_init */
+#include <gnutls_extensions.h>  /* for _gnutls_ext_init */
+#include <gnutls_cryptodev.h>
+#include <locks.h>
+#include <system.h>
 
 #include "sockets.h"
 #include "gettext.h"
 
 /* Minimum library versions we accept. */
-#define GNUTLS_MIN_LIBGCRYPT_VERSION "1.2.4"
 #define GNUTLS_MIN_LIBTASN1_VERSION "0.3.4"
-
-/* Remove this when we require libtasn1 v1.6 or later. */
-#ifndef ASN1_VERSION
-# define ASN1_VERSION LIBTASN1_VERSION
-#endif
 
 /* created by asn1c */
 extern const ASN1_ARRAY_TYPE gnutls_asn1_tab[];
@@ -51,10 +49,10 @@ ASN1_TYPE _gnutls_pkix1_asn;
 ASN1_TYPE _gnutls_gnutls_asn;
 
 gnutls_log_func _gnutls_log_func;
-int _gnutls_log_level = 0;	/* default log level */
+int _gnutls_log_level = 0;      /* default log level */
 
 /**
- * gnutls_global_set_log_function - set the logging function
+ * gnutls_global_set_log_function:
  * @log_func: it's a log function
  *
  * This is the function where you set the logging function gnutls is
@@ -72,7 +70,23 @@ gnutls_global_set_log_function (gnutls_log_func log_func)
 }
 
 /**
- * gnutls_global_set_log_level - set the logging level
+ * gnutls_global_set_time_function:
+ * @time_func: it's the system time function
+ *
+ * This is the function where you can override the default system
+ * time function.
+ *
+ * gnutls_time_func is of the form,
+ * time_t (*gnutls_time_func)( time*);
+ **/
+void
+gnutls_global_set_time_function (gnutls_time_func time_func)
+{
+  gnutls_time = time_func;
+}
+
+/**
+ * gnutls_global_set_log_level:
  * @level: it's an integer from 0 to 9.
  *
  * This is the function that allows you to set the log level.  The
@@ -89,7 +103,7 @@ gnutls_global_set_log_level (int level)
 }
 
 /**
- * gnutls_global_set_mem_functions - set the memory allocation functions
+ * gnutls_global_set_mem_functions:
  * @alloc_func: it's the default memory allocation function. Like malloc().
  * @secure_alloc_func: This is the memory allocation function that will be used for sensitive data.
  * @is_secure_func: a function that returns 0 if the memory given is not secure. May be NULL.
@@ -101,17 +115,16 @@ gnutls_global_set_log_level (int level)
  * (malloc(), free()), are used by gnutls, to allocate both sensitive
  * and not sensitive data.  This function is provided to set the
  * memory allocation functions to something other than the defaults
- * (ie the gcrypt allocation functions).
  *
  * This function must be called before gnutls_global_init() is called.
  * This function is not thread safe.
  **/
 void
 gnutls_global_set_mem_functions (gnutls_alloc_function alloc_func,
-				 gnutls_alloc_function secure_alloc_func,
-				 gnutls_is_secure_function is_secure_func,
-				 gnutls_realloc_function realloc_func,
-				 gnutls_free_function free_func)
+                                 gnutls_alloc_function secure_alloc_func,
+                                 gnutls_is_secure_function is_secure_func,
+                                 gnutls_realloc_function realloc_func,
+                                 gnutls_free_function free_func)
 {
   gnutls_secure_malloc = secure_alloc_func;
   gnutls_malloc = alloc_func;
@@ -131,7 +144,7 @@ gnutls_global_set_mem_functions (gnutls_alloc_function alloc_func,
       gnutls_calloc = calloc;
     }
   else
-    {				/* use the included ones */
+    {                           /* use the included ones */
       gnutls_calloc = _gnutls_calloc;
     }
   gnutls_strdup = _gnutls_strdup;
@@ -140,19 +153,17 @@ gnutls_global_set_mem_functions (gnutls_alloc_function alloc_func,
 
 static int _gnutls_init = 0;
 
+
 /**
- * gnutls_global_init - initialize the global data to defaults.
+ * gnutls_global_init:
  *
  * This function initializes the global data to defaults.  Every
  * gnutls application has a global data which holds common parameters
  * shared by gnutls session structures.  You should call
  * gnutls_global_deinit() when gnutls usage is no longer needed
  *
- * Note that this function will also initialize libgcrypt, if it has
- * not been initialized before.  Thus if you want to manually
- * initialize libgcrypt you must do it before calling this function.
- * This is useful in cases you want to disable libgcrypt's internal
- * lockings etc.
+ * Note that this function will also initialize the underlying crypto
+ * backend, if it has not been initialized before.  
  *
  * This function increment a global counter, so that
  * gnutls_global_deinit() only releases resources when it has been
@@ -186,26 +197,11 @@ gnutls_global_init (void)
 
   bindtextdomain (PACKAGE, LOCALEDIR);
 
-  /* Initialize libgcrypt if it hasn't already been initialized. */
-  if (gcry_control (GCRYCTL_ANY_INITIALIZATION_P) == 0)
+  res = gnutls_crypto_init ();
+  if (res != 0)
     {
-      const char *p;
-
-      p = gcry_check_version (GNUTLS_MIN_LIBGCRYPT_VERSION);
-
-      if (p == NULL)
-	{
-	  gnutls_assert ();
-	  _gnutls_debug_log ("Checking for libgcrypt failed: %s < %s\n",
-			     gcry_check_version (NULL),
-			     GNUTLS_MIN_LIBGCRYPT_VERSION);
-	  return GNUTLS_E_INCOMPATIBLE_GCRYPT_LIBRARY;
-	}
-
-      /* for gcrypt in order to be able to allocate memory */
-      gcry_control (GCRYCTL_DISABLE_SECMEM, NULL, 0);
-
-      gcry_control (GCRYCTL_INITIALIZATION_FINISHED, NULL, 0);
+      gnutls_assert ();
+      return GNUTLS_E_CRYPTO_INIT_FAILED;
     }
 
   /* initialize ASN.1 parser
@@ -216,8 +212,8 @@ gnutls_global_init (void)
     {
       gnutls_assert ();
       _gnutls_debug_log ("Checking for libtasn1 failed: %s < %s\n",
-			 asn1_check_version (NULL),
-			 GNUTLS_MIN_LIBTASN1_VERSION);
+                         asn1_check_version (NULL),
+                         GNUTLS_MIN_LIBTASN1_VERSION);
       return GNUTLS_E_INCOMPATIBLE_LIBTASN1_LIBRARY;
     }
 
@@ -252,12 +248,18 @@ gnutls_global_init (void)
       goto out;
     }
 
+#ifdef ENABLE_PKCS11
+  gnutls_pkcs11_init (GNUTLS_PKCS11_FLAG_AUTO, NULL);
+#endif
+
+  _gnutls_cryptodev_init ();
+
 out:
   return result;
 }
 
 /**
- * gnutls_global_deinit - deinitialize the global data
+ * gnutls_global_deinit:
  *
  * This function deinitializes the global data, that were initialized
  * using gnutls_global_init().
@@ -276,6 +278,10 @@ gnutls_global_deinit (void)
       asn1_delete_structure (&_gnutls_gnutls_asn);
       asn1_delete_structure (&_gnutls_pkix1_asn);
       _gnutls_crypto_deregister ();
+      _gnutls_cryptodev_deinit ();
+#ifdef ENABLE_PKCS11
+      gnutls_pkcs11_deinit ();
+#endif
     }
   _gnutls_init--;
 }
@@ -284,48 +290,9 @@ gnutls_global_deinit (void)
  * historical reasons.
  */
 
-/**
- * gnutls_transport_set_pull_function - set a read like function
- * @pull_func: a callback function similar to read()
- * @session: gnutls session
- *
- * This is the function where you set a function for gnutls to receive
- * data.  Normally, if you use berkeley style sockets, do not need to
- * use this function since the default (recv(2)) will probably be ok.
- *
- * PULL_FUNC is of the form,
- * ssize_t (*gnutls_pull_func)(gnutls_transport_ptr_t, void*, size_t);
- **/
-void
-gnutls_transport_set_pull_function (gnutls_session_t session,
-				    gnutls_pull_func pull_func)
-{
-  session->internals._gnutls_pull_func = pull_func;
-}
 
 /**
- * gnutls_transport_set_push_function - set the function to send data
- * @push_func: a callback function similar to write()
- * @session: gnutls session
- *
- * This is the function where you set a push function for gnutls to
- * use in order to send data.  If you are going to use berkeley style
- * sockets, you do not need to use this function since the default
- * (send(2)) will probably be ok.  Otherwise you should specify this
- * function for gnutls to be able to send data.
- *
- * PUSH_FUNC is of the form,
- * ssize_t (*gnutls_push_func)(gnutls_transport_ptr_t, const void*, size_t);
- **/
-void
-gnutls_transport_set_push_function (gnutls_session_t session,
-				    gnutls_push_func push_func)
-{
-  session->internals._gnutls_push_func = push_func;
-}
-
-/**
- * gnutls_check_version - checks the libgnutls version
+ * gnutls_check_version:
  * @req_version: version string to compare with, or %NULL.
  *
  * Check GnuTLS Library version.

@@ -1,5 +1,6 @@
 /* main.c
- * Copyright (C) 2001, 2002, 2003, 2007, 2008 Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2003, 2007, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Timo Schulz
  *
@@ -22,12 +23,12 @@
  *
  */
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 #include <stdio.h>
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>
+#include <unistd.h>
 #endif
 #ifdef _WIN32
 #include <windows.h>
@@ -93,9 +94,9 @@ handle_set_compress (cdk_ctx_t hd, int algo, int level)
   else
     {
       if (level > 0 && level < 10)
-	hd->compress.level = level;
+        hd->compress.level = level;
       else
-	hd->compress.level = 6;
+        hd->compress.level = 6;
     }
 }
 
@@ -124,59 +125,59 @@ cdk_handle_control (cdk_ctx_t hd, int action, int cmd, ...)
     {
     case CDK_CTL_ARMOR:
       if (set)
-	hd->opt.armor = va_arg (arg_ptr, int);
+        hd->opt.armor = va_arg (arg_ptr, int);
       else
-	val = hd->opt.armor;
+        val = hd->opt.armor;
       break;
 
     case CDK_CTL_DIGEST:
       if (set)
-	handle_set_digest (hd, va_arg (arg_ptr, int));
+        handle_set_digest (hd, va_arg (arg_ptr, int));
       else
-	val = hd->digest_algo;
+        val = hd->digest_algo;
       break;
 
     case CDK_CTL_OVERWRITE:
       if (set)
-	hd->opt.overwrite = va_arg (arg_ptr, int);
+        hd->opt.overwrite = va_arg (arg_ptr, int);
       else
-	val = hd->opt.overwrite;
+        val = hd->opt.overwrite;
       break;
 
     case CDK_CTL_COMPRESS:
       if (set)
-	{
-	  int algo = va_arg (arg_ptr, int);
-	  int level = va_arg (arg_ptr, int);
-	  handle_set_compress (hd, algo, level);
-	}
+        {
+          int algo = va_arg (arg_ptr, int);
+          int level = va_arg (arg_ptr, int);
+          handle_set_compress (hd, algo, level);
+        }
       else
-	val = hd->compress.algo;
+        val = hd->compress.algo;
       break;
 
     case CDK_CTL_S2K:
       if (set)
-	{
-	  int mode = va_arg (arg_ptr, int);
-	  int digest = va_arg (arg_ptr, int);
-	  handle_set_s2k (hd, mode, digest);
-	}
+        {
+          int mode = va_arg (arg_ptr, int);
+          int digest = va_arg (arg_ptr, int);
+          handle_set_s2k (hd, mode, digest);
+        }
       else
-	val = hd->_s2k.mode;
+        val = hd->_s2k.mode;
       break;
 
     case CDK_CTL_FORCE_DIGEST:
       if (set)
-	hd->opt.force_digest = va_arg (arg_ptr, int);
+        hd->opt.force_digest = va_arg (arg_ptr, int);
       else
-	val = hd->opt.force_digest;
+        val = hd->opt.force_digest;
       break;
 
     case CDK_CTL_BLOCKMODE_ON:
       if (set)
-	hd->opt.blockmode = va_arg (arg_ptr, int);
+        hd->opt.blockmode = va_arg (arg_ptr, int);
       else
-	val = hd->opt.blockmode;
+        val = hd->opt.blockmode;
       break;
 
     default:
@@ -308,29 +309,14 @@ cdk_handle_get_keydb (cdk_ctx_t hd, int type)
  **/
 void
 cdk_handle_set_passphrase_cb (cdk_ctx_t hd,
-			      char *(*cb) (void *opa, const char *prompt),
-			      void *cb_value)
+                              char *(*cb) (void *opa, const char *prompt),
+                              void *cb_value)
 {
   if (!hd)
     return;
   hd->passphrase_cb = cb;
   hd->passphrase_cb_value = cb_value;
 }
-
-
-/**
- * cdk_handle_verify_get_result:
- * @hd: the session handle
- * 
- * Return the verify result for the current session.
- * Do not free the pointer.
- **/
-cdk_verify_result_t
-cdk_handle_verify_get_result (cdk_ctx_t hd)
-{
-  return hd->result.verify;
-}
-
 
 /**
  * cdk_handle_free:
@@ -343,16 +329,15 @@ cdk_handle_free (cdk_ctx_t hd)
 {
   if (!hd)
     return;
-  _cdk_result_verify_free (hd->result.verify);
 
   /* If cdk_handle_set_keyring() were used, we need to free the key db
      handles here because the handles are not controlled by the user. */
   if (hd->db.close_db)
     {
       if (hd->db.pub)
-	cdk_keydb_free (hd->db.pub);
+        cdk_keydb_free (hd->db.pub);
       if (hd->db.sec)
-	cdk_keydb_free (hd->db.sec);
+        cdk_keydb_free (hd->db.sec);
       hd->db.pub = hd->db.sec = NULL;
     }
   cdk_free (hd);

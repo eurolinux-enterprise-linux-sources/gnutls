@@ -1,26 +1,26 @@
 /*
- * Copyright (C) 2007 Free Software Foundation
+ * Copyright (C) 2007, 2010 Free Software Foundation, Inc.
  * Author: Ludovic Courtès, Timo Schulz
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #include <stdio.h>
@@ -199,7 +199,8 @@ doit (void)
     fail ("init %d\n", ret);
 
   gnutls_global_set_log_function (tls_log_func);
-  gnutls_global_set_log_level (2);
+  if (debug)
+    gnutls_global_set_log_level (2);
 
   ret = gnutls_global_init_extra ();
   if (ret < 0)
@@ -212,7 +213,7 @@ doit (void)
   data.data = raw_keyring;
   data.size = sizeof (raw_keyring) / sizeof (raw_keyring[0]);
   ret = gnutls_openpgp_keyring_import (keyring, &data,
-				       GNUTLS_OPENPGP_FMT_RAW);
+                                       GNUTLS_OPENPGP_FMT_RAW);
   if (ret < 0)
     fail ("keyring-import %d\n", ret);
 
@@ -228,7 +229,8 @@ doit (void)
   if (ret != 0)
     fail ("keyring-check-id second key %d\n", ret);
 
-  success ("done\n");
+  if (debug)
+    success ("done\n");
 
   gnutls_openpgp_keyring_deinit (keyring);
   gnutls_global_deinit ();

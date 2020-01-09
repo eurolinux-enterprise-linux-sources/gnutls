@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2006, 2008 Free Software Foundation
+# Copyright (C) 2006, 2008, 2010 Free Software Foundation, Inc.
 #
 # Author: Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 EXTRA_DIST = MD5CollisionCA.cer \
 	TargetCollidingCertificate1.cer \
 	TargetCollidingCertificate2.cer \
-	README mbox
+	README
 
 dist_check_SCRIPTS = rsa-md5-collision
 

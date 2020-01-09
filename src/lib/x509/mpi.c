@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2007, 2008 Free Software Foundation
+ * Copyright (C) 2003, 2004, 2005, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -68,7 +69,7 @@ _gnutls_x509_read_rsa_params (opaque * der, int dersize, bigint_t * params)
     }
 
   if ((result = _gnutls_x509_read_int (spk, "publicExponent",
-				       &params[1])) < 0)
+                                       &params[1])) < 0)
     {
       gnutls_assert ();
       _gnutls_mpi_release (&params[0]);
@@ -162,7 +163,7 @@ _gnutls_x509_read_der_int (opaque * der, int dersize, bigint_t * out)
   /* == INTEGER */
   if ((result = asn1_create_element
        (_gnutls_get_gnutls_asn (), "GNUTLS.DSAPublicKey",
-	&spk)) != ASN1_SUCCESS)
+        &spk)) != ASN1_SUCCESS)
     {
       gnutls_assert ();
       return _gnutls_asn2err (result);
@@ -205,23 +206,32 @@ _gnutls_x509_read_dsa_pubkey (opaque * der, int dersize, bigint_t * params)
 
 /* Extracts DSA and RSA parameters from a certificate.
  */
-static int
-get_mpis (int pk_algorithm, ASN1_TYPE asn, const char *root,
-	  bigint_t * params, int *params_size)
+int
+_gnutls_get_asn_mpis (ASN1_TYPE asn, const char *root,
+                      bigint_t * params, int *params_size)
 {
   int result;
   char name[256];
-  gnutls_datum tmp = { NULL, 0 };
+  gnutls_datum_t tmp = { NULL, 0 };
+  gnutls_pk_algorithm pk_algorithm;
+
+  result = _gnutls_x509_get_pk_algorithm (asn, root, NULL);
+  if (result < 0)
+    {
+      gnutls_assert ();
+      return result;
+    }
+
+  pk_algorithm = result;
 
   /* Read the algorithm's parameters
    */
-  snprintf (name, sizeof (name), "%s.subjectPublicKey", root);
+  _asnstr_append_name (name, sizeof (name), root, ".subjectPublicKey");
   result = _gnutls_x509_read_value (asn, name, &tmp, 2);
 
   if (result < 0)
     {
       gnutls_assert ();
-      fprintf (stderr, "name: %s\n", name);
       return result;
     }
 
@@ -232,19 +242,19 @@ get_mpis (int pk_algorithm, ASN1_TYPE asn, const char *root,
        * params[1] is the exponent
        */
       if (*params_size < RSA_PUBLIC_PARAMS)
-	{
-	  gnutls_assert ();
-	  /* internal error. Increase the bigint_ts in params */
-	  result = GNUTLS_E_INTERNAL_ERROR;
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          /* internal error. Increase the bigint_ts in params */
+          result = GNUTLS_E_INTERNAL_ERROR;
+          goto error;
+        }
 
       if ((result =
-	   _gnutls_x509_read_rsa_params (tmp.data, tmp.size, params)) < 0)
-	{
-	  gnutls_assert ();
-	  goto error;
-	}
+           _gnutls_x509_read_rsa_params (tmp.data, tmp.size, params)) < 0)
+        {
+          gnutls_assert ();
+          goto error;
+        }
       *params_size = RSA_PUBLIC_PARAMS;
 
       break;
@@ -256,25 +266,26 @@ get_mpis (int pk_algorithm, ASN1_TYPE asn, const char *root,
        */
 
       if (*params_size < DSA_PUBLIC_PARAMS)
-	{
-	  gnutls_assert ();
-	  /* internal error. Increase the bigint_ts in params */
-	  result = GNUTLS_E_INTERNAL_ERROR;
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          /* internal error. Increase the bigint_ts in params */
+          result = GNUTLS_E_INTERNAL_ERROR;
+          goto error;
+        }
 
       if ((result =
-	   _gnutls_x509_read_dsa_pubkey (tmp.data, tmp.size, params)) < 0)
-	{
-	  gnutls_assert ();
-	  goto error;
-	}
+           _gnutls_x509_read_dsa_pubkey (tmp.data, tmp.size, params)) < 0)
+        {
+          gnutls_assert ();
+          goto error;
+        }
 
       /* Now read the parameters
        */
       _gnutls_free_datum (&tmp);
 
-      snprintf (name, sizeof (name), "%s.algorithm.parameters", root);
+      _asnstr_append_name (name, sizeof (name), root,
+                           ".algorithm.parameters");
       result = _gnutls_x509_read_value (asn, name, &tmp, 0);
 
       /* FIXME: If the parameters are not included in the certificate
@@ -283,17 +294,17 @@ get_mpis (int pk_algorithm, ASN1_TYPE asn, const char *root,
        */
 
       if (result < 0)
-	{
-	  gnutls_assert ();
-	  goto error;
-	}
+        {
+          gnutls_assert ();
+          goto error;
+        }
 
       if ((result =
-	   _gnutls_x509_read_dsa_params (tmp.data, tmp.size, params)) < 0)
-	{
-	  gnutls_assert ();
-	  goto error;
-	}
+           _gnutls_x509_read_dsa_params (tmp.data, tmp.size, params)) < 0)
+        {
+          gnutls_assert ();
+          goto error;
+        }
       *params_size = DSA_PUBLIC_PARAMS;
 
       break;
@@ -318,35 +329,31 @@ error:
  */
 int
 _gnutls_x509_crt_get_mpis (gnutls_x509_crt_t cert,
-			   bigint_t * params, int *params_size)
+                           bigint_t * params, int *params_size)
 {
-  int pk_algorithm;
-
   /* Read the algorithm's OID
    */
-  pk_algorithm = gnutls_x509_crt_get_pk_algorithm (cert, NULL);
-
-  return get_mpis (pk_algorithm, cert->cert,
-		   "tbsCertificate.subjectPublicKeyInfo", params,
-		   params_size);
+  return _gnutls_get_asn_mpis (cert->cert,
+                               "tbsCertificate.subjectPublicKeyInfo", params,
+                               params_size);
 }
+
+#ifdef ENABLE_PKI
 
 /* Extracts DSA and RSA parameters from a certificate.
  */
 int
 _gnutls_x509_crq_get_mpis (gnutls_x509_crq_t cert,
-			   bigint_t * params, int *params_size)
+                           bigint_t * params, int *params_size)
 {
-  int pk_algorithm;
-
   /* Read the algorithm's OID
    */
-  pk_algorithm = gnutls_x509_crq_get_pk_algorithm (cert, NULL);
-
-  return get_mpis (pk_algorithm, cert->crq,
-		   "certificationRequestInfo.subjectPKInfo", params,
-		   params_size);
+  return _gnutls_get_asn_mpis (cert->crq,
+                               "certificationRequestInfo.subjectPKInfo",
+                               params, params_size);
 }
+
+#endif
 
 /*
  * some x509 certificate functions that relate to MPI parameter
@@ -357,7 +364,7 @@ _gnutls_x509_crq_get_mpis (gnutls_x509_crq_t cert,
  */
 int
 _gnutls_x509_write_rsa_params (bigint_t * params, int params_size,
-			       gnutls_datum_t * der)
+                               gnutls_datum_t * der)
 {
   int result;
   ASN1_TYPE spk = ASN1_TYPE_EMPTY;
@@ -380,14 +387,14 @@ _gnutls_x509_write_rsa_params (bigint_t * params, int params_size,
       return _gnutls_asn2err (result);
     }
 
-  result = _gnutls_x509_write_int (spk, "modulus", params[0], 0);
+  result = _gnutls_x509_write_int (spk, "modulus", params[0], 1);
   if (result < 0)
     {
       gnutls_assert ();
       goto cleanup;
     }
 
-  result = _gnutls_x509_write_int (spk, "publicExponent", params[1], 0);
+  result = _gnutls_x509_write_int (spk, "publicExponent", params[1], 1);
   if (result < 0)
     {
       gnutls_assert ();
@@ -416,11 +423,9 @@ cleanup:
  */
 int
 _gnutls_x509_write_sig_params (ASN1_TYPE dst, const char *dst_name,
-			       gnutls_pk_algorithm_t pk_algorithm,
-			       gnutls_digest_algorithm_t dig,
-			       bigint_t * params, int params_size)
+                               gnutls_pk_algorithm_t pk_algorithm,
+                               gnutls_digest_algorithm_t dig)
 {
-  gnutls_datum_t der;
   int result;
   char name[128];
   const char *pk;
@@ -432,6 +437,9 @@ _gnutls_x509_write_sig_params (ASN1_TYPE dst, const char *dst_name,
   if (pk == NULL)
     {
       gnutls_assert ();
+      _gnutls_debug_log
+        ("Cannot find OID for sign algorithm pk: %d dig: %d\n",
+         (int) pk_algorithm, (int) dig);
       return GNUTLS_E_INVALID_REQUEST;
     }
 
@@ -448,36 +456,18 @@ _gnutls_x509_write_sig_params (ASN1_TYPE dst, const char *dst_name,
   _gnutls_str_cpy (name, sizeof (name), dst_name);
   _gnutls_str_cat (name, sizeof (name), ".parameters");
 
-  if (pk_algorithm == GNUTLS_PK_DSA)
-    {
-      result = _gnutls_x509_write_dsa_params (params, params_size, &der);
-      if (result < 0)
-	{
-	  gnutls_assert ();
-	  return result;
-	}
-
-      result = asn1_write_value (dst, name, der.data, der.size);
-      _gnutls_free_datum (&der);
-
-      if (result != ASN1_SUCCESS)
-	{
-	  gnutls_assert ();
-	  return _gnutls_asn2err (result);
-	}
-    }
+  if (pk_algorithm == GNUTLS_PK_RSA)
+    result = asn1_write_value (dst, name, ASN1_NULL, ASN1_NULL_SIZE);
   else
-    {				/* RSA */
-      result = asn1_write_value (dst, name, NULL, 0);
+    result = asn1_write_value (dst, name, NULL, 0);
 
-      if (result != ASN1_SUCCESS && result != ASN1_ELEMENT_NOT_FOUND)
-	{
-	  /* Here we ignore the element not found error, since this
-	   * may have been disabled before.
-	   */
-	  gnutls_assert ();
-	  return _gnutls_asn2err (result);
-	}
+  if (result != ASN1_SUCCESS && result != ASN1_ELEMENT_NOT_FOUND)
+    {
+      /* Here we ignore the element not found error, since this
+       * may have been disabled before.
+       */
+      gnutls_assert ();
+      return _gnutls_asn2err (result);
     }
 
   return 0;
@@ -491,7 +481,7 @@ _gnutls_x509_write_sig_params (ASN1_TYPE dst, const char *dst_name,
  */
 int
 _gnutls_x509_write_dsa_params (bigint_t * params, int params_size,
-			       gnutls_datum_t * der)
+                               gnutls_datum_t * der)
 {
   int result;
   ASN1_TYPE spk = ASN1_TYPE_EMPTY;
@@ -514,21 +504,21 @@ _gnutls_x509_write_dsa_params (bigint_t * params, int params_size,
       return _gnutls_asn2err (result);
     }
 
-  result = _gnutls_x509_write_int (spk, "p", params[0], 0);
+  result = _gnutls_x509_write_int (spk, "p", params[0], 1);
   if (result < 0)
     {
       gnutls_assert ();
       goto cleanup;
     }
 
-  result = _gnutls_x509_write_int (spk, "q", params[1], 0);
+  result = _gnutls_x509_write_int (spk, "q", params[1], 1);
   if (result < 0)
     {
       gnutls_assert ();
       goto cleanup;
     }
 
-  result = _gnutls_x509_write_int (spk, "g", params[2], 0);
+  result = _gnutls_x509_write_int (spk, "g", params[2], 1);
   if (result < 0)
     {
       gnutls_assert ();
@@ -557,7 +547,7 @@ cleanup:
  */
 int
 _gnutls_x509_write_dsa_public_key (bigint_t * params, int params_size,
-				   gnutls_datum_t * der)
+                                   gnutls_datum_t * der)
 {
   int result;
   ASN1_TYPE spk = ASN1_TYPE_EMPTY;
@@ -580,7 +570,7 @@ _gnutls_x509_write_dsa_public_key (bigint_t * params, int params_size,
       return _gnutls_asn2err (result);
     }
 
-  result = _gnutls_x509_write_int (spk, "", params[3], 0);
+  result = _gnutls_x509_write_int (spk, "", params[3], 1);
   if (result < 0)
     {
       gnutls_assert ();
@@ -594,8 +584,7 @@ _gnutls_x509_write_dsa_public_key (bigint_t * params, int params_size,
       goto cleanup;
     }
 
-  asn1_delete_structure (&spk);
-  return 0;
+  result = 0;
 
 cleanup:
   asn1_delete_structure (&spk);

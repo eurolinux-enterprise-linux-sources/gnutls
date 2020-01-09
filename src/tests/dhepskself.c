@@ -1,29 +1,30 @@
 /*
- * Copyright (C) 2004, 2005, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2008, 2009, 2010 Free Software Foundation,
+ * Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Parts copied from GnuTLS example programs. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -31,9 +32,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#if !defined(_WIN32)
 #include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 #include <unistd.h>
 #include <gnutls/gnutls.h>
 
@@ -60,23 +63,24 @@ client (void)
   gnutls_session_t session;
   char buffer[MAX_BUF + 1];
   gnutls_psk_client_credentials_t pskcred;
-  const gnutls_datum_t key = { (char*) "DEADBEEF", 8 };
+  const gnutls_datum_t key = { (char *) "DEADBEEF", 8 };
 
   gnutls_global_init ();
 
   gnutls_global_set_log_function (tls_log_func);
-//  gnutls_global_set_log_level (99);
+  if (debug)
+    gnutls_global_set_log_level (5);
 
   gnutls_psk_allocate_client_credentials (&pskcred);
   gnutls_psk_set_client_credentials (pskcred, "test", &key,
-				     GNUTLS_PSK_KEY_HEX);
+                                     GNUTLS_PSK_KEY_HEX);
 
   /* Initialize TLS session
    */
   gnutls_init (&session, GNUTLS_CLIENT);
 
   /* Use default priorities */
-  gnutls_set_default_priority (session);
+  gnutls_priority_set_direct (session, "NORMAL:+DHE-PSK", NULL);
 
   /* put the anonymous credentials to the current session
    */
@@ -100,7 +104,8 @@ client (void)
     }
   else
     {
-      success ("client: Handshake was completed\n");
+      if (debug)
+        success ("client: Handshake was completed\n");
     }
 
   gnutls_record_send (session, MSG, strlen (MSG));
@@ -108,7 +113,8 @@ client (void)
   ret = gnutls_record_recv (session, buffer, MAX_BUF);
   if (ret == 0)
     {
-      success ("client: Peer has closed the TLS connection\n");
+      if (debug)
+        success ("client: Peer has closed the TLS connection\n");
       goto end;
     }
   else if (ret < 0)
@@ -117,10 +123,13 @@ client (void)
       goto end;
     }
 
-  printf ("- Received %d bytes: ", ret);
-  for (ii = 0; ii < ret; ii++)
-    fputc (buffer[ii], stdout);
-  fputs ("\n", stdout);
+  if (debug)
+    {
+      printf ("- Received %d bytes: ", ret);
+      for (ii = 0; ii < ret; ii++)
+        fputc (buffer[ii], stdout);
+      fputs ("\n", stdout);
+    }
 
   gnutls_bye (session, GNUTLS_SHUT_RDWR);
 
@@ -140,7 +149,7 @@ end:
 
 #define SA struct sockaddr
 #define MAX_BUF 1024
-#define PORT 5556		/* listen to 5556 port */
+#define PORT 5556               /* listen to 5556 port */
 
 /* These are global */
 gnutls_psk_server_credentials_t server_pskcred;
@@ -155,7 +164,7 @@ initialize_tls_session (void)
   /* avoid calling all the priority functions, since the defaults
    * are adequate.
    */
-  gnutls_set_default_priority (session);
+  gnutls_priority_set_direct(session, "NORMAL:+DHE-PSK", NULL);
 
   gnutls_credentials_set (session, GNUTLS_CRD_PSK, server_pskcred);
 
@@ -167,7 +176,7 @@ static gnutls_dh_params_t dh_params;
 static int
 generate_dh_params (void)
 {
-  const gnutls_datum_t p3 = { (char*) pkcs3, strlen (pkcs3) };
+  const gnutls_datum_t p3 = { (char *) pkcs3, strlen (pkcs3) };
   /* Generate Diffie-Hellman parameters - for use with DHE
    * kx algorithms. These should be discarded and regenerated
    * once a day, once a week or once a month. Depending on the
@@ -180,7 +189,8 @@ generate_dh_params (void)
 static int
 pskfunc (gnutls_session_t session, const char *username, gnutls_datum_t * key)
 {
-  printf ("psk callback to get %s's password\n", username);
+  if (debug)
+    printf ("psk callback to get %s's password\n", username);
   key->data = gnutls_malloc (4);
   key->data[0] = 0xDE;
   key->data[1] = 0xAD;
@@ -203,7 +213,8 @@ int optval = 1;
 static void
 server_start (void)
 {
-  success ("Launched, generating DH parameters...\n");
+  if (debug)
+    success ("Launched, generating DH parameters...\n");
 
   /* Socket operations
    */
@@ -218,9 +229,10 @@ server_start (void)
   memset (&sa_serv, '\0', sizeof (sa_serv));
   sa_serv.sin_family = AF_INET;
   sa_serv.sin_addr.s_addr = INADDR_ANY;
-  sa_serv.sin_port = htons (PORT);	/* Server Port number */
+  sa_serv.sin_port = htons (PORT);      /* Server Port number */
 
-  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval, sizeof (int));
+  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval,
+              sizeof (int));
 
   err = bind (listen_sd, (SA *) & sa_serv, sizeof (sa_serv));
   if (err == -1)
@@ -238,7 +250,8 @@ server_start (void)
       return;
     }
 
-  success ("server: ready. Listening to port '%d'.\n", PORT);
+  if (debug)
+    success ("server: ready. Listening to port '%d'.\n", PORT);
 }
 
 static void
@@ -264,9 +277,10 @@ server (void)
 
   sd = accept (listen_sd, (SA *) & sa_cli, &client_len);
 
-  success ("server: connection from %s, port %d\n",
-	   inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
-		      sizeof (topbuf)), ntohs (sa_cli.sin_port));
+  if (debug)
+    success ("server: connection from %s, port %d\n",
+             inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
+                        sizeof (topbuf)), ntohs (sa_cli.sin_port));
 
   gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
   ret = gnutls_handshake (session);
@@ -277,7 +291,8 @@ server (void)
       fail ("server: Handshake has failed (%s)\n\n", gnutls_strerror (ret));
       return;
     }
-  success ("server: Handshake was completed\n");
+  if (debug)
+    success ("server: Handshake was completed\n");
 
   /* see the Getting peer's information example */
   /* print_info(session); */
@@ -289,21 +304,22 @@ server (void)
       ret = gnutls_record_recv (session, buffer, MAX_BUF);
 
       if (ret == 0)
-	{
-	  success ("server: Peer has closed the GNUTLS connection\n");
-	  break;
-	}
+        {
+          if (debug)
+            success ("server: Peer has closed the GnuTLS connection\n");
+          break;
+        }
       else if (ret < 0)
-	{
-	  fail ("server: Received corrupted data(%d). Closing...\n", ret);
-	  break;
-	}
+        {
+          fail ("server: Received corrupted data(%d). Closing...\n", ret);
+          break;
+        }
       else if (ret > 0)
-	{
-	  /* echo data back to the client
-	   */
-	  gnutls_record_send (session, buffer, strlen (buffer));
-	}
+        {
+          /* echo data back to the client
+           */
+          gnutls_record_send (session, buffer, strlen (buffer));
+        }
     }
   /* do not wait for the peer to close the connection.
    */
@@ -320,7 +336,8 @@ server (void)
 
   gnutls_global_deinit ();
 
-  success ("server: finished\n");
+  if (debug)
+    success ("server: finished\n");
 }
 
 void

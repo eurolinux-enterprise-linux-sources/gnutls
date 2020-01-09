@@ -1,5 +1,6 @@
 /* new-packet.c - packet handling (freeing, copying, ...)
- * Copyright (C) 2001, 2002, 2003, 2007, 2008 Free Software Foundation, Inc.
+ * Copyright (C) 2001, 2002, 2003, 2007, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Timo Schulz
  *
@@ -22,7 +23,7 @@
  *
  */
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 #include <string.h>
 #include <stdio.h>
@@ -289,7 +290,7 @@ cdk_pkt_alloc (cdk_packet_t * r_pkt, cdk_packet_type_t pkttype)
     case CDK_PKT_USER_ID:
       pkt->pkt.user_id = cdk_calloc (1, sizeof pkt->pkt.user_id);
       if (!pkt->pkt.user_id)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       pkt->pkt.user_id->name = NULL;
       break;
 
@@ -297,40 +298,40 @@ cdk_pkt_alloc (cdk_packet_t * r_pkt, cdk_packet_type_t pkttype)
     case CDK_PKT_PUBLIC_SUBKEY:
       pkt->pkt.public_key = cdk_calloc (1, sizeof *pkt->pkt.public_key);
       if (!pkt->pkt.public_key)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_SECRET_KEY:
     case CDK_PKT_SECRET_SUBKEY:
       pkt->pkt.secret_key = cdk_calloc (1, sizeof *pkt->pkt.secret_key);
       pkt->pkt.secret_key->pk =
-	cdk_calloc (1, sizeof *pkt->pkt.secret_key->pk);
+        cdk_calloc (1, sizeof *pkt->pkt.secret_key->pk);
       if (!pkt->pkt.secret_key || !pkt->pkt.secret_key->pk)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_SIGNATURE:
       pkt->pkt.signature = cdk_calloc (1, sizeof *pkt->pkt.signature);
       if (!pkt->pkt.signature)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_PUBKEY_ENC:
       pkt->pkt.pubkey_enc = cdk_calloc (1, sizeof *pkt->pkt.pubkey_enc);
       if (!pkt->pkt.pubkey_enc)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_MDC:
       pkt->pkt.mdc = cdk_calloc (1, sizeof *pkt->pkt.mdc);
       if (!pkt->pkt.mdc)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_ONEPASS_SIG:
       pkt->pkt.onepass_sig = cdk_calloc (1, sizeof *pkt->pkt.onepass_sig);
       if (!pkt->pkt.onepass_sig)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       break;
 
     case CDK_PKT_LITERAL:
@@ -338,7 +339,7 @@ cdk_pkt_alloc (cdk_packet_t * r_pkt, cdk_packet_type_t pkttype)
          bytes, otherwise the result would be useless. */
       pkt->pkt.literal = cdk_calloc (1, sizeof *pkt->pkt.literal);
       if (!pkt->pkt.literal)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       pkt->pkt.literal->name = NULL;
       break;
 
@@ -388,7 +389,7 @@ _cdk_copy_userid (cdk_pkt_userid_t * dst, cdk_pkt_userid_t src)
   u = cdk_calloc (1, sizeof *u + strlen (src->name) + 2);
   if (!u)
     return CDK_Out_Of_Core;
-  u->name = (char*)u + sizeof(*u);
+  u->name = (char *) u + sizeof (*u);
 
   memcpy (u, src, sizeof *u);
   memcpy (u->name, src->name, strlen (src->name));
@@ -447,7 +448,7 @@ _cdk_copy_seckey (cdk_pkt_seckey_t * dst, cdk_pkt_seckey_t src)
     {
       k->encdata = cdk_calloc (1, src->enclen + 1);
       if (!k->encdata)
-	return CDK_Out_Of_Core;
+        return CDK_Out_Of_Core;
       memcpy (k->encdata, src->encdata, src->enclen);
     }
 
@@ -521,7 +522,7 @@ _cdk_pubkey_compare (cdk_pkt_pubkey_t a, cdk_pkt_pubkey_t b)
   for (i = 0; i < na; i++)
     {
       if (_gnutls_mpi_cmp (a->mpi[i], b->mpi[i]))
-	return -1;
+        return -1;
     }
 
   return 0;
@@ -579,7 +580,7 @@ cdk_subpkt_type_count (cdk_subpkt_t ctx, size_t type)
   for (s = ctx; s; s = s->next)
     {
       if (s->type == type)
-	count++;
+        count++;
     }
 
   return count;
@@ -604,7 +605,7 @@ cdk_subpkt_find_nth (cdk_subpkt_t ctx, size_t type, size_t idx)
   for (s = ctx; s; s = s->next)
     {
       if (s->type == type && pos++ == idx)
-	return s;
+        return s;
     }
 
   return NULL;
@@ -627,7 +628,7 @@ cdk_subpkt_new (size_t size)
   s = cdk_calloc (1, sizeof *s + size + 2);
   if (!s)
     return NULL;
-  s->d = (char*)s + sizeof(*s);
+  s->d = (char *) s + sizeof (*s);
 
   return s;
 }
@@ -685,20 +686,20 @@ _cdk_subpkt_get_array (cdk_subpkt_t s, int count, size_t * r_nbytes)
   if (!s)
     {
       if (r_nbytes)
-	*r_nbytes = 0;
+        *r_nbytes = 0;
       return NULL;
     }
 
   for (n = 0, list = s; list; list = list->next)
     {
-      n++;			/* type */
+      n++;                      /* type */
       n += list->size;
       if (list->size < 192)
-	n++;
+        n++;
       else if (list->size < 8384)
-	n += 2;
+        n += 2;
       else
-	n += 5;
+        n += 5;
     }
   buf = cdk_calloc (1, n + 1);
   if (!buf)
@@ -707,22 +708,24 @@ _cdk_subpkt_get_array (cdk_subpkt_t s, int count, size_t * r_nbytes)
   n = 0;
   for (list = s; list; list = list->next)
     {
-      nbytes = 1 + list->size;	/* type */
+      nbytes = 1 + list->size;  /* type */
       if (nbytes < 192)
-	buf[n++] = nbytes;
+        buf[n++] = nbytes;
       else if (nbytes < 8384)
-	{
-	  buf[n++] = nbytes / 256 + 192;
-	  buf[n++] = nbytes % 256;
-	}
+        {
+          nbytes -= 192;
+          buf[n++] = nbytes / 256 + 192;
+          buf[n++] = nbytes & 0xff;
+        }
       else
-	{
-	  buf[n++] = 0xFF;
-	  buf[n++] = nbytes >> 24;
-	  buf[n++] = nbytes >> 16;
-	  buf[n++] = nbytes >> 8;
-	  buf[n++] = nbytes;
-	}
+        {
+          buf[n++] = 0xFF;
+          buf[n++] = nbytes >> 24;
+          buf[n++] = nbytes >> 16;
+          buf[n++] = nbytes >> 8;
+          buf[n++] = nbytes;
+        }
+
       buf[n++] = list->type;
       memcpy (buf + n, list->d, list->size);
       n += list->size;
@@ -752,15 +755,15 @@ _cdk_subpkt_copy (cdk_subpkt_t * r_dst, cdk_subpkt_t src)
     {
       node = cdk_subpkt_new (p->size);
       if (node)
-	{
-	  memcpy (node->d, p->d, p->size);
-	  node->type = p->type;
-	  node->size = p->size;
-	}
+        {
+          memcpy (node->d, p->d, p->size);
+          node->type = p->type;
+          node->size = p->size;
+        }
       if (!root)
-	root = node;
+        root = node;
       else
-	cdk_subpkt_add (root, node);
+        cdk_subpkt_add (root, node);
     }
   *r_dst = root;
   return 0;
@@ -778,7 +781,7 @@ _cdk_subpkt_copy (cdk_subpkt_t * r_dst, cdk_subpkt_t src)
  **/
 void
 cdk_subpkt_init (cdk_subpkt_t node, size_t type,
-		 const void *buf, size_t buflen)
+                 const void *buf, size_t buflen)
 {
   if (!node)
     return;
@@ -791,8 +794,8 @@ cdk_subpkt_init (cdk_subpkt_t node, size_t type,
 /* FIXME: We need to think of a public interface for it. */
 const byte *
 cdk_key_desig_revoker_walk (cdk_desig_revoker_t root,
-			    cdk_desig_revoker_t * ctx,
-			    int *r_class, int *r_algid)
+                            cdk_desig_revoker_t * ctx,
+                            int *r_class, int *r_algid)
 {
   cdk_desig_revoker_t n;
 
@@ -833,9 +836,9 @@ cdk_subpkt_find_next (cdk_subpkt_t root, size_t type)
   for (node = root->next; node; node = node->next)
     {
       if (!type)
-	return node;
+        return node;
       else if (node->type == type)
-	return node;
+        return node;
     }
 
   return NULL;

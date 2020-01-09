@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2001, 2004, 2005, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -34,12 +35,12 @@
 #include "gnutls_mpi.h"
 
 /**
-  * gnutls_anon_free_server_credentials - Used to free an allocated gnutls_anon_server_credentials_t structure
-  * @sc: is a #gnutls_anon_server_credentials_t structure.
-  *
-  * This structure is complex enough to manipulate directly thus this
-  * helper function is provided in order to free (deallocate) it.
-  **/
+ * gnutls_anon_free_server_credentials:
+ * @sc: is a #gnutls_anon_server_credentials_t structure.
+ *
+ * This structure is complex enough to manipulate directly thus this
+ * helper function is provided in order to free (deallocate) it.
+ **/
 void
 gnutls_anon_free_server_credentials (gnutls_anon_server_credentials_t sc)
 {
@@ -48,17 +49,17 @@ gnutls_anon_free_server_credentials (gnutls_anon_server_credentials_t sc)
 }
 
 /**
-  * gnutls_anon_allocate_server_credentials - Used to allocate an gnutls_anon_server_credentials_t structure
-  * @sc: is a pointer to a #gnutls_anon_server_credentials_t structure.
-  *
-  * This structure is complex enough to manipulate directly thus this
-  * helper function is provided in order to allocate it.
-  *
-  * Returns: %GNUTLS_E_SUCCESS on success, or an error code.
-  **/
+ * gnutls_anon_allocate_server_credentials:
+ * @sc: is a pointer to a #gnutls_anon_server_credentials_t structure.
+ *
+ * This structure is complex enough to manipulate directly thus this
+ * helper function is provided in order to allocate it.
+ *
+ * Returns: %GNUTLS_E_SUCCESS on success, or an error code.
+ **/
 int
 gnutls_anon_allocate_server_credentials (gnutls_anon_server_credentials_t *
-					 sc)
+                                         sc)
 {
 
   *sc = gnutls_calloc (1, sizeof (anon_server_credentials_st));
@@ -68,12 +69,12 @@ gnutls_anon_allocate_server_credentials (gnutls_anon_server_credentials_t *
 
 
 /**
-  * gnutls_anon_free_client_credentials - Used to free an allocated gnutls_anon_client_credentials_t structure
-  * @sc: is a #gnutls_anon_client_credentials_t structure.
-  *
-  * This structure is complex enough to manipulate directly thus this
-  * helper function is provided in order to free (deallocate) it.
-  **/
+ * gnutls_anon_free_client_credentials:
+ * @sc: is a #gnutls_anon_client_credentials_t structure.
+ *
+ * This structure is complex enough to manipulate directly thus this
+ * helper function is provided in order to free (deallocate) it.
+ **/
 void
 gnutls_anon_free_client_credentials (gnutls_anon_client_credentials_t sc)
 {
@@ -83,7 +84,7 @@ static struct gnutls_anon_client_credentials_st anon_dummy_struct;
 static const gnutls_anon_client_credentials_t anon_dummy = &anon_dummy_struct;
 
 /**
- * gnutls_anon_allocate_client_credentials - Used to allocate a credentials structure
+ * gnutls_anon_allocate_client_credentials:
  * @sc: is a pointer to a #gnutls_anon_client_credentials_t structure.
  *
  * This structure is complex enough to manipulate directly thus
@@ -93,7 +94,7 @@ static const gnutls_anon_client_credentials_t anon_dummy = &anon_dummy_struct;
  **/
 int
 gnutls_anon_allocate_client_credentials (gnutls_anon_client_credentials_t *
-					 sc)
+                                         sc)
 {
   /* anon_dummy is only there for *sc not to be null.
    * it is not used at all;
@@ -104,33 +105,33 @@ gnutls_anon_allocate_client_credentials (gnutls_anon_client_credentials_t *
 }
 
 /**
-  * gnutls_anon_set_server_dh_params - set the DH parameters for a server to use
-  * @res: is a gnutls_anon_server_credentials_t structure
-  * @dh_params: is a structure that holds Diffie-Hellman parameters.
-  *
-  * This function will set the Diffie-Hellman parameters for an
-  * anonymous server to use.  These parameters will be used in
-  * Anonymous Diffie-Hellman cipher suites.
-  **/
+ * gnutls_anon_set_server_dh_params:
+ * @res: is a gnutls_anon_server_credentials_t structure
+ * @dh_params: is a structure that holds Diffie-Hellman parameters.
+ *
+ * This function will set the Diffie-Hellman parameters for an
+ * anonymous server to use.  These parameters will be used in
+ * Anonymous Diffie-Hellman cipher suites.
+ **/
 void
 gnutls_anon_set_server_dh_params (gnutls_anon_server_credentials_t res,
-				  gnutls_dh_params_t dh_params)
+                                  gnutls_dh_params_t dh_params)
 {
   res->dh_params = dh_params;
 }
 
 /**
-  * gnutls_anon_set_server_params_function - set the DH parameters callback
-  * @res: is a gnutls_certificate_credentials_t structure
-  * @func: is the function to be called
-  *
-  * This function will set a callback in order for the server to get
-  * the Diffie-Hellman parameters for anonymous authentication.  The
-  * callback should return zero on success.
-  **/
+ * gnutls_anon_set_server_params_function:
+ * @res: is a gnutls_certificate_credentials_t structure
+ * @func: is the function to be called
+ *
+ * This function will set a callback in order for the server to get
+ * the Diffie-Hellman parameters for anonymous authentication.  The
+ * callback should return zero on success.
+ **/
 void
 gnutls_anon_set_server_params_function (gnutls_anon_server_credentials_t res,
-					gnutls_params_function * func)
+                                        gnutls_params_function * func)
 {
   res->params_func = func;
 }

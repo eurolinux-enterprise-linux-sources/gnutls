@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2006 Free Software Foundation
+# Copyright (C) 2006, 2010 Free Software Foundation, Inc.
 #
 # Author: Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -24,3 +24,5 @@ EXTRA_DIST = encpkcs8.pem unencpkcs8.pem enc2pkcs8.pem
 dist_check_SCRIPTS = pkcs8
 
 TESTS = pkcs8
+
+TESTS_ENVIRONMENT = EXEEXT=$(EXEEXT)

@@ -11,7 +11,7 @@ void tls_test_version(void);
 
 #}
 
-helpnode "GNU TLS debug client\nUsage: gnutls-cli-debug [options] hostname\n\n"
+helpnode "GnuTLS debug client\nUsage: gnutls-cli-debug [options] hostname\n\n"
 
 #int pp;
 option (p, port) INT "integer" { $pp = $1 } "The port to connect to."
@@ -30,4 +30,3 @@ option (h, help) { gaa_help(); exit(0); } "prints this help"
 rest STR "hostname" { $rest_args = $1; }
 
 init { $rest_args=NULL; $pp = 443; $more_info = 0; }
-

@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -31,11 +31,16 @@
 #include <random.h>
 #include <gnutls_cipher_int.h>
 
+/* default values for priorities */
+int crypto_mac_prio = INT_MAX;
+int crypto_digest_prio = INT_MAX;
+int crypto_cipher_prio = INT_MAX;
+
 typedef struct algo_list
 {
   int algorithm;
   int priority;
-  void *alg_data;
+  const void *alg_data;
   struct algo_list *next;
 } algo_list;
 
@@ -44,7 +49,7 @@ typedef struct algo_list
 #define digest_list algo_list
 
 static int
-_algo_register (algo_list * al, int algorithm, int priority, void *s)
+_algo_register (algo_list * al, int algorithm, int priority, const void *s)
 {
   algo_list *cl;
   algo_list *last_cl = al;
@@ -55,27 +60,27 @@ _algo_register (algo_list * al, int algorithm, int priority, void *s)
   while (cl && cl->alg_data)
     {
       if (cl->algorithm == algorithm)
-	{
-	  if (cl->priority < priority)
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_CRYPTO_ALREADY_REGISTERED;
-	    }
-	  else
-	    {
-	      /* the current has higher priority -> overwrite */
-	      cl->algorithm = algorithm;
-	      cl->priority = priority;
-	      cl->alg_data = s;
-	      return 0;
-	    }
-	}
+        {
+          if (cl->priority < priority)
+            {
+              gnutls_assert ();
+              return GNUTLS_E_CRYPTO_ALREADY_REGISTERED;
+            }
+          else
+            {
+              /* the current has higher priority -> overwrite */
+              cl->algorithm = algorithm;
+              cl->priority = priority;
+              cl->alg_data = s;
+              return 0;
+            }
+        }
       cl = cl->next;
       if (cl)
-	last_cl = cl;
+        last_cl = cl;
     }
 
-  cl = gnutls_malloc (sizeof (cipher_list));
+  cl = gnutls_calloc (1, sizeof (cipher_list));
 
   if (cl == NULL)
     {
@@ -83,30 +88,29 @@ _algo_register (algo_list * al, int algorithm, int priority, void *s)
       return GNUTLS_E_MEMORY_ERROR;
     }
 
-  cl->algorithm = algorithm;
-  cl->priority = priority;
-  cl->alg_data = s;
-  cl->next = NULL;
-
+  last_cl->algorithm = algorithm;
+  last_cl->priority = priority;
+  last_cl->alg_data = s;
   last_cl->next = cl;
+
   return 0;
 
 }
 
-static void *
+static const void *
 _get_algo (algo_list * al, int algo)
 {
   cipher_list *cl;
 
   /* look if there is any cipher with lowest priority. In that case do not add.
    */
-  cl = al->next;
+  cl = al;
   while (cl && cl->alg_data)
     {
       if (cl->algorithm == algo)
-	{
-	  return cl->alg_data;
-	}
+        {
+          return cl->alg_data;
+        }
       cl = cl->next;
     }
 
@@ -143,7 +147,7 @@ _gnutls_crypto_deregister (void)
 }
 
 /**
- * gnutls_crypto_single_cipher_register2 - register a cipher algorithm
+ * gnutls_crypto_single_cipher_register2:
  * @algorithm: is the gnutls algorithm identifier
  * @priority: is the priority of the algorithm
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
@@ -166,8 +170,8 @@ _gnutls_crypto_deregister (void)
  **/
 int
 gnutls_crypto_single_cipher_register2 (gnutls_cipher_algorithm_t algorithm,
-				       int priority, int version,
-				       gnutls_crypto_single_cipher_st * s)
+                                       int priority, int version,
+                                       const gnutls_crypto_cipher_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -178,14 +182,14 @@ gnutls_crypto_single_cipher_register2 (gnutls_cipher_algorithm_t algorithm,
   return _algo_register (&glob_cl, algorithm, priority, s);
 }
 
-gnutls_crypto_single_cipher_st *
+const gnutls_crypto_cipher_st *
 _gnutls_get_crypto_cipher (gnutls_cipher_algorithm_t algo)
 {
   return _get_algo (&glob_cl, algo);
 }
 
 /**
- * gnutls_crypto_rnd_register2 - register a random generator
+ * gnutls_crypto_rnd_register2:
  * @priority: is the priority of the generator
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new generator's data
@@ -207,7 +211,7 @@ _gnutls_get_crypto_cipher (gnutls_cipher_algorithm_t algo)
  **/
 int
 gnutls_crypto_rnd_register2 (int priority, int version,
-			     gnutls_crypto_rnd_st * s)
+                             const gnutls_crypto_rnd_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -226,7 +230,7 @@ gnutls_crypto_rnd_register2 (int priority, int version,
 }
 
 /**
- * gnutls_crypto_single_mac_register2 - register a MAC algorithm
+ * gnutls_crypto_single_mac_register2:
  * @algorithm: is the gnutls algorithm identifier
  * @priority: is the priority of the algorithm
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
@@ -248,8 +252,8 @@ gnutls_crypto_rnd_register2 (int priority, int version,
  **/
 int
 gnutls_crypto_single_mac_register2 (gnutls_mac_algorithm_t algorithm,
-				    int priority, int version,
-				    gnutls_crypto_single_mac_st * s)
+                                    int priority, int version,
+                                    const gnutls_crypto_mac_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -260,14 +264,14 @@ gnutls_crypto_single_mac_register2 (gnutls_mac_algorithm_t algorithm,
   return _algo_register (&glob_ml, algorithm, priority, s);
 }
 
-gnutls_crypto_single_mac_st *
+const gnutls_crypto_mac_st *
 _gnutls_get_crypto_mac (gnutls_mac_algorithm_t algo)
 {
   return _get_algo (&glob_ml, algo);
 }
 
 /**
- * gnutls_crypto_single_digest_register2 - register a digest algorithm
+ * gnutls_crypto_single_digest_register2:
  * @algorithm: is the gnutls algorithm identifier
  * @priority: is the priority of the algorithm
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
@@ -290,8 +294,8 @@ _gnutls_get_crypto_mac (gnutls_mac_algorithm_t algo)
  **/
 int
 gnutls_crypto_single_digest_register2 (gnutls_digest_algorithm_t algorithm,
-				       int priority, int version,
-				       gnutls_crypto_single_digest_st * s)
+                                       int priority, int version,
+                                       const gnutls_crypto_digest_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -302,14 +306,14 @@ gnutls_crypto_single_digest_register2 (gnutls_digest_algorithm_t algorithm,
   return _algo_register (&glob_dl, algorithm, priority, s);
 }
 
-gnutls_crypto_single_digest_st *
+const gnutls_crypto_digest_st *
 _gnutls_get_crypto_digest (gnutls_digest_algorithm_t algo)
 {
   return _get_algo (&glob_dl, algo);
 }
 
 /**
- * gnutls_crypto_bigint_register2 - register a bigint interface
+ * gnutls_crypto_bigint_register2:
  * @priority: is the priority of the interface
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new interface's data
@@ -334,7 +338,7 @@ _gnutls_get_crypto_digest (gnutls_digest_algorithm_t algo)
  **/
 int
 gnutls_crypto_bigint_register2 (int priority, int version,
-				gnutls_crypto_bigint_st * s)
+                                const gnutls_crypto_bigint_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -353,7 +357,7 @@ gnutls_crypto_bigint_register2 (int priority, int version,
 }
 
 /**
- * gnutls_crypto_pk_register2 - register a public key interface
+ * gnutls_crypto_pk_register2:
  * @priority: is the priority of the interface
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new interface's data
@@ -378,7 +382,7 @@ gnutls_crypto_bigint_register2 (int priority, int version,
  **/
 int
 gnutls_crypto_pk_register2 (int priority, int version,
-			    gnutls_crypto_pk_st * s)
+                            const gnutls_crypto_pk_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -397,7 +401,7 @@ gnutls_crypto_pk_register2 (int priority, int version,
 }
 
 /**
- * gnutls_crypto_cipher_register2 - register a cipher interface
+ * gnutls_crypto_cipher_register2:
  * @priority: is the priority of the cipher interface
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new interface's data
@@ -419,7 +423,7 @@ gnutls_crypto_pk_register2 (int priority, int version,
  **/
 int
 gnutls_crypto_cipher_register2 (int priority, int version,
-				gnutls_crypto_cipher_st * s)
+                                const gnutls_crypto_cipher_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -438,7 +442,7 @@ gnutls_crypto_cipher_register2 (int priority, int version,
 }
 
 /**
- * gnutls_crypto_mac_register2 - register a mac interface
+ * gnutls_crypto_mac_register2:
  * @priority: is the priority of the mac interface
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new interface's data
@@ -452,7 +456,7 @@ gnutls_crypto_cipher_register2 (int priority, int version,
  * This function should be called before gnutls_global_init().
  *
  * For simplicity you can use the convenience
- * gnutls_crypto_mac_register() macro.
+ * gnutls_crypto_digest_register() macro.
  *
  * Returns: %GNUTLS_E_SUCCESS on success, otherwise an error.
  *
@@ -460,7 +464,7 @@ gnutls_crypto_cipher_register2 (int priority, int version,
  **/
 int
 gnutls_crypto_mac_register2 (int priority, int version,
-			     gnutls_crypto_mac_st * s)
+                             const gnutls_crypto_mac_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {
@@ -479,7 +483,7 @@ gnutls_crypto_mac_register2 (int priority, int version,
 }
 
 /**
- * gnutls_crypto_digest_register2 - register a digest interface
+ * gnutls_crypto_digest_register2:
  * @priority: is the priority of the digest interface
  * @version: should be set to %GNUTLS_CRYPTO_API_VERSION
  * @s: is a structure holding new interface's data
@@ -501,7 +505,7 @@ gnutls_crypto_mac_register2 (int priority, int version,
  **/
 int
 gnutls_crypto_digest_register2 (int priority, int version,
-				gnutls_crypto_digest_st * s)
+                                const gnutls_crypto_digest_st * s)
 {
   if (version != GNUTLS_CRYPTO_API_VERSION)
     {

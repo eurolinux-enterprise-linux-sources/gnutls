@@ -1,18 +1,18 @@
-;;; GNUTLS-EXTRA --- Guile bindings for GnuTLS-EXTRA.
-;;; Copyright (C) 2007, 2008  Free Software Foundation
+;;; GnuTLS-extra --- Guile bindings for GnuTLS-EXTRA.
+;;; Copyright (C) 2007, 2008, 2010, 2011 Free Software Foundation, Inc.
 ;;;
-;;; GNUTLS-EXTRA is free software; you can redistribute it and/or modify
+;;; GnuTLS-extra is free software; you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
 ;;; the Free Software Foundation; either version 3 of the License, or
 ;;; (at your option) any later version.
 ;;;
-;;; GNUTLS-EXTRA is distributed in the hope that it will be useful,
+;;; GnuTLS-extra is distributed in the hope that it will be useful,
 ;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;;; GNU General Public License for more details.
 ;;;
 ;;; You should have received a copy of the GNU General Public License
-;;; along with GNUTLS-EXTRA; if not, write to the Free Software
+;;; along with GnuTLS-EXTRA; if not, write to the Free Software
 ;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
 ;;; USA.
 
@@ -25,15 +25,16 @@
 
 (use-modules (gnutls)
              (gnutls extra)
+             (gnutls build tests)
              (srfi srfi-4))
 
 
 ;; TLS session settings.
 (define %protos  (list protocol/tls-1.0))
 (define %certs   (list certificate-type/openpgp))
-(define %ciphers (list cipher/null cipher/arcfour cipher/aes-128-cbc
+(define %ciphers (list cipher/arcfour cipher/aes-128-cbc
                        cipher/aes-256-cbc))
-(define %kx      (list kx/rsa kx/rsa-export kx/dhe-rsa kx/dhe-dss))
+(define %kx      (list kx/dhe-rsa kx/dhe-dss))
 (define %macs    (list mac/sha1 mac/rmd160 mac/md5))
 
 ;; Message sent by the client.
@@ -54,15 +55,16 @@
   (import-something pkcs1-import-rsa-parameters file
                     x509-certificate-format/pem))
 
+(define (import-dh-params file)
+  (import-something pkcs3-import-dh-parameters file
+                    x509-certificate-format/pem))
+
 ;; Debugging.
 ;; (set-log-level! 3)
 ;; (set-log-procedure! (lambda (level str)
 ;;                       (format #t "[~a|~a] ~a" (getpid) level str)))
 
-(dynamic-wind
-    (lambda ()
-      #t)
-
+(run-test
     (lambda ()
       (let ((socket-pair (socketpair PF_UNIX SOCK_STREAM 0))
             (pub         (import-key import-openpgp-certificate
@@ -92,11 +94,11 @@
                 (write %message (session-record-port client))
                 (bye client close-request/rdwr)
 
-                (exit))
+                (primitive-exit))
 
               (let ((server (make-session connection-end/server))
                     (rsa    (import-rsa-params "rsa-parameters.pem"))
-                    (dh     (make-dh-parameters 1024)))
+                    (dh     (import-dh-params "dh-parameters.pem")))
                 ;; server-side
                 (set-session-default-priority! server)
                 (set-session-certificate-type-priority! server %certs)
@@ -119,11 +121,7 @@
                 (let ((msg (read (session-record-port server)))
                       (auth-type (session-authentication-type server)))
                   (bye server close-request/rdwr)
-                  (exit (and (eq? auth-type credentials/certificate)
-                             (equal? msg %message)))))))))
-
-    (lambda ()
-      ;; failure
-      (exit 1)))
+                  (and (eq? auth-type credentials/certificate)
+                       (equal? msg %message)))))))))
 
 ;;; arch-tag: 1a973ed5-f45d-45a4-8160-900b6a8c27ff

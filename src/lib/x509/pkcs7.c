@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2003, 2004, 2005, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -44,7 +45,7 @@
  */
 static int
 _decode_pkcs7_signed_data (ASN1_TYPE pkcs7, ASN1_TYPE * sdata,
-			   gnutls_datum_t * raw)
+                           gnutls_datum_t * raw)
 {
   char oid[MAX_OID_SIZE];
   ASN1_TYPE c2;
@@ -138,7 +139,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_init - initialize a #gnutls_pkcs7_t structure
+ * gnutls_pkcs7_init:
  * @pkcs7: The structure to be initialized
  *
  * This function will initialize a PKCS7 structure. PKCS7 structures
@@ -156,21 +157,21 @@ gnutls_pkcs7_init (gnutls_pkcs7_t * pkcs7)
   if (*pkcs7)
     {
       int result = asn1_create_element (_gnutls_get_pkix (),
-					"PKIX1.pkcs-7-ContentInfo",
-					&(*pkcs7)->pkcs7);
+                                        "PKIX1.pkcs-7-ContentInfo",
+                                        &(*pkcs7)->pkcs7);
       if (result != ASN1_SUCCESS)
-	{
-	  gnutls_assert ();
-	  gnutls_free (*pkcs7);
-	  return _gnutls_asn2err (result);
-	}
-      return 0;			/* success */
+        {
+          gnutls_assert ();
+          gnutls_free (*pkcs7);
+          return _gnutls_asn2err (result);
+        }
+      return 0;                 /* success */
     }
   return GNUTLS_E_MEMORY_ERROR;
 }
 
 /**
- * gnutls_pkcs7_deinit - deinitializes a #gnutls_pkcs7_t structure
+ * gnutls_pkcs7_deinit:
  * @pkcs7: The structure to be initialized
  *
  * This function will deinitialize a PKCS7 structure.
@@ -188,14 +189,14 @@ gnutls_pkcs7_deinit (gnutls_pkcs7_t pkcs7)
 }
 
 /**
- * gnutls_pkcs7_import - import a DER or PEM encoded PKCS7
+ * gnutls_pkcs7_import:
  * @pkcs7: The structure to store the parsed PKCS7.
  * @data: The DER or PEM encoded PKCS7.
  * @format: One of DER or PEM
  *
  * This function will convert the given DER or PEM encoded PKCS7 to
  * the native #gnutls_pkcs7_t format.  The output will be stored in
- * 'pkcs7'.
+ * @pkcs7.
  *
  * If the PKCS7 is PEM encoded it should have a header of "PKCS7".
  *
@@ -204,7 +205,7 @@ gnutls_pkcs7_deinit (gnutls_pkcs7_t pkcs7)
  **/
 int
 gnutls_pkcs7_import (gnutls_pkcs7_t pkcs7, const gnutls_datum_t * data,
-		     gnutls_x509_crt_fmt_t format)
+                     gnutls_x509_crt_fmt_t format)
 {
   int result = 0, need_free = 0;
   gnutls_datum_t _data;
@@ -222,15 +223,15 @@ gnutls_pkcs7_import (gnutls_pkcs7_t pkcs7, const gnutls_datum_t * data,
       opaque *out;
 
       result = _gnutls_fbase64_decode (PEM_PKCS7, data->data, data->size,
-				       &out);
+                                       &out);
 
       if (result <= 0)
-	{
-	  if (result == 0)
-	    result = GNUTLS_E_INTERNAL_ERROR;
-	  gnutls_assert ();
-	  return result;
-	}
+        {
+          if (result == 0)
+            result = GNUTLS_E_INTERNAL_ERROR;
+          gnutls_assert ();
+          return result;
+        }
 
       _data.data = out;
       _data.size = result;
@@ -259,7 +260,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_get_crt_raw - get a certificate from a PKCS7 certificate set
+ * gnutls_pkcs7_get_crt_raw:
  * @pkcs7: should contain a gnutls_pkcs7_t structure
  * @indx: contains the index of the certificate to extract
  * @certificate: the contents of the certificate will be copied
@@ -279,8 +280,8 @@ cleanup:
  **/
 int
 gnutls_pkcs7_get_crt_raw (gnutls_pkcs7_t pkcs7,
-			  int indx, void *certificate,
-			  size_t * certificate_size)
+                          int indx, void *certificate,
+                          size_t * certificate_size)
 {
   ASN1_TYPE c2 = ASN1_TYPE_EMPTY;
   int result, len;
@@ -329,26 +330,26 @@ gnutls_pkcs7_get_crt_raw (gnutls_pkcs7_t pkcs7,
       int start, end;
 
       result = asn1_der_decoding_startEnd (c2, tmp.data, tmp.size,
-					   root2, &start, &end);
+                                           root2, &start, &end);
 
       if (result != ASN1_SUCCESS)
-	{
-	  gnutls_assert ();
-	  result = _gnutls_asn2err (result);
-	  goto cleanup;
-	}
+        {
+          gnutls_assert ();
+          result = _gnutls_asn2err (result);
+          goto cleanup;
+        }
 
       end = end - start + 1;
 
       if ((unsigned) end > *certificate_size)
-	{
-	  *certificate_size = end;
-	  result = GNUTLS_E_SHORT_MEMORY_BUFFER;
-	  goto cleanup;
-	}
+        {
+          *certificate_size = end;
+          result = GNUTLS_E_SHORT_MEMORY_BUFFER;
+          goto cleanup;
+        }
 
       if (certificate)
-	memcpy (certificate, &tmp.data[start], end);
+        memcpy (certificate, &tmp.data[start], end);
 
       *certificate_size = end;
 
@@ -368,7 +369,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_get_crt_count - return the number of certificates in a PKCS7 certificate set
+ * gnutls_pkcs7_get_crt_count:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  *
  * This function will return the number of certifcates in the PKCS7
@@ -404,7 +405,7 @@ gnutls_pkcs7_get_crt_count (gnutls_pkcs7_t pkcs7)
   if (result != ASN1_SUCCESS)
     {
       gnutls_assert ();
-      return 0;			/* no certificates */
+      return 0;                 /* no certificates */
     }
 
   return count;
@@ -412,7 +413,7 @@ gnutls_pkcs7_get_crt_count (gnutls_pkcs7_t pkcs7)
 }
 
 /**
- * gnutls_pkcs7_export - export the pkcs7 structure
+ * gnutls_pkcs7_export:
  * @pkcs7: Holds the pkcs7 structure
  * @format: the format of output params. One of PEM or DER.
  * @output_data: will contain a structure PEM or DER encoded
@@ -433,14 +434,14 @@ gnutls_pkcs7_get_crt_count (gnutls_pkcs7_t pkcs7)
   **/
 int
 gnutls_pkcs7_export (gnutls_pkcs7_t pkcs7,
-		     gnutls_x509_crt_fmt_t format, void *output_data,
-		     size_t * output_data_size)
+                     gnutls_x509_crt_fmt_t format, void *output_data,
+                     size_t * output_data_size)
 {
   if (pkcs7 == NULL)
     return GNUTLS_E_INVALID_REQUEST;
 
   return _gnutls_x509_export_int (pkcs7->pkcs7, format, PEM_PKCS7,
-				  output_data, output_data_size);
+                                  output_data, output_data_size);
 }
 
 /* Creates an empty signed data structure in the pkcs7
@@ -456,7 +457,7 @@ create_empty_signed_data (ASN1_TYPE pkcs7, ASN1_TYPE * sdata)
 
   if ((result = asn1_create_element
        (_gnutls_get_pkix (), "PKIX1.pkcs-7-SignedData",
-	sdata)) != ASN1_SUCCESS)
+        sdata)) != ASN1_SUCCESS)
     {
       gnutls_assert ();
       result = _gnutls_asn2err (result);
@@ -479,7 +480,7 @@ create_empty_signed_data (ASN1_TYPE pkcs7, ASN1_TYPE * sdata)
   /* id-data */
   result =
     asn1_write_value (*sdata, "encapContentInfo.eContentType",
-		      "1.2.840.113549.1.7.5", 1);
+                      "1.2.840.113549.1.7.5", 1);
   if (result != ASN1_SUCCESS)
     {
       gnutls_assert ();
@@ -523,7 +524,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_set_crt_raw - add a certificate in a PKCS7 certificate set
+ * gnutls_pkcs7_set_crt_raw:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  * @crt: the DER encoded certificate to be added
  *
@@ -561,10 +562,10 @@ gnutls_pkcs7_set_crt_raw (gnutls_pkcs7_t pkcs7, const gnutls_datum_t * crt)
        */
       result = create_empty_signed_data (pkcs7->pkcs7, &c2);
       if (result < 0)
-	{
-	  gnutls_assert ();
-	  return result;
-	}
+        {
+          gnutls_assert ();
+          return result;
+        }
     }
 
   /* Step 2. Append the new certificate.
@@ -588,7 +589,7 @@ gnutls_pkcs7_set_crt_raw (gnutls_pkcs7_t pkcs7, const gnutls_datum_t * crt)
 
   result =
     asn1_write_value (c2, "certificates.?LAST.certificate", crt->data,
-		      crt->size);
+                      crt->size);
   if (result != ASN1_SUCCESS)
     {
       gnutls_assert ();
@@ -617,17 +618,17 @@ cleanup:
 }
 
 /**
-  * gnutls_pkcs7_set_crt - add a parsed certificate in a PKCS7 certificate set
-  * @pkcs7: should contain a #gnutls_pkcs7_t structure
-  * @crt: the certificate to be copied.
-  *
-  * This function will add a parsed certificate to the PKCS7 or
-  * RFC2630 certificate set.  This is a wrapper function over
-  * gnutls_pkcs7_set_crt_raw() .
-  *
-  * Returns: On success, %GNUTLS_E_SUCCESS is returned, otherwise a
-  *   negative error value.
-  **/
+ * gnutls_pkcs7_set_crt:
+ * @pkcs7: should contain a #gnutls_pkcs7_t structure
+ * @crt: the certificate to be copied.
+ *
+ * This function will add a parsed certificate to the PKCS7 or
+ * RFC2630 certificate set.  This is a wrapper function over
+ * gnutls_pkcs7_set_crt_raw() .
+ *
+ * Returns: On success, %GNUTLS_E_SUCCESS is returned, otherwise a
+ *   negative error value.
+ **/
 int
 gnutls_pkcs7_set_crt (gnutls_pkcs7_t pkcs7, gnutls_x509_crt_t crt)
 {
@@ -659,7 +660,7 @@ gnutls_pkcs7_set_crt (gnutls_pkcs7_t pkcs7, gnutls_x509_crt_t crt)
 
 
 /**
- * gnutls_pkcs7_delete_crt - deletes a certificate from a PKCS7 certificate set
+ * gnutls_pkcs7_delete_crt:
  * @pkcs7: should contain a gnutls_pkcs7_t structure
  * @indx: the index of the certificate to delete
  *
@@ -725,7 +726,7 @@ cleanup:
  */
 
 /**
- * gnutls_pkcs7_get_crl_raw - returns a crl in a PKCS7 crl set
+ * gnutls_pkcs7_get_crl_raw:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  * @indx: contains the index of the crl to extract
  * @crl: the contents of the crl will be copied there (may be null)
@@ -741,7 +742,7 @@ cleanup:
  **/
 int
 gnutls_pkcs7_get_crl_raw (gnutls_pkcs7_t pkcs7,
-			  int indx, void *crl, size_t * crl_size)
+                          int indx, void *crl, size_t * crl_size)
 {
   ASN1_TYPE c2 = ASN1_TYPE_EMPTY;
   int result;
@@ -769,7 +770,7 @@ gnutls_pkcs7_get_crl_raw (gnutls_pkcs7_t pkcs7,
   /* Get the raw CRL 
    */
   result = asn1_der_decoding_startEnd (c2, tmp.data, tmp.size,
-				       root2, &start, &end);
+                                       root2, &start, &end);
 
   if (result != ASN1_SUCCESS)
     {
@@ -802,7 +803,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_get_crl_count - returns the number of CRLs in a PKCS7 crl set
+ * gnutls_pkcs7_get_crl_count:
  * @pkcs7: should contain a gnutls_pkcs7_t structure
  *
  * This function will return the number of certifcates in the PKCS7
@@ -838,7 +839,7 @@ gnutls_pkcs7_get_crl_count (gnutls_pkcs7_t pkcs7)
   if (result != ASN1_SUCCESS)
     {
       gnutls_assert ();
-      return 0;			/* no crls */
+      return 0;                 /* no crls */
     }
 
   return count;
@@ -846,7 +847,7 @@ gnutls_pkcs7_get_crl_count (gnutls_pkcs7_t pkcs7)
 }
 
 /**
- * gnutls_pkcs7_set_crl_raw - add a crl in a PKCS7 crl set
+ * gnutls_pkcs7_set_crl_raw:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  * @crl: the DER encoded crl to be added
  *
@@ -883,10 +884,10 @@ gnutls_pkcs7_set_crl_raw (gnutls_pkcs7_t pkcs7, const gnutls_datum_t * crl)
        */
       result = create_empty_signed_data (pkcs7->pkcs7, &c2);
       if (result < 0)
-	{
-	  gnutls_assert ();
-	  return result;
-	}
+        {
+          gnutls_assert ();
+          return result;
+        }
     }
 
   /* Step 2. Append the new crl.
@@ -929,7 +930,7 @@ cleanup:
 }
 
 /**
- * gnutls_pkcs7_set_crl - add a parsed crl in a PKCS7 crl set
+ * gnutls_pkcs7_set_crl:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  * @crl: the DER encoded crl to be added
  *
@@ -969,7 +970,7 @@ gnutls_pkcs7_set_crl (gnutls_pkcs7_t pkcs7, gnutls_x509_crl_t crl)
 }
 
 /**
- * gnutls_pkcs7_delete_crl - deletes a CRL from a PKCS7 crl set
+ * gnutls_pkcs7_delete_crl:
  * @pkcs7: should contain a #gnutls_pkcs7_t structure
  * @indx: the index of the crl to delete
  *

@@ -1,7 +1,7 @@
 /* This example code is placed in the public domain. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -41,7 +41,7 @@ main (void)
 
   /* Use default priorities */
   gnutls_priority_set_direct (session, "PERFORMANCE:+ANON-DH:!ARCFOUR-128",
-			      NULL);
+                              NULL);
 
   /* put the anonymous credentials to the current session
    */

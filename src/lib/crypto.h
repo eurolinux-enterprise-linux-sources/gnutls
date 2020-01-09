@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -23,11 +23,14 @@
  */
 
 #ifndef CRYPTO_H
-# define CRYPTO_H
+#define CRYPTO_H
 
-gnutls_crypto_single_cipher_st *_gnutls_get_crypto_cipher( gnutls_cipher_algorithm_t algo);
-gnutls_crypto_single_digest_st *_gnutls_get_crypto_digest( gnutls_digest_algorithm_t algo);
-gnutls_crypto_single_mac_st *_gnutls_get_crypto_mac( gnutls_mac_algorithm_t algo);
-void _gnutls_crypto_deregister(void);
+const gnutls_crypto_cipher_st
+  * _gnutls_get_crypto_cipher (gnutls_cipher_algorithm_t algo);
+const gnutls_crypto_digest_st
+  * _gnutls_get_crypto_digest (gnutls_digest_algorithm_t algo);
+const gnutls_crypto_mac_st *_gnutls_get_crypto_mac (gnutls_mac_algorithm_t
+                                                    algo);
+void _gnutls_crypto_deregister (void);
 
 #endif /* CRYPTO_H */

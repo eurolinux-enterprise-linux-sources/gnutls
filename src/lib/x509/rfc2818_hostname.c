@@ -1,10 +1,11 @@
 /*
- * Copyright (C) 2003, 2004, 2005, 2007, 2008 Free Software Foundation
+ * Copyright (C) 2003, 2004, 2005, 2007, 2008, 2010 Free Software
+ * Foundation, Inc.
  * Copyright (C) 2002 Andrew McDonald
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -28,7 +29,7 @@
 #include <gnutls_errors.h>
 
 /**
- * gnutls_x509_crt_check_hostname - compares the hostname with certificate's hostname
+ * gnutls_x509_crt_check_hostname:
  * @cert: should contain an gnutls_x509_crt_t structure
  * @hostname: A null terminated string that contains a DNS name
  *
@@ -68,27 +69,17 @@ gnutls_x509_crt_check_hostname (gnutls_x509_crt_t cert, const char *hostname)
 
       dnsnamesize = sizeof (dnsname);
       ret = gnutls_x509_crt_get_subject_alt_name (cert, i,
-						  dnsname, &dnsnamesize,
-						  NULL);
+                                                  dnsname, &dnsnamesize,
+                                                  NULL);
 
       if (ret == GNUTLS_SAN_DNSNAME)
-	{
-	  found_dnsname = 1;
-	  if (_gnutls_hostname_compare (dnsname, dnsnamesize, hostname))
-	    {
-	      return 1;
-	    }
-	}
-      else if (ret == GNUTLS_SAN_IPADDRESS)
-	{
-	  found_dnsname = 1;	/* RFC 2818 is unclear whether the CN
-				   should be compared for IP addresses
-				   too, but we won't do it.  */
-	  if (_gnutls_hostname_compare (dnsname, dnsnamesize, hostname))
-	    {
-	      return 1;
-	    }
-	}
+        {
+          found_dnsname = 1;
+          if (_gnutls_hostname_compare (dnsname, dnsnamesize, hostname, 0))
+            {
+              return 1;
+            }
+        }
     }
 
   if (!found_dnsname)
@@ -97,17 +88,17 @@ gnutls_x509_crt_check_hostname (gnutls_x509_crt_t cert, const char *hostname)
        */
       dnsnamesize = sizeof (dnsname);
       if (gnutls_x509_crt_get_dn_by_oid (cert, OID_X520_COMMON_NAME, 0,
-					 0, dnsname, &dnsnamesize) < 0)
-	{
-	  /* got an error, can't find a name
-	   */
-	  return 0;
-	}
+                                         0, dnsname, &dnsnamesize) < 0)
+        {
+          /* got an error, can't find a name
+           */
+          return 0;
+        }
 
-      if (_gnutls_hostname_compare (dnsname, dnsnamesize, hostname))
-	{
-	  return 1;
-	}
+      if (_gnutls_hostname_compare (dnsname, dnsnamesize, hostname, 0))
+        {
+          return 1;
+        }
     }
 
   /* not found a matching name

@@ -9,14 +9,15 @@ gnutls
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
 
 
 <!-- ##### MACRO HAVE_SSIZE_T ##### -->
@@ -105,6 +106,7 @@ gnutls
 @GNUTLS_CIPHER_CAMELLIA_256_CBC: 
 @GNUTLS_CIPHER_RC2_40_CBC: 
 @GNUTLS_CIPHER_DES_CBC: 
+@GNUTLS_CIPHER_AES_192_CBC: 
 @GNUTLS_CIPHER_IDEA_PGP_CFB: 
 @GNUTLS_CIPHER_3DES_PGP_CFB: 
 @GNUTLS_CIPHER_CAST5_PGP_CFB: 
@@ -179,12 +181,14 @@ gnutls
 @GNUTLS_MAC_SHA256: 
 @GNUTLS_MAC_SHA384: 
 @GNUTLS_MAC_SHA512: 
+@GNUTLS_MAC_SHA224: 
 
 <!-- ##### ENUM gnutls_digest_algorithm_t ##### -->
 <para>
 
 </para>
 
+@GNUTLS_DIG_UNKNOWN: 
 @GNUTLS_DIG_NULL: 
 @GNUTLS_DIG_MD5: 
 @GNUTLS_DIG_SHA1: 
@@ -202,13 +206,6 @@ gnutls
 
 
 
-<!-- ##### MACRO GNUTLS_COMP_ZLIB ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM gnutls_compression_method_t ##### -->
 <para>
 
@@ -217,6 +214,7 @@ gnutls
 @GNUTLS_COMP_UNKNOWN: 
 @GNUTLS_COMP_NULL: 
 @GNUTLS_COMP_DEFLATE: 
+@GNUTLS_COMP_ZLIB: 
 @GNUTLS_COMP_LZO: 
 
 <!-- ##### ENUM gnutls_connection_end_t ##### -->
@@ -279,6 +277,7 @@ gnutls
 @GNUTLS_HANDSHAKE_HELLO_REQUEST: 
 @GNUTLS_HANDSHAKE_CLIENT_HELLO: 
 @GNUTLS_HANDSHAKE_SERVER_HELLO: 
+@GNUTLS_HANDSHAKE_NEW_SESSION_TICKET: 
 @GNUTLS_HANDSHAKE_CERTIFICATE_PKT: 
 @GNUTLS_HANDSHAKE_SERVER_KEY_EXCHANGE: 
 @GNUTLS_HANDSHAKE_CERTIFICATE_REQUEST: 
@@ -326,13 +325,6 @@ gnutls
 @GNUTLS_SHUT_RDWR: 
 @GNUTLS_SHUT_WR: 
 
-<!-- ##### MACRO GNUTLS_TLS1 ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM gnutls_protocol_t ##### -->
 <para>
 
@@ -340,8 +332,10 @@ gnutls
 
 @GNUTLS_SSL3: 
 @GNUTLS_TLS1_0: 
+@GNUTLS_TLS1: 
 @GNUTLS_TLS1_1: 
 @GNUTLS_TLS1_2: 
+@GNUTLS_VERSION_MAX: 
 @GNUTLS_VERSION_UNKNOWN: 
 
 <!-- ##### ENUM gnutls_certificate_type_t ##### -->
@@ -378,6 +372,7 @@ gnutls
 @GNUTLS_PK_UNKNOWN: 
 @GNUTLS_PK_RSA: 
 @GNUTLS_PK_DSA: 
+@GNUTLS_PK_DH: 
 
 <!-- ##### FUNCTION gnutls_pk_algorithm_get_name ##### -->
 <para>
@@ -388,20 +383,6 @@ gnutls
 @Returns: 
 
 
-<!-- ##### MACRO GNUTLS_SIGN_RSA_SHA ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GNUTLS_SIGN_DSA_SHA ##### -->
-<para>
-
-</para>
-
-
-
 <!-- ##### ENUM gnutls_sign_algorithm_t ##### -->
 <para>
 
@@ -409,7 +390,9 @@ gnutls
 
 @GNUTLS_SIGN_UNKNOWN: 
 @GNUTLS_SIGN_RSA_SHA1: 
+@GNUTLS_SIGN_RSA_SHA: 
 @GNUTLS_SIGN_DSA_SHA1: 
+@GNUTLS_SIGN_DSA_SHA: 
 @GNUTLS_SIGN_RSA_MD5: 
 @GNUTLS_SIGN_RSA_MD2: 
 @GNUTLS_SIGN_RSA_RMD160: 
@@ -417,6 +400,8 @@ gnutls
 @GNUTLS_SIGN_RSA_SHA384: 
 @GNUTLS_SIGN_RSA_SHA512: 
 @GNUTLS_SIGN_RSA_SHA224: 
+@GNUTLS_SIGN_DSA_SHA224: 
+@GNUTLS_SIGN_DSA_SHA256: 
 
 <!-- ##### FUNCTION gnutls_sign_algorithm_get_name ##### -->
 <para>
@@ -426,6 +411,25 @@ gnutls
 @sign: 
 @Returns: 
 
+
+<!-- ##### ENUM gnutls_sec_param_t ##### -->
+<para>
+
+</para>
+
+@GNUTLS_SEC_PARAM_UNKNOWN: 
+@GNUTLS_SEC_PARAM_WEAK: 
+@GNUTLS_SEC_PARAM_LOW: 
+@GNUTLS_SEC_PARAM_NORMAL: 
+@GNUTLS_SEC_PARAM_HIGH: 
+@GNUTLS_SEC_PARAM_ULTRA: 
+
+<!-- ##### ENUM gnutls_channel_binding_t ##### -->
+<para>
+
+</para>
+
+@GNUTLS_CB_TLS_UNIQUE: 
 
 <!-- ##### TYPEDEF gnutls_transport_ptr_t ##### -->
 <para>
@@ -566,6 +570,35 @@ gnutls
 @Returns: 
 
 
+<!-- ##### FUNCTION gnutls_pk_bits_to_sec_param ##### -->
+<para>
+
+</para>
+
+@algo: 
+@bits: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_sec_param_get_name ##### -->
+<para>
+
+</para>
+
+@param: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_sec_param_to_pk_bits ##### -->
+<para>
+
+</para>
+
+@algo: 
+@param: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gnutls_cipher_get ##### -->
 <para>
 
@@ -608,6 +641,17 @@ gnutls
 </para>
 
 @session: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_sign_algorithm_get_requested ##### -->
+<para>
+
+</para>
+
+@session: 
+@indx: 
+@algo: 
 @Returns: 
 
 
@@ -769,6 +813,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -777,6 +822,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -785,6 +831,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -793,6 +840,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -801,6 +849,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -809,6 +858,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -817,6 +867,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -825,6 +876,7 @@ gnutls
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -1064,19 +1116,8 @@ gnutls
 @GNUTLS_EXT_ANY: 
 @GNUTLS_EXT_APPLICATION: 
 @GNUTLS_EXT_TLS: 
-
-<!-- ##### FUNCTION gnutls_ext_register ##### -->
-<para>
-
-</para>
-
-@type: 
-@name: 
-@parse_type: 
-@recv_func: 
-@send_func: 
-@Returns: 
-
+@GNUTLS_EXT_MANDATORY: 
+@GNUTLS_EXT_NONE: 
 
 <!-- ##### ENUM gnutls_server_name_type_t ##### -->
 <para>
@@ -1110,37 +1151,13 @@ gnutls
 @Returns: 
 
 
-<!-- ##### FUNCTION gnutls_oprfi_enable_client ##### -->
+<!-- ##### FUNCTION gnutls_safe_renegotiation_status ##### -->
 <para>
 
 </para>
 
 @session: 
-@len: 
-@data: 
-
-
-<!-- ##### USER_FUNCTION gnutls_oprfi_callback_func ##### -->
-<para>
-
-</para>
-
-@session: 
-@userdata: 
-@oprfi_len: 
-@in_oprfi: 
-@out_oprfi: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gnutls_oprfi_enable_server ##### -->
-<para>
-
-</para>
-
-@session: 
-@cb: 
-@userdata: 
 
 
 <!-- ##### ENUM gnutls_supplemental_data_format_type_t ##### -->
@@ -1150,72 +1167,31 @@ gnutls
 
 @GNUTLS_SUPPLEMENTAL_USER_MAPPING_DATA: 
 
-<!-- ##### FUNCTION gnutls_supplemental_get_name ##### -->
+<!-- ##### FUNCTION gnutls_session_ticket_key_generate ##### -->
 <para>
 
 </para>
 
-@type: 
+@key: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gnutls_cipher_set_priority ##### -->
+<!-- ##### FUNCTION gnutls_session_ticket_enable_client ##### -->
 <para>
 
 </para>
 
 @session: 
-@list: 
 @Returns: 
 
 
-<!-- ##### FUNCTION gnutls_mac_set_priority ##### -->
+<!-- ##### FUNCTION gnutls_session_ticket_enable_server ##### -->
 <para>
 
 </para>
 
 @session: 
-@list: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_compression_set_priority ##### -->
-<para>
-
-</para>
-
-@session: 
-@list: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_kx_set_priority ##### -->
-<para>
-
-</para>
-
-@session: 
-@list: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_protocol_set_priority ##### -->
-<para>
-
-</para>
-
-@session: 
-@list: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_certificate_type_set_priority ##### -->
-<para>
-
-</para>
-
-@session: 
-@list: 
+@key: 
 @Returns: 
 
 
@@ -1356,64 +1332,15 @@ gnutls
 @Returns: 
 
 
-<!-- ##### MACRO GNUTLS_MASTER_SIZE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GNUTLS_RANDOM_SIZE ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### FUNCTION gnutls_session_get_server_random ##### -->
+<!-- ##### FUNCTION gnutls_session_channel_binding ##### -->
 <para>
 
 </para>
 
 @session: 
+@cbtype: 
+@cb: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gnutls_session_get_client_random ##### -->
-<para>
-
-</para>
-
-@session: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_session_get_master_secret ##### -->
-<para>
-
-</para>
-
-@session: 
-@Returns: 
-
-
-<!-- ##### USER_FUNCTION gnutls_finished_callback_func ##### -->
-<para>
-
-</para>
-
-@session: 
-@finished: 
-@len: 
-
-
-<!-- ##### FUNCTION gnutls_session_set_finished_function ##### -->
-<para>
-
-</para>
-
-@session: 
-@func: 
 
 
 <!-- ##### FUNCTION gnutls_session_is_resumed ##### -->
@@ -1865,6 +1792,18 @@ gnutls
 </para>
 
 
+<!-- ##### STRUCT gnutls_x509_crq_int ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF gnutls_x509_crq_t ##### -->
+<para>
+
+</para>
+
+
 <!-- ##### STRUCT gnutls_openpgp_keyring_int ##### -->
 <para>
 
@@ -1911,40 +1850,12 @@ gnutls
 @Returns: 
 
 
-<!-- ##### FUNCTION gnutls_certificate_get_x509_cas ##### -->
-<para>
-
-</para>
-
-@sc: 
-@x509_ca_list: 
-@ncas: 
-
-
-<!-- ##### FUNCTION gnutls_certificate_get_x509_crls ##### -->
-<para>
-
-</para>
-
-@sc: 
-@x509_crl_list: 
-@ncrls: 
-
-
-<!-- ##### FUNCTION gnutls_certificate_get_openpgp_keyring ##### -->
-<para>
-
-</para>
-
-@sc: 
-@keyring: 
-
-
 <!-- ##### FUNCTION gnutls_global_init ##### -->
 <para>
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -1953,6 +1864,54 @@ gnutls
 
 </para>
 
+@void: 
+
+
+<!-- ##### USER_FUNCTION mutex_init_func ##### -->
+<para>
+
+</para>
+
+@mutex: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION mutex_lock_func ##### -->
+<para>
+
+</para>
+
+@mutex: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION mutex_unlock_func ##### -->
+<para>
+
+</para>
+
+@mutex: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION mutex_deinit_func ##### -->
+<para>
+
+</para>
+
+@mutex: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_global_set_mutex ##### -->
+<para>
+
+</para>
+
+@init: 
+@deinit: 
+@lock: 
+@unlock: 
 
 
 <!-- ##### USER_FUNCTION gnutls_alloc_function ##### -->
@@ -2043,7 +2002,7 @@ gnutls
 </para>
 
 
-<!-- ##### FUNCTION gnutls_strdup ##### -->
+<!-- ##### USER_FUNCTION gnutls_strdup ##### -->
 <para>
 
 </para>
@@ -2057,7 +2016,7 @@ gnutls
 
 </para>
 
-@Varargs: 
+@Param1: 
 @Param2: 
 
 
@@ -2273,6 +2232,26 @@ gnutls
 @Returns: 
 
 
+<!-- ##### USER_FUNCTION gnutls_vec_push_func ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@iov: 
+@iovcnt: 
+@Returns: 
+
+
+<!-- ##### USER_FUNCTION gnutls_errno_func ##### -->
+<para>
+
+</para>
+
+@Param1: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gnutls_transport_set_ptr ##### -->
 <para>
 
@@ -2311,13 +2290,13 @@ gnutls
 @send_ptr: 
 
 
-<!-- ##### FUNCTION gnutls_transport_set_lowat ##### -->
+<!-- ##### FUNCTION gnutls_transport_set_vec_push_function ##### -->
 <para>
 
 </para>
 
 @session: 
-@num: 
+@vec_func: 
 
 
 <!-- ##### FUNCTION gnutls_transport_set_push_function ##### -->
@@ -2338,20 +2317,21 @@ gnutls
 @pull_func: 
 
 
+<!-- ##### FUNCTION gnutls_transport_set_errno_function ##### -->
+<para>
+
+</para>
+
+@session: 
+@errno_func: 
+
+
 <!-- ##### FUNCTION gnutls_transport_set_errno ##### -->
 <para>
 
 </para>
 
 @session: 
-@err: 
-
-
-<!-- ##### FUNCTION gnutls_transport_set_global_errno ##### -->
-<para>
-
-</para>
-
 @err: 
 
 
@@ -2728,18 +2708,6 @@ gnutls
 @func: 
 
 
-<!-- ##### FUNCTION gnutls_psk_netconf_derive_key ##### -->
-<para>
-
-</para>
-
-@password: 
-@psk_identity: 
-@psk_identity_hint: 
-@output_key: 
-@Returns: 
-
-
 <!-- ##### ENUM gnutls_x509_subject_alt_name_t ##### -->
 <para>
 
@@ -2776,6 +2744,27 @@ gnutls
 
 </para>
 
+
+<!-- ##### STRUCT gnutls_pkcs11_privkey_st ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF gnutls_pkcs11_privkey_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### ENUM gnutls_privkey_type_t ##### -->
+<para>
+
+</para>
+
+@GNUTLS_PRIVKEY_X509: 
+@GNUTLS_PRIVKEY_OPENPGP: 
+@GNUTLS_PRIVKEY_PKCS11: 
 
 <!-- ##### FUNCTION gnutls_auth_get_type ##### -->
 <para>
@@ -2881,41 +2870,7 @@ gnutls
 @Returns: 
 
 
-<!-- ##### USER_FUNCTION gnutls_sign_func ##### -->
-<para>
-
-</para>
-
-@session: 
-@userdata: 
-@cert_type: 
-@cert: 
-@hash: 
-@signature: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_sign_callback_set ##### -->
-<para>
-
-</para>
-
-@session: 
-@sign_func: 
-@userdata: 
-
-
-<!-- ##### FUNCTION gnutls_sign_callback_get ##### -->
-<para>
-
-</para>
-
-@session: 
-@userdata: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_certificate_client_set_retrieve_function ##### -->
+<!-- ##### FUNCTION gnutls_certificate_set_retrieve_function ##### -->
 <para>
 
 </para>
@@ -2924,7 +2879,7 @@ gnutls
 @func: 
 
 
-<!-- ##### FUNCTION gnutls_certificate_server_set_retrieve_function ##### -->
+<!-- ##### FUNCTION gnutls_certificate_set_verify_function ##### -->
 <para>
 
 </para>
@@ -2995,15 +2950,6 @@ gnutls
 
 @session: 
 @status: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_certificate_verify_peers ##### -->
-<para>
-
-</para>
-
-@session: 
 @Returns: 
 
 
@@ -3813,6 +3759,34 @@ gnutls
 
 
 
+<!-- ##### MACRO GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_SAFE_RENEGOTIATION_FAILED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_UNSAFE_RENEGOTIATION_DENIED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_UNKNOWN_SRP_USERNAME ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GNUTLS_E_BASE64_ENCODING_ERROR ##### -->
 <para>
 
@@ -3884,6 +3858,167 @@ gnutls
 
 
 <!-- ##### MACRO GNUTLS_E_HANDSHAKE_TOO_LARGE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_CRYPTODEV_IOCTL_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_CRYPTODEV_DEVICE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_CHANNEL_BINDING_NOT_AVAILABLE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_OPENPGP_PREFERRED_KEY_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_INCOMPAT_DSA_KEY_WITH_TLS_PROTOCOL ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_LOAD_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PARSING_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_PIN_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_SLOT_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_LOCKING_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_ATTRIBUTE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_DEVICE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_DATA_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_UNSUPPORTED_FEATURE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_KEY_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_PIN_EXPIRED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_PIN_LOCKED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_SESSION_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_SIGNATURE_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_TOKEN_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_PKCS11_USER_ERROR ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_E_CRYPTO_INIT_FAILED ##### -->
 <para>
 
 </para>

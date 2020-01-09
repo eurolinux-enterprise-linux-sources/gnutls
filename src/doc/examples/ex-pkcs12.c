@@ -1,7 +1,7 @@
 /* This example code is placed in the public domain. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -21,7 +21,7 @@
  */
 int
 write_pkcs12 (const gnutls_datum_t * cert,
-	      const gnutls_datum_t * pkcs8_key, const char *password)
+              const gnutls_datum_t * pkcs8_key, const char *password)
 {
   gnutls_pkcs12_t pkcs12;
   int ret, bag_index;
@@ -33,7 +33,7 @@ write_pkcs12 (const gnutls_datum_t * cert,
   /* A good idea might be to use gnutls_x509_privkey_get_key_id()
    * to obtain a unique ID.
    */
-  gnutls_datum_t key_id = { (char*) "\x00\x00\x07", 3 };
+  gnutls_datum_t key_id = { (char *) "\x00\x00\x07", 3 };
 
   gnutls_global_init ();
 
@@ -73,8 +73,8 @@ write_pkcs12 (const gnutls_datum_t * cert,
    */
 
   ret = gnutls_pkcs12_bag_set_data (key_bag,
-				    GNUTLS_BAG_PKCS8_ENCRYPTED_KEY,
-				    pkcs8_key);
+                                    GNUTLS_BAG_PKCS8_ENCRYPTED_KEY,
+                                    pkcs8_key);
   if (ret < 0)
     {
       fprintf (stderr, "ret: %s\n", gnutls_strerror (ret));
@@ -110,7 +110,7 @@ write_pkcs12 (const gnutls_datum_t * cert,
   pkcs12_struct_size = sizeof (pkcs12_struct);
   ret =
     gnutls_pkcs12_export (pkcs12, GNUTLS_X509_FMT_DER, pkcs12_struct,
-			  &pkcs12_struct_size);
+                          &pkcs12_struct_size);
   if (ret < 0)
     {
       fprintf (stderr, "ret: %s\n", gnutls_strerror (ret));

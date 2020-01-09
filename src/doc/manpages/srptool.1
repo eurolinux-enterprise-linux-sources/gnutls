@@ -5,7 +5,7 @@ srptool \- Simple SRP password tool
 srptool [\fIoptions\fR]
 .SH DESCRIPTION
 Very simple program that emulates the programs in the Stanford SRP
-(Secure Remote Password) libraries using GNU TLS.
+(Secure Remote Password) libraries using GnuTLS.
 It is intended for use in places where you don't expect SRP
 authentication to be the used for system users.
 
@@ -25,7 +25,7 @@ Prints a short reminder of the command line options.
 Specify the index of the parameters in tpasswd.conf to use.
 .IP "\-p, \-\-passwd \fIFILE\fR"
 Specify a password file.
-.IP "\-\-passwd\-conf \fIFILE\fR"
+.IP "\-c, \-\-passwd\-conf \fIFILE\fR"
 Specify a password configuration file.
 .IP "\-s, \-\-salt \fISALT\fR"
 Specify salt size for crypt algorithm.
@@ -66,7 +66,7 @@ $ srptool \-\-passwd /etc/tpasswd \\
 
 .SH AUTHOR
 .PP
-Nikos Mavroyanopoulos <nmav@gnutls.org> and others; see
+Nikos Mavrogiannopoulos <nmav@gnutls.org> and others; see
 /usr/share/doc/gnutls\-bin/AUTHORS for a complete list.
 .PP
 This manual page was written by Ivo Timmermans <ivo@debian.org>, for

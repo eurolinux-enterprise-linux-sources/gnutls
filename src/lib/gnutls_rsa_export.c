@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -48,7 +49,7 @@ _gnutls_rsa_params_to_mpi (gnutls_rsa_params_t rsa_params)
 }
 
 /**
- * gnutls_rsa_params_import_raw - set the RSA parameters
+ * gnutls_rsa_params_import_raw:
  * @rsa_params: Is a structure will hold the parameters
  * @m: holds the modulus
  * @e: holds the public exponent
@@ -65,18 +66,18 @@ _gnutls_rsa_params_to_mpi (gnutls_rsa_params_t rsa_params)
  **/
 int
 gnutls_rsa_params_import_raw (gnutls_rsa_params_t rsa_params,
-			      const gnutls_datum_t * m,
-			      const gnutls_datum_t * e,
-			      const gnutls_datum_t * d,
-			      const gnutls_datum_t * p,
-			      const gnutls_datum_t * q,
-			      const gnutls_datum_t * u)
+                              const gnutls_datum_t * m,
+                              const gnutls_datum_t * e,
+                              const gnutls_datum_t * d,
+                              const gnutls_datum_t * p,
+                              const gnutls_datum_t * q,
+                              const gnutls_datum_t * u)
 {
   return gnutls_x509_privkey_import_rsa_raw (rsa_params, m, e, d, p, q, u);
 }
 
 /**
- * gnutls_rsa_params_init - initialize the temporary RSA parameters
+ * gnutls_rsa_params_init:
  * @rsa_params: Is a structure that will hold the parameters
  *
  * This function will initialize the temporary RSA parameters structure.
@@ -95,13 +96,11 @@ gnutls_rsa_params_init (gnutls_rsa_params_t * rsa_params)
       return ret;
     }
 
-  (*rsa_params)->crippled = 1;
-
   return 0;
 }
 
 /**
- * gnutls_rsa_params_deinit - deinitialize the RSA parameters
+ * gnutls_rsa_params_deinit:
  * @rsa_params: Is a structure that holds the parameters
  *
  * This function will deinitialize the RSA parameters structure.
@@ -113,7 +112,7 @@ gnutls_rsa_params_deinit (gnutls_rsa_params_t rsa_params)
 }
 
 /**
- * gnutls_rsa_params_cpy - copy an RSA parameters structure
+ * gnutls_rsa_params_cpy:
  * @dst: Is the destination structure, which should be initialized.
  * @src: Is the source structure
  *
@@ -129,7 +128,7 @@ gnutls_rsa_params_cpy (gnutls_rsa_params_t dst, gnutls_rsa_params_t src)
 }
 
 /**
- * gnutls_rsa_params_generate2 - generate temporary RSA parameters
+ * gnutls_rsa_params_generate2:
  * @params: The structure where the parameters will be stored
  * @bits: is the prime's number of bits
  *
@@ -151,7 +150,7 @@ gnutls_rsa_params_generate2 (gnutls_rsa_params_t params, unsigned int bits)
 }
 
 /**
- * gnutls_rsa_params_import_pkcs1 - import RSA params from a pkcs1 structure
+ * gnutls_rsa_params_import_pkcs1:
  * @params: A structure where the parameters will be copied to
  * @pkcs1_params: should contain a PKCS1 RSAPublicKey structure PEM or DER encoded
  * @format: the format of params. PEM or DER.
@@ -166,14 +165,14 @@ gnutls_rsa_params_generate2 (gnutls_rsa_params_t params, unsigned int bits)
  **/
 int
 gnutls_rsa_params_import_pkcs1 (gnutls_rsa_params_t params,
-				const gnutls_datum_t * pkcs1_params,
-				gnutls_x509_crt_fmt_t format)
+                                const gnutls_datum_t * pkcs1_params,
+                                gnutls_x509_crt_fmt_t format)
 {
   return gnutls_x509_privkey_import (params, pkcs1_params, format);
 }
 
 /**
- * gnutls_rsa_params_export_pkcs1 - export RSA params to a pkcs1 structure
+ * gnutls_rsa_params_export_pkcs1:
  * @params: Holds the RSA parameters
  * @format: the format of output params. One of PEM or DER.
  * @params_data: will contain a PKCS1 RSAPublicKey structure PEM or DER encoded
@@ -190,16 +189,16 @@ gnutls_rsa_params_import_pkcs1 (gnutls_rsa_params_t params,
  **/
 int
 gnutls_rsa_params_export_pkcs1 (gnutls_rsa_params_t params,
-				gnutls_x509_crt_fmt_t format,
-				unsigned char *params_data,
-				size_t * params_data_size)
+                                gnutls_x509_crt_fmt_t format,
+                                unsigned char *params_data,
+                                size_t * params_data_size)
 {
   return gnutls_x509_privkey_export (params, format,
-				     params_data, params_data_size);
+                                     params_data, params_data_size);
 }
 
 /**
- * gnutls_rsa_params_export_raw - export the RSA parameters
+ * gnutls_rsa_params_export_raw:
  * @params: a structure that holds the rsa parameters
  * @m: will hold the modulus
  * @e: will hold the public exponent
@@ -217,10 +216,10 @@ gnutls_rsa_params_export_pkcs1 (gnutls_rsa_params_t params,
  **/
 int
 gnutls_rsa_params_export_raw (gnutls_rsa_params_t params,
-			      gnutls_datum_t * m, gnutls_datum_t * e,
-			      gnutls_datum_t * d, gnutls_datum_t * p,
-			      gnutls_datum_t * q, gnutls_datum_t * u,
-			      unsigned int *bits)
+                              gnutls_datum_t * m, gnutls_datum_t * e,
+                              gnutls_datum_t * d, gnutls_datum_t * p,
+                              gnutls_datum_t * q, gnutls_datum_t * u,
+                              unsigned int *bits)
 {
   int ret;
 

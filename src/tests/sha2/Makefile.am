@@ -1,9 +1,9 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2007, 2008 Free Software Foundation
+# Copyright (C) 2007, 2008, 2010 Free Software Foundation, Inc.
 #
 # Author: Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -19,10 +19,11 @@
 # along with this file; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
-EXTRA_DIST = key-ca.pem key-subca.pem key-subsubca.pem key-user.pem
+EXTRA_DIST = key-ca.pem key-subca.pem key-subsubca.pem key-user.pem key-dsa.pem \
+	key-ca-dsa.pem key-subca-dsa.pem
 
-dist_check_SCRIPTS = sha2
+dist_check_SCRIPTS = sha2 sha2-dsa
 
-TESTS = sha2
+TESTS = sha2 sha2-dsa
 
 TESTS_ENVIRONMENT = EXEEXT=$(EXEEXT)

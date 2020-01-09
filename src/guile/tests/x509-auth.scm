@@ -1,18 +1,18 @@
-;;; GNUTLS --- Guile bindings for GnuTLS.
-;;; Copyright (C) 2007  Free Software Foundation
+;;; GnuTLS --- Guile bindings for GnuTLS.
+;;; Copyright (C) 2007, 2010, 2011 Free Software Foundation, Inc.
 ;;;
-;;; GNUTLS is free software; you can redistribute it and/or
+;;; GnuTLS is free software; you can redistribute it and/or
 ;;; modify it under the terms of the GNU Lesser General Public
 ;;; License as published by the Free Software Foundation; either
 ;;; version 2.1 of the License, or (at your option) any later version.
 ;;;
-;;; GNUTLS is distributed in the hope that it will be useful,
+;;; GnuTLS is distributed in the hope that it will be useful,
 ;;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;;; Lesser General Public License for more details.
 ;;;
 ;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with GNUTLS; if not, write to the Free Software
+;;; License along with GnuTLS; if not, write to the Free Software
 ;;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 ;;; Written by Ludovic Courtès <ludo@chbouib.org>.
@@ -24,6 +24,7 @@
 ;;;
 
 (use-modules (gnutls)
+             (gnutls build tests)
              (srfi srfi-4))
 
 
@@ -53,15 +54,16 @@
   (import-something pkcs1-import-rsa-parameters file
                     x509-certificate-format/pem))
 
+(define (import-dh-params file)
+  (import-something pkcs3-import-dh-parameters file
+                    x509-certificate-format/pem))
+
 ;; Debugging.
 ;; (set-log-level! 3)
 ;; (set-log-procedure! (lambda (level str)
 ;;                       (format #t "[~a|~a] ~a" (getpid) level str)))
 
-(dynamic-wind
-    (lambda ()
-      #t)
-
+(run-test
     (lambda ()
       (let ((socket-pair (socketpair PF_UNIX SOCK_STREAM 0))
             (pub         (import-key import-x509-certificate
@@ -91,11 +93,11 @@
                 (write %message (session-record-port client))
                 (bye client close-request/rdwr)
 
-                (exit))
+                (primitive-exit))
 
               (let ((server (make-session connection-end/server))
                     (rsa    (import-rsa-params "rsa-parameters.pem"))
-                    (dh     (make-dh-parameters 1024)))
+                    (dh     (import-dh-params "dh-parameters.pem")))
                 ;; server-side
                 (set-session-default-priority! server)
                 (set-session-certificate-type-priority! server %certs)
@@ -124,12 +126,7 @@
                 (let ((msg (read (session-record-port server)))
                       (auth-type (session-authentication-type server)))
                   (bye server close-request/rdwr)
-                  (exit (and (eq? auth-type credentials/certificate)
-                             (equal? msg %message)))))))))
-
-    (lambda ()
-      ;; failure
-      (exit 1)))
+                  (and (eq? auth-type credentials/certificate)
+                       (equal? msg %message)))))))))
 
 ;;; arch-tag: 1f88f835-a5c8-4fd6-94b6-5a13571ba03d
-

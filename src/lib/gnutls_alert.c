@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -77,7 +78,7 @@ static const gnutls_alert_entry sup_alerts[] = {
 };
 
 /**
- * gnutls_alert_get_name - Returns a string describing the alert number given
+ * gnutls_alert_get_name:
  * @alert: is an alert number #gnutls_session_t structure.
  *
  * This function will return a string that describes the given alert
@@ -98,7 +99,7 @@ gnutls_alert_get_name (gnutls_alert_description_t alert)
 }
 
 /**
- * gnutls_alert_send - send an alert message to the peer
+ * gnutls_alert_send:
  * @session: is a #gnutls_session_t structure.
  * @level: is the level of the alert
  * @desc: is the alert description
@@ -117,7 +118,7 @@ gnutls_alert_get_name (gnutls_alert_description_t alert)
  **/
 int
 gnutls_alert_send (gnutls_session_t session, gnutls_alert_level_t level,
-		   gnutls_alert_description_t desc)
+                   gnutls_alert_description_t desc)
 {
   uint8_t data[2];
   int ret;
@@ -130,16 +131,18 @@ gnutls_alert_send (gnutls_session_t session, gnutls_alert_level_t level,
   if (name == NULL)
     name = "(unknown)";
   _gnutls_record_log ("REC: Sending Alert[%d|%d] - %s\n", data[0],
-		      data[1], name);
+                      data[1], name);
 
-  if ((ret = _gnutls_send_int (session, GNUTLS_ALERT, -1, data, 2)) >= 0)
+  if ((ret =
+       _gnutls_send_int (session, GNUTLS_ALERT, -1, EPOCH_WRITE_CURRENT, data,
+                         2, MBUFFER_FLUSH)) >= 0)
     return 0;
   else
     return ret;
 }
 
 /**
- * gnutls_error_to_alert - return an alert code based on the given error code
+ * gnutls_error_to_alert:
  * @err: is a negative integer
  * @level: the alert level will be stored there
  *
@@ -160,7 +163,7 @@ gnutls_error_to_alert (int err, int *level)
   int ret, _level = -1;
 
   switch (err)
-    {				/* send appropriate alert */
+    {                           /* send appropriate alert */
     case GNUTLS_E_DECRYPTION_FAILED:
       /* GNUTLS_A_DECRYPTION_FAILED is not sent, because
        * it is not defined in SSL3. Note that we must
@@ -180,6 +183,10 @@ gnutls_error_to_alert (int err, int *level)
       ret = GNUTLS_A_ILLEGAL_PARAMETER;
       _level = GNUTLS_AL_FATAL;
       break;
+    case GNUTLS_E_UNKNOWN_SRP_USERNAME:
+      ret = GNUTLS_A_UNKNOWN_PSK_IDENTITY;
+      _level = GNUTLS_AL_FATAL;
+      break;
     case GNUTLS_E_ASN1_ELEMENT_NOT_FOUND:
     case GNUTLS_E_ASN1_IDENTIFIER_NOT_FOUND:
     case GNUTLS_E_ASN1_DER_ERROR:
@@ -191,6 +198,7 @@ gnutls_error_to_alert (int err, int *level)
     case GNUTLS_E_ASN1_TYPE_ANY_ERROR:
     case GNUTLS_E_ASN1_SYNTAX_ERROR:
     case GNUTLS_E_ASN1_DER_OVERFLOW:
+    case GNUTLS_E_CERTIFICATE_ERROR:
       ret = GNUTLS_A_BAD_CERTIFICATE;
       _level = GNUTLS_AL_FATAL;
       break;
@@ -199,6 +207,9 @@ gnutls_error_to_alert (int err, int *level)
     case GNUTLS_E_INSUFFICIENT_CREDENTIALS:
     case GNUTLS_E_NO_CIPHER_SUITES:
     case GNUTLS_E_NO_COMPRESSION_ALGORITHMS:
+    case GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHM:
+    case GNUTLS_E_SAFE_RENEGOTIATION_FAILED:
+    case GNUTLS_E_INCOMPAT_DSA_KEY_WITH_TLS_PROTOCOL:
       ret = GNUTLS_A_HANDSHAKE_FAILURE;
       _level = GNUTLS_AL_FATAL;
       break;
@@ -212,6 +223,7 @@ gnutls_error_to_alert (int err, int *level)
       _level = GNUTLS_AL_FATAL;
       break;
     case GNUTLS_E_REHANDSHAKE:
+    case GNUTLS_E_UNSAFE_RENEGOTIATION_DENIED:
       ret = GNUTLS_A_NO_RENEGOTIATION;
       _level = GNUTLS_AL_WARNING;
       break;
@@ -255,7 +267,7 @@ gnutls_error_to_alert (int err, int *level)
 }
 
 /**
- * gnutls_alert_send_appropriate - send alert to peer depending on error code
+ * gnutls_alert_send_appropriate:
  * @session: is a #gnutls_session_t structure.
  * @err: is an integer
  *
@@ -288,7 +300,7 @@ gnutls_alert_send_appropriate (gnutls_session_t session, int err)
 }
 
 /**
- * gnutls_alert_get - Returns the last alert number received.
+ * gnutls_alert_get:
  * @session: is a #gnutls_session_t structure.
  *
  * This function will return the last alert number received.  This

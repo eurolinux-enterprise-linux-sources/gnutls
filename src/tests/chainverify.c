@@ -1,27 +1,27 @@
 /*
- * Copyright (C) 2008, 2009 Free Software Foundation
+ * Copyright (C) 2008, 2009, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -32,12 +32,14 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/x509.h>
 
+#include "utils.h"
+
 /* GnuTLS internally calls time() to find out the current time when
    verifying certificates.  To avoid a time bomb, we hard code the
    current time.  This should work fine on systems where the library
    call to time is resolved at run-time.  */
 time_t
-time (time_t *t)
+time (time_t * t)
 {
   time_t then = 1256803113;
 
@@ -685,15 +687,13 @@ static struct
   { "CVE-2008-4989", cve_2008_4989_chain, &cve_2008_4989_chain[2],
     0, GNUTLS_CERT_SIGNER_NOT_FOUND | GNUTLS_CERT_INVALID },
   { "verisign.com v1 fail", verisign_com_chain, &verisign_com_chain[3],
-    0, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
-  { "verisign.com v1 fail2", verisign_com_chain, &verisign_com_chain[3],
-    GNUTLS_VERIFY_ALLOW_X509_V1_CA_CRT,
+    0,
     GNUTLS_CERT_EXPIRED | GNUTLS_CERT_INVALID },
   { "verisign.com v1 ok", verisign_com_chain, &verisign_com_chain[3],
     GNUTLS_VERIFY_DISABLE_TIME_CHECKS | GNUTLS_VERIFY_ALLOW_X509_V1_CA_CRT,
     0 },
   { "citibank.com v1 fail", citibank_com_chain, &citibank_com_chain[2],
-    0, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
+    GNUTLS_VERIFY_DO_NOT_ALLOW_X509_V1_CA_CRT, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
   { "expired self signed", pem_self_cert, &pem_self_cert[0],
     0, GNUTLS_CERT_EXPIRED | GNUTLS_CERT_INVALID },
   { "self signed", pem_self_cert, &pem_self_cert[0],
@@ -704,7 +704,7 @@ static struct
   { "ca=false2", thea_chain, &thea_chain[1],
     0, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
   { "hbci v1 fail", hbci_chain, &hbci_chain[2],
-    0, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID},
+    GNUTLS_VERIFY_DO_NOT_ALLOW_X509_V1_CA_CRT, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID},
   { "hbci v1 ok expired", hbci_chain, &hbci_chain[2],
     GNUTLS_VERIFY_ALLOW_X509_V1_CA_CRT,
     GNUTLS_CERT_EXPIRED | GNUTLS_CERT_INVALID },
@@ -722,7 +722,7 @@ static struct
   { "rsa-md5 ok", mayfirst_chain, &mayfirst_chain[1],
     GNUTLS_VERIFY_DISABLE_TIME_CHECKS | GNUTLS_VERIFY_ALLOW_SIGN_RSA_MD5, 0 },
   { "v1ca fail", v1ca, &v1ca[2],
-    0, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
+    GNUTLS_VERIFY_DO_NOT_ALLOW_X509_V1_CA_CRT, GNUTLS_CERT_SIGNER_NOT_CA | GNUTLS_CERT_INVALID },
   { "v1ca expired", v1ca, &v1ca[2],
     GNUTLS_VERIFY_ALLOW_X509_V1_CA_CRT,
     GNUTLS_CERT_EXPIRED | GNUTLS_CERT_INVALID  },
@@ -739,7 +739,7 @@ static struct
     0, GNUTLS_CERT_INSECURE_ALGORITHM | GNUTLS_CERT_INVALID },
   { "cacertrsamd5 ok", cacertrsamd5, &cacertrsamd5[2],
     GNUTLS_VERIFY_ALLOW_SIGN_RSA_MD5, 0 },
-  { "cacertrsamd5 short-cut not ok", cacertrsamd5, &cacertrsamd5[1],
+  { "cacertrsamd5 short-cut not ok", cacertrsamd5, &cacertrsamd5[0],
     GNUTLS_VERIFY_DO_NOT_ALLOW_SAME,
     GNUTLS_CERT_SIGNER_NOT_FOUND | GNUTLS_CERT_INVALID },
   { "cacertrsamd5 short-cut ok", cacertrsamd5, &cacertrsamd5[1],
@@ -754,22 +754,30 @@ tls_log_func (int level, const char *str)
   fprintf (stderr, "|<%d>| %s", level, str);
 }
 
-int
-main (int argc, char *argv[])
+void
+doit (void)
 {
   int exit_val = 0;
   size_t i;
   int ret;
 
+  /* The overloading of time() seems to work in linux (ELF?)
+   * systems only. Disable it on windows.
+   */
+#ifdef _WIN32
+  exit(77);
+#endif
+
   ret = gnutls_global_init ();
   if (ret != 0)
     {
-      printf ("%d: %s\n", ret, gnutls_strerror (ret));
-      return EXIT_FAILURE;
+      fail ("%d: %s\n", ret, gnutls_strerror (ret));
+      exit (EXIT_FAILURE);
     }
 
   gnutls_global_set_log_function (tls_log_func);
-  gnutls_global_set_log_level (4711);
+  if (debug)
+    gnutls_global_set_log_level (4711);
 
   for (i = 0; chains[i].chain; i++)
     {
@@ -779,87 +787,104 @@ main (int argc, char *argv[])
       gnutls_datum_t tmp;
       size_t j;
 
-      printf ("Chain '%s' (%d)...\n", chains[i].name, i);
+      if (debug)
+        printf ("Chain '%s' (%d)...\n", chains[i].name, (int) i);
 
       for (j = 0; chains[i].chain[j]; j++)
-	{
-	  printf ("\tAdding certificate %d...", j);
+        {
+          if (debug > 2)
+            printf ("\tAdding certificate %d...", (int) j);
 
-	  ret = gnutls_x509_crt_init (&certs[j]);
-	  if (ret < 0)
-	    error (EXIT_FAILURE, 0, "gnutls_x509_crt_init[%d,%d]: %s", i, j,
-		   gnutls_strerror (ret));
+          ret = gnutls_x509_crt_init (&certs[j]);
+          if (ret < 0)
+            error (EXIT_FAILURE, 0, "gnutls_x509_crt_init[%d,%d]: %s",
+                   (int) i, (int) j, gnutls_strerror (ret));
 
-	  tmp.data = (char *) chains[i].chain[j];
-	  tmp.size = strlen (chains[i].chain[j]);
+          tmp.data = (char *) chains[i].chain[j];
+          tmp.size = strlen (chains[i].chain[j]);
 
-	  ret = gnutls_x509_crt_import (certs[j], &tmp, GNUTLS_X509_FMT_PEM);
-	  printf ("done\n");
-	  if (ret < 0)
-	    error (EXIT_FAILURE, 0, "gnutls_x509_crt_import[%d,%d]: %s", i, j,
-		   gnutls_strerror (ret));
+          ret = gnutls_x509_crt_import (certs[j], &tmp, GNUTLS_X509_FMT_PEM);
+          if (debug > 2)
+            printf ("done\n");
+          if (ret < 0)
+            error (EXIT_FAILURE, 0, "gnutls_x509_crt_import[%d,%d]: %s",
+                   (int) i, (int) j, gnutls_strerror (ret));
 
-	  gnutls_x509_crt_print (certs[j], GNUTLS_CRT_PRINT_ONELINE, &tmp);
-	  printf ("\tCertificate %d: %.*s\n", j, tmp.size, tmp.data);
-	  gnutls_free (tmp.data);
-	}
+          gnutls_x509_crt_print (certs[j], GNUTLS_CRT_PRINT_ONELINE, &tmp);
+          if (debug)
+            printf ("\tCertificate %d: %.*s\n", (int) j, tmp.size, tmp.data);
+          gnutls_free (tmp.data);
+        }
 
-      printf ("\tAdding CA certificate...");
+      if (debug > 2)
+        printf ("\tAdding CA certificate...");
 
       ret = gnutls_x509_crt_init (&ca);
       if (ret < 0)
-	error (EXIT_FAILURE, 0, "gnutls_x509_crt_init: %s",
-	       gnutls_strerror (ret));
+        error (EXIT_FAILURE, 0, "gnutls_x509_crt_init: %s",
+               gnutls_strerror (ret));
 
       tmp.data = (char *) *chains[i].ca;
       tmp.size = strlen (*chains[i].ca);
 
       ret = gnutls_x509_crt_import (ca, &tmp, GNUTLS_X509_FMT_PEM);
       if (ret < 0)
-	error (EXIT_FAILURE, 0, "gnutls_x509_crt_import: %s",
-	       gnutls_strerror (ret));
+        error (EXIT_FAILURE, 0, "gnutls_x509_crt_import: %s",
+               gnutls_strerror (ret));
 
-      printf ("done\n");
+      if (debug > 2)
+        printf ("done\n");
 
       gnutls_x509_crt_print (ca, GNUTLS_CRT_PRINT_ONELINE, &tmp);
-      printf ("\tCA Certificate: %.*s\n", tmp.size, tmp.data);
+      if (debug)
+        printf ("\tCA Certificate: %.*s\n", tmp.size, tmp.data);
       gnutls_free (tmp.data);
 
-      printf ("\tVerifying...");
+      if (debug)
+        printf ("\tVerifying...");
 
       ret = gnutls_x509_crt_list_verify (certs, j,
-					 &ca, 1, NULL, 0,
-					 chains[i].verify_flags,
-					 &verify_status);
+                                         &ca, 1, NULL, 0,
+                                         chains[i].verify_flags,
+                                         &verify_status);
       if (ret < 0)
-	error (EXIT_FAILURE, 0, "gnutls_x509_crt_list_verify[%d,%d]: %s",
-	       i, j, gnutls_strerror (ret));
+        error (EXIT_FAILURE, 0, "gnutls_x509_crt_list_verify[%d,%d]: %s",
+               (int) i, (int) j, gnutls_strerror (ret));
 
       if (verify_status != chains[i].expected_verify_result)
-	{
-	  error (0, 0, "verify_status: %d expected: %d",
-		 verify_status, chains[i].expected_verify_result);
-	  exit_val = 1;
-	  if (argc > 1)
-	    {
-	      printf ("Exiting early with status...%d\n", exit_val);
-	      return exit_val;
-	    }
-	}
-      else
-	printf ("done\n");
-      printf ("\tCleanup...");
+        {
+          fail ("chain[%s]: verify_status: %d expected: %d\n", chains[i].name,
+                verify_status, chains[i].expected_verify_result);
+
+#if 0
+          j = 0;
+          do
+            {
+              fprintf (stderr, "%s\n", chains[i].chain[j]);
+            }
+          while (chains[i].chain[++j] != NULL);
+#endif
+
+          if (!debug)
+            exit (1);
+        }
+      else if (debug)
+        printf ("done\n");
+      if (debug)
+        printf ("\tCleanup...");
 
       gnutls_x509_crt_deinit (ca);
       for (j = 0; chains[i].chain[j]; j++)
-	gnutls_x509_crt_deinit (certs[j]);
+        gnutls_x509_crt_deinit (certs[j]);
 
-      printf ("done\n");
+      if (debug)
+        printf ("done\n\n\n");
     }
 
   gnutls_global_deinit ();
 
-  printf ("Exit status...%d\n", exit_val);
+  if (debug)
+    printf ("Exit status...%d\n", exit_val);
 
-  return exit_val;
+  exit (exit_val);
 }

@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Timo Schulz, Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -31,7 +32,7 @@
 #include <openpgp_int.h>
 
 /*-
- * gnutls_openpgp_verify_key - Verify all signatures on the key
+ * gnutls_openpgp_verify_key:
  * @cert_list: the structure that holds the certificates.
  * @cert_list_lenght: the items in the cert_list.
  * @status: the output of the verification function
@@ -46,8 +47,8 @@
  -*/
 int
 _gnutls_openpgp_verify_key (const gnutls_certificate_credentials_t cred,
-			    const gnutls_datum_t * cert_list,
-			    int cert_list_length, unsigned int *status)
+                            const gnutls_datum_t * cert_list,
+                            int cert_list_length, unsigned int *status)
 {
   int ret = 0;
   gnutls_openpgp_crt_t key = NULL;
@@ -78,10 +79,10 @@ _gnutls_openpgp_verify_key (const gnutls_certificate_credentials_t cred,
     {
       ret = gnutls_openpgp_crt_verify_ring (key, cred->keyring, 0, &verify);
       if (ret < 0)
-	{
-	  gnutls_assert ();
-	  goto leave;
-	}
+        {
+          gnutls_assert ();
+          goto leave;
+        }
     }
 
   /* Now try the self signature. */
@@ -107,7 +108,7 @@ leave:
 }
 
 /*-
- * gnutls_openpgp_fingerprint - Gets the fingerprint
+ * gnutls_openpgp_fingerprint:
  * @cert: the raw data that contains the OpenPGP public key.
  * @fpr: the buffer to save the fingerprint.
  * @fprlen: the integer to save the length of the fingerprint.
@@ -117,7 +118,7 @@ leave:
  -*/
 int
 _gnutls_openpgp_fingerprint (const gnutls_datum_t * cert,
-			     unsigned char *fpr, size_t * fprlen)
+                             unsigned char *fpr, size_t * fprlen)
 {
   gnutls_openpgp_crt_t key;
   int ret;
@@ -148,7 +149,7 @@ _gnutls_openpgp_fingerprint (const gnutls_datum_t * cert,
 }
 
 /*-
- * gnutls_openpgp_get_raw_key_creation_time - Extract the timestamp
+ * gnutls_openpgp_get_raw_key_creation_time:
  * @cert: the raw data that contains the OpenPGP public key.
  *
  * Returns the timestamp when the OpenPGP key was created.
@@ -183,7 +184,7 @@ _gnutls_openpgp_get_raw_key_creation_time (const gnutls_datum_t * cert)
 
 
 /*-
- * gnutls_openpgp_get_raw_key_expiration_time - Extract the expire date
+ * gnutls_openpgp_get_raw_key_expiration_time:
  * @cert: the raw data that contains the OpenPGP public key.
  *
  * Returns the time when the OpenPGP key expires. A value of '0' means

@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2002, 2003, 2004, 2005 Free Software Foundation
+ * Copyright (C) 2002, 2003, 2004, 2005, 2010 Free Software Foundation,
+ * Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -33,8 +34,28 @@
 #include <gnutls_state.h>
 #include <gnutls_num.h>
 
+/* Maps record size to numbers according to the
+ * extensions draft.
+ */
 inline static int _gnutls_num2cert_type (int num);
 inline static int _gnutls_cert_type2num (int record_size);
+static int _gnutls_cert_type_recv_params (gnutls_session_t session,
+                                          const opaque * data,
+                                          size_t data_size);
+static int _gnutls_cert_type_send_params (gnutls_session_t session,
+                                          opaque * data, size_t);
+
+extension_entry_st ext_mod_cert_type = {
+  .name = "CERT TYPE",
+  .type = GNUTLS_EXTENSION_CERT_TYPE,
+  .parse_type = GNUTLS_EXT_TLS,
+
+  .recv_func = _gnutls_cert_type_recv_params,
+  .send_func = _gnutls_cert_type_send_params,
+  .pack_func = NULL,
+  .unpack_func = NULL,
+  .deinit_func = NULL
+};
 
 /* 
  * In case of a server: if a CERT_TYPE extension type is received then it stores
@@ -45,9 +66,9 @@ inline static int _gnutls_cert_type2num (int record_size);
  *
  */
 
-int
+static int
 _gnutls_cert_type_recv_params (gnutls_session_t session,
-			       const opaque * data, size_t _data_size)
+                               const opaque * data, size_t _data_size)
 {
   int new_type = -1, ret, i;
   ssize_t data_size = _data_size;
@@ -55,82 +76,83 @@ _gnutls_cert_type_recv_params (gnutls_session_t session,
   if (session->security_parameters.entity == GNUTLS_CLIENT)
     {
       if (data_size > 0)
-	{
-	  if (data_size != 1)
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_UNEXPECTED_PACKET_LENGTH;
-	    }
+        {
+          if (data_size != 1)
+            {
+              gnutls_assert ();
+              return GNUTLS_E_UNEXPECTED_PACKET_LENGTH;
+            }
 
-	  new_type = _gnutls_num2cert_type (data[0]);
+          new_type = _gnutls_num2cert_type (data[0]);
 
-	  if (new_type < 0)
-	    {
-	      gnutls_assert ();
-	      return new_type;
-	    }
+          if (new_type < 0)
+            {
+              gnutls_assert ();
+              return new_type;
+            }
 
-	  /* Check if we support this cert_type */
-	  if ((ret =
-	       _gnutls_session_cert_type_supported (session, new_type)) < 0)
-	    {
-	      gnutls_assert ();
-	      return ret;
-	    }
+          /* Check if we support this cert_type */
+          if ((ret =
+               _gnutls_session_cert_type_supported (session, new_type)) < 0)
+            {
+              gnutls_assert ();
+              return ret;
+            }
 
-	  _gnutls_session_cert_type_set (session, new_type);
-	}
+          _gnutls_session_cert_type_set (session, new_type);
+        }
     }
   else
-    {				/* SERVER SIDE - we must check if the sent cert type is the right one 
-				 */
+    {                           /* SERVER SIDE - we must check if the sent cert type is the right one 
+                                 */
       if (data_size > 1)
-	{
-	  uint8_t len;
+        {
+          uint8_t len;
 
-	  len = data[0];
-	  DECR_LEN (data_size, len);
+          DECR_LEN (data_size, 1);
+          len = data[0];
+          DECR_LEN (data_size, len);
 
-	  for (i = 0; i < len; i++)
-	    {
-	      new_type = _gnutls_num2cert_type (data[i + 1]);
+          for (i = 0; i < len; i++)
+            {
+              new_type = _gnutls_num2cert_type (data[i + 1]);
 
-	      if (new_type < 0)
-		continue;
+              if (new_type < 0)
+                continue;
 
-	      /* Check if we support this cert_type */
-	      if ((ret =
-		   _gnutls_session_cert_type_supported (session,
-							new_type)) < 0)
-		{
-		  gnutls_assert ();
-		  continue;
-		}
-	      else
-		break;
-	      /* new_type is ok */
-	    }
+              /* Check if we support this cert_type */
+              if ((ret =
+                   _gnutls_session_cert_type_supported (session,
+                                                        new_type)) < 0)
+                {
+                  gnutls_assert ();
+                  continue;
+                }
+              else
+                break;
+              /* new_type is ok */
+            }
 
-	  if (new_type < 0)
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_RECEIVED_ILLEGAL_PARAMETER;
-	    }
+          if (new_type < 0)
+            {
+              gnutls_assert ();
+              return GNUTLS_E_RECEIVED_ILLEGAL_PARAMETER;
+            }
 
-	  if ((ret =
-	       _gnutls_session_cert_type_supported (session, new_type)) < 0)
-	    {
-	      gnutls_assert ();
-	      /* The peer has requested unsupported certificate
-	       * types. Instead of failing, procceed normally.
-	       * (the ciphersuite selection would fail, or a
-	       * non certificate ciphersuite will be selected).
-	       */
-	      return 0;
-	    }
+          if ((ret =
+               _gnutls_session_cert_type_supported (session, new_type)) < 0)
+            {
+              gnutls_assert ();
+              /* The peer has requested unsupported certificate
+               * types. Instead of failing, procceed normally.
+               * (the ciphersuite selection would fail, or a
+               * non certificate ciphersuite will be selected).
+               */
+              return 0;
+            }
 
-	  _gnutls_session_cert_type_set (session, new_type);
-	}
+          _gnutls_session_cert_type_set (session, new_type);
+        }
 
 
     }
@@ -140,9 +162,9 @@ _gnutls_cert_type_recv_params (gnutls_session_t session,
 
 /* returns data_size or a negative number on failure
  */
-int
+static int
 _gnutls_cert_type_send_params (gnutls_session_t session, opaque * data,
-			       size_t data_size)
+                               size_t data_size)
 {
   unsigned len, i;
 
@@ -151,55 +173,55 @@ _gnutls_cert_type_send_params (gnutls_session_t session, opaque * data,
     {
 
       if (session->internals.priorities.cert_type.algorithms > 0)
-	{
+        {
 
-	  len = session->internals.priorities.cert_type.algorithms;
+          len = session->internals.priorities.cert_type.algorithms;
 
-	  if (len == 1 &&
-	      session->internals.priorities.cert_type.priority[0] ==
-	      GNUTLS_CRT_X509)
-	    {
-	      /* We don't use this extension if X.509 certificates
-	       * are used.
-	       */
-	      return 0;
-	    }
+          if (len == 1 &&
+              session->internals.priorities.cert_type.priority[0] ==
+              GNUTLS_CRT_X509)
+            {
+              /* We don't use this extension if X.509 certificates
+               * are used.
+               */
+              return 0;
+            }
 
-	  if (data_size < len + 1)
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_SHORT_MEMORY_BUFFER;
-	    }
+          if (data_size < len + 1)
+            {
+              gnutls_assert ();
+              return GNUTLS_E_SHORT_MEMORY_BUFFER;
+            }
 
-	  /* this is a vector!
-	   */
-	  data[0] = (uint8_t) len;
+          /* this is a vector!
+           */
+          data[0] = (uint8_t) len;
 
-	  for (i = 0; i < len; i++)
-	    {
-	      data[i + 1] =
-		_gnutls_cert_type2num (session->internals.
-				       priorities.cert_type.priority[i]);
-	    }
-	  return len + 1;
-	}
+          for (i = 0; i < len; i++)
+            {
+              data[i + 1] =
+                _gnutls_cert_type2num (session->internals.priorities.
+                                       cert_type.priority[i]);
+            }
+          return len + 1;
+        }
 
     }
   else
-    {				/* server side */
+    {                           /* server side */
       if (session->security_parameters.cert_type != DEFAULT_CERT_TYPE)
-	{
-	  len = 1;
-	  if (data_size < len)
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_SHORT_MEMORY_BUFFER;
-	    }
+        {
+          len = 1;
+          if (data_size < len)
+            {
+              gnutls_assert ();
+              return GNUTLS_E_SHORT_MEMORY_BUFFER;
+            }
 
-	  data[0] =
-	    _gnutls_cert_type2num (session->security_parameters.cert_type);
-	  return len;
-	}
+          data[0] =
+            _gnutls_cert_type2num (session->security_parameters.cert_type);
+          return len;
+        }
 
 
     }

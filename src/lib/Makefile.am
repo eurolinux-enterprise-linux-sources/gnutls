@@ -1,22 +1,23 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+# 2009, 2010 Free Software Foundation, Inc.
 #
 # Author: Nikos Mavrogiannopoulos
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
-# The GNUTLS library is free software; you can redistribute it and/or
+# The GnuTLS is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
 # as published by the Free Software Foundation; either version 2.1 of
 # the License, or (at your option) any later version.
 #
-# The GNUTLS library is distributed in the hope that it will be
+# The GnuTLS is distributed in the hope that it will be
 # useful, but WITHOUT ANY WARRANTY; without even the implied warranty
 # of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public
-# License along with the GNUTLS library; if not, write to the Free
+# License along with GnuTLS; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA
 
@@ -29,13 +30,14 @@ endif
 
 localedir = $(datadir)/locale
 
-AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
+AM_CFLAGS = $(WERROR_CFLAGS) $(WSTACK_CFLAGS) $(WARN_CFLAGS)
 AM_CPPFLAGS = \
 	-DLOCALEDIR=\"$(localedir)\"		\
 	-I$(srcdir)/gl				\
 	-I$(builddir)/gl			\
 	-I$(srcdir)/includes			\
 	-I$(builddir)/includes			\
+	$(LIBTASN1_CFLAGS)			\
 	-I$(srcdir)/x509
 
 if ENABLE_OPENPGP
@@ -53,7 +55,6 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gnutls.pc
 DISTCLEANFILES = $(pkgconfig_DATA)
 
-EXTRA_DIST = gnutls-api.texi
 lib_LTLIBRARIES = libgnutls.la
 
 SRP_COBJECTS = ext_srp.c gnutls_srp.c auth_srp.c auth_srp_passwd.c	\
@@ -62,10 +63,10 @@ SRP_COBJECTS = ext_srp.c gnutls_srp.c auth_srp.c auth_srp_passwd.c	\
 PSK_COBJECTS = auth_psk.c auth_psk_passwd.c gnutls_psk.c	\
 	auth_dhe_psk.c gnutls_psk_netconf.c
 
-OPRFI_COBJECTS = ext_oprfi.c
+SESSION_TICKET_COBJECTS = ext_session_ticket.c
 
 COBJECTS = gnutls_record.c gnutls_compress.c debug.c gnutls_cipher.c	\
-	gnutls_buffers.c gnutls_handshake.c gnutls_num.c		\
+	gnutls_mbuffers.c gnutls_buffers.c gnutls_handshake.c gnutls_num.c \
 	gnutls_errors.c gnutls_algorithms.c gnutls_dh.c gnutls_kx.c	\
 	gnutls_priority.c gnutls_hash_int.c gnutls_cipher_int.c		\
 	gnutls_session.c gnutls_db.c x509_b64.c auth_anon.c		\
@@ -78,38 +79,53 @@ COBJECTS = gnutls_record.c gnutls_compress.c debug.c gnutls_cipher.c	\
 	gnutls_str.c gnutls_state.c gnutls_x509.c ext_cert_type.c	\
 	gnutls_rsa_export.c auth_rsa_export.c ext_server_name.c		\
 	auth_dh_common.c gnutls_helper.c gnutls_supplemental.c		\
-	crypto.c random.c pk-libgcrypt.c mpi-libgcrypt.c		\
-	rnd-libgcrypt.c cipher-libgcrypt.c mac-libgcrypt.c
+	crypto.c random.c  ext_signature.c cryptodev.c system.c \
+	crypto-api.c ext_safe_renegotiation.c gnutls_privkey.c \
+	gnutls_pubkey.c locks.c
 
-if ENABLE_OPRFI
-COBJECTS += $(OPRFI_COBJECTS)
+if ENABLE_PKCS11
+COBJECTS += pkcs11.c pkcs11_privkey.c pkcs11_write.c pkcs11_secret.c
 endif
 
-HFILES = debug.h gnutls_compress.h gnutls_cipher.h gnutls_buffers.h	\
-	gnutls_errors.h gnutls_int.h gnutls_handshake.h gnutls_num.h	\
-	gnutls_algorithms.h gnutls_dh.h gnutls_kx.h gnutls_hash_int.h	\
-	gnutls_cipher_int.h gnutls_db.h gnutls_auth.h auth_anon.h	\
-	gnutls_extensions.h x509_b64.h gnutls_v2_compat.h		\
-	gnutls_datum.h auth_cert.h gnutls_mpi.h gnutls_pk.h		\
-	gnutls_record.h gnutls_cert.h gnutls_constate.h			\
-	gnutls_global.h gnutls_sig.h gnutls_mem.h io_debug.h		\
+if ENABLE_NETTLE
+SUBDIRS += nettle
+else
+SUBDIRS += gcrypt
+endif
+
+HFILES = abstract_int.h debug.h gnutls_compress.h gnutls_cipher.h	\
+	gnutls_buffers.h gnutls_errors.h gnutls_int.h			\
+	gnutls_handshake.h gnutls_num.h gnutls_algorithms.h		\
+	gnutls_dh.h gnutls_kx.h gnutls_hash_int.h gnutls_cipher_int.h	\
+	gnutls_db.h gnutls_auth.h auth_anon.h gnutls_extensions.h	\
+	x509_b64.h gnutls_v2_compat.h gnutls_datum.h auth_cert.h	\
+	gnutls_mpi.h gnutls_pk.h gnutls_record.h gnutls_cert.h		\
+	gnutls_constate.h gnutls_global.h gnutls_sig.h gnutls_mem.h	\
 	ext_max_record.h gnutls_session_pack.h gnutls_str.h		\
 	gnutls_state.h gnutls_x509.h ext_cert_type.h			\
 	gnutls_rsa_export.h ext_server_name.h auth_dh_common.h		\
 	ext_srp.h gnutls_srp.h auth_srp.h auth_srp_passwd.h		\
 	gnutls_helper.h auth_psk.h auth_psk_passwd.h			\
-	gnutls_supplemental.h ext_oprfi.h crypto.h random.h
+	gnutls_supplemental.h crypto.h random.h system.h		\
+	ext_session_ticket.h ext_signature.h gnutls_cryptodev.h		\
+	ext_safe_renegotiation.h locks.h gnutls_mbuffers.h
+
+if ENABLE_PKCS11
+HFILES += pkcs11_int.h
+endif
 
 # Separate so we can create the documentation
 
 libgnutls_la_SOURCES = $(HFILES) $(COBJECTS) $(SRP_COBJECTS)	\
-	$(PSK_COBJECTS) gnutls.asn pkix.asn libgnutls.map
+	$(PSK_COBJECTS) $(SESSION_TICKET_COBJECTS) \
+	gnutls.asn pkix.asn libgnutls.map
 
 libgnutls_la_LDFLAGS = -no-undefined \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 libgnutls_la_LIBADD = gl/liblgnu.la x509/libgnutls_x509.la \
-	$(LTLIBZ) $(LTLIBGCRYPT) $(LTLIBINTL) $(LIBSOCKET)
+	$(LTLIBZ)  $(LTLIBINTL) $(LIBSOCKET) $(LTLIBDL) \
+	$(LTLIBPTHREAD)
 
 if ENABLE_OPENPGP
 libgnutls_la_LIBADD += openpgp/libgnutls_openpgp.la
@@ -125,7 +141,17 @@ endif
 if ENABLE_MINITASN1
 libgnutls_la_LIBADD += minitasn1/libminitasn1.la
 else
-libgnutls_la_LDFLAGS += $(LTLIBTASN1)
+libgnutls_la_LIBADD += $(LIBTASN1_LIBS)
+endif
+
+libgnutls_la_LDFLAGS += $(LTLIBPAKCHOIS)
+
+if ENABLE_NETTLE
+libgnutls_la_LDFLAGS += $(LTLIBNETTLE) $(NETTLE_LIBS)
+libgnutls_la_LIBADD += nettle/libcrypto.la
+else
+libgnutls_la_LDFLAGS += $(LTLIBGCRYPT)
+libgnutls_la_LIBADD += gcrypt/libcrypto.la
 endif
 
 if HAVE_LD_OUTPUT_DEF
@@ -138,7 +164,7 @@ endif
 # C++ library
 
 if ENABLE_CXX
-libgnutlsxx_la_CPPFLAGS = -I$(top_srcdir)/includes -I../includes
+libgnutlsxx_la_CPPFLAGS = -I$(top_srcdir)/includes -I$(top_builddir)/includes
 
 AM_CXXFLAGS = -I$(top_srcdir)/includes/
 
@@ -147,7 +173,7 @@ lib_LTLIBRARIES += libgnutlsxx.la
 libgnutlsxx_la_SOURCES = gnutlsxx.cpp libgnutlsxx.map
 
 libgnutlsxx_la_LDFLAGS = -no-undefined \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	-version-info $(CXX_LT_CURRENT):$(CXX_LT_REVISION):$(CXX_LT_AGE)
 
 libgnutlsxx_la_LIBADD = libgnutls.la
 
@@ -161,13 +187,3 @@ pkix_asn1_tab.c: pkix.asn
 
 gnutls_asn1_tab.c: gnutls.asn
 	-asn1Parser gnutls.asn gnutls_asn1_tab.c
-
-gnutls-api.texi: $(COBJECTS) $(SRP_COBJECTS) $(PSK_COBJECTS) $(OPRFI_COBJECTS)
-	@echo "" > gnutls-api.texi
-	@for i in $(COBJECTS) $(SRP_COBJECTS) $(PSK_COBJECTS) $(OPRFI_COBJECTS); do \
-		echo -n "Creating documentation for file $$i... " && \
-		$(srcdir)/../doc/scripts/gdoc -texinfo $$i >> gnutls-api.texi && \
-		echo "ok"; \
-	done
-
-dist-hook: gnutls-api.texi

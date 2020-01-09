@@ -1,5 +1,6 @@
 /* misc.c
- * Copyright (C) 1998-2002, 2003, 2007, 2008, 2009 Free Software Foundation, Inc.
+ * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003, 2007, 2008, 2009,
+ * 2010 Free Software Foundation, Inc.
  *
  * Author: Timo Schulz
  *
@@ -22,12 +23,13 @@
  *
  */
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <sys/stat.h>
+#include <c-ctype.h>
 
 #include "opencdk.h"
 #include "main.h"
@@ -97,35 +99,12 @@ cdk_strlist_add (cdk_strlist_t * list, const char *string)
   sl = cdk_calloc (1, sizeof *sl + strlen (string) + 2);
   if (!sl)
     return NULL;
-  sl->d = (char*) sl + sizeof(*sl);
+  sl->d = (char *) sl + sizeof (*sl);
   strcpy (sl->d, string);
   sl->next = *list;
   *list = sl;
   return sl;
 }
-
-
-/**
- * cdk_strlist_next:
- * @root: the opaque string list.
- * @r_str: optional argument to store the string data.
- * 
- * Return the next string list node from @root. The optional
- * argument @r_str return the data of the current (!) node.
- **/
-cdk_strlist_t
-cdk_strlist_next (cdk_strlist_t root, const char **r_str)
-{
-  cdk_strlist_t node;
-
-  if (root && r_str)
-    *r_str = root->d;
-  for (node = root->next; node; node = node->next)
-    return node;
-
-  return NULL;
-}
-
 
 const char *
 _cdk_memistr (const char *buf, size_t buflen, const char *sub)
@@ -135,17 +114,17 @@ _cdk_memistr (const char *buf, size_t buflen, const char *sub)
 
   for (t = (byte *) buf, n = buflen, s = (byte *) sub; n; t++, n--)
     {
-      if (toupper (*t) == toupper (*s))
-	{
-	  for (buf = t++, buflen = n--, s++;
-	       n && toupper (*t) == toupper ((byte) * s); t++, s++, n--)
-	    ;
-	  if (!*s)
-	    return buf;
-	  t = (byte *) buf;
-	  n = buflen;
-	  s = (byte *) sub;
-	}
+      if (c_toupper (*t) == c_toupper (*s))
+        {
+          for (buf = t++, buflen = n--, s++;
+               n && c_toupper (*t) == c_toupper ((byte) * s); t++, s++, n--)
+            ;
+          if (!*s)
+            return buf;
+          t = (byte *) buf;
+          n = buflen;
+          s = (byte *) sub;
+        }
     }
 
   return NULL;
@@ -168,15 +147,14 @@ _cdk_map_gnutls_error (int err)
 
 /* Remove all trailing white spaces from the string. */
 void
-_cdk_trim_string (char *s, int canon)
+_cdk_trim_string (char *s)
 {
+int len = strlen(s);
   while (s && *s &&
-	 (s[strlen (s) - 1] == '\t' ||
-	  s[strlen (s) - 1] == '\r' ||
-	  s[strlen (s) - 1] == '\n' || s[strlen (s) - 1] == ' '))
-    s[strlen (s) - 1] = '\0';
-  if (canon)
-    strcat (s, "\r\n");
+         (s[len - 1] == '\t' ||
+          s[len - 1] == '\r' ||
+          s[len - 1] == '\n' || s[len - 1] == ' '))
+    s[len - 1] = '\0';
 }
 
 
@@ -222,7 +200,7 @@ _cdk_tmpfile (void)
 
   /* We need to make sure the file will be deleted when it is closed. */
   fd = _open (buf, _O_CREAT | _O_EXCL | _O_TEMPORARY |
-	      _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
+              _O_RDWR | _O_BINARY, _S_IREAD | _S_IWRITE);
   if (fd == -1)
     return NULL;
   fp = fdopen (fd, "w+b");

@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -22,10 +23,19 @@
  *
  */
 
+#ifndef GNUTLS_RECORD_H
+#define GNUTLS_RECORD_H
+
+#include <gnutls/gnutls.h>
+#include <gnutls_buffers.h>
+
 ssize_t _gnutls_send_int (gnutls_session_t session, content_type_t type,
-			  gnutls_handshake_description_t htype,
-			  const void *data, size_t sizeofdata);
+                          gnutls_handshake_description_t htype,
+                          unsigned int epoch_rel, const void *data,
+                          size_t sizeofdata, unsigned int mflags);
 ssize_t _gnutls_recv_int (gnutls_session_t session, content_type_t type,
-			  gnutls_handshake_description_t, opaque * data,
-			  size_t sizeofdata);
+                          gnutls_handshake_description_t, opaque * data,
+                          size_t sizeofdata);
 ssize_t _gnutls_send_change_cipher_spec (gnutls_session_t session, int again);
+
+#endif

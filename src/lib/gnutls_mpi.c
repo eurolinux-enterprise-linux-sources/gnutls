@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -40,7 +41,7 @@
 
 bigint_t
 _gnutls_mpi_randomize (bigint_t r, unsigned int bits,
-		       gnutls_rnd_level_t level)
+                       gnutls_rnd_level_t level)
 {
   size_t size = 1 + (bits / 8);
   int ret;
@@ -58,10 +59,10 @@ _gnutls_mpi_randomize (bigint_t r, unsigned int bits,
     {
       buf = gnutls_malloc (size);
       if (buf == NULL)
-	{
-	  gnutls_assert ();
-	  goto cleanup;
-	}
+        {
+          gnutls_assert ();
+          goto cleanup;
+        }
       buf_release = 1;
     }
 
@@ -83,7 +84,7 @@ _gnutls_mpi_randomize (bigint_t r, unsigned int bits,
   else
     {
       for (i = 8; i >= rem; i--)
-	buf[0] = clearbit (buf[0], i);
+        buf[0] = clearbit (buf[0], i);
     }
 
   ret = _gnutls_mpi_scan (&tmp, buf, size);
@@ -153,7 +154,7 @@ _gnutls_mpi_scan_nz (bigint_t * ret_mpi, const void *buffer, size_t nbytes)
 
   /* MPIs with 0 bits are illegal
    */
-  if (_gnutls_mpi_get_nbits (*ret_mpi) == 0)
+  if (_gnutls_mpi_cmp_ui (*ret_mpi, 0) == 0)
     {
       _gnutls_mpi_release (ret_mpi);
       return GNUTLS_E_MPI_SCAN_FAILED;
@@ -255,13 +256,11 @@ _gnutls_mpi_dprint_size (const bigint_t a, gnutls_datum_t * dest, size_t size)
   if (buf == NULL)
     return GNUTLS_E_MEMORY_ERROR;
 
-  dest->size = MAX (size, bytes);
-
   if (bytes <= size)
     {
       size_t diff = size - bytes;
       for (i = 0; i < diff; i++)
-	buf[i] = 0;
+        buf[i] = 0;
       ret = _gnutls_mpi_print (a, &buf[diff], &bytes);
     }
   else
@@ -330,7 +329,7 @@ _gnutls_x509_read_int (ASN1_TYPE node, const char *value, bigint_t * ret_mpi)
  */
 int
 _gnutls_x509_write_int (ASN1_TYPE node, const char *value, bigint_t mpi,
-			int lz)
+                        int lz)
 {
   opaque *tmpstr;
   size_t s_len;
@@ -341,10 +340,10 @@ _gnutls_x509_write_int (ASN1_TYPE node, const char *value, bigint_t mpi,
     result = _gnutls_mpi_print_lz (mpi, NULL, &s_len);
   else
     result = _gnutls_mpi_print (mpi, NULL, &s_len);
-  
-  if (result != 0)
+
+  if (result != GNUTLS_E_SHORT_MEMORY_BUFFER)
     {
-      gnutls_assert();
+      gnutls_assert ();
       return result;
     }
 

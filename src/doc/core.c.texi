@@ -1,276 +1,276 @@
 @c Automatically generated, do not edit.
 
-@c snarfed from ../guile/src/core.c:2784
+@c snarfed from ../guile/src/core.c:2788
 @deffn {Scheme Procedure} set-log-level! level
 Enable GnuTLS logging up to @var{level} (an integer).
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2766
+@c snarfed from ../guile/src/core.c:2770
 @deffn {Scheme Procedure} set-log-procedure! proc
 Use @var{proc} (a two-argument procedure) as the global GnuTLS log procedure.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2696
+@c snarfed from ../guile/src/core.c:2700
 @deffn {Scheme Procedure} x509-certificate-subject-alternative-name cert index
 Return two values: the alternative name type for @var{cert} (i.e., one of the @code{x509-subject-alternative-name/} values) and the actual subject alternative name (a string) at @var{index}. Both values are @code{#f} if no alternative name is available at @var{index}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2661
+@c snarfed from ../guile/src/core.c:2665
 @deffn {Scheme Procedure} x509-certificate-subject-key-id cert
 Return the subject key ID (a u8vector) for @var{cert}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2630
+@c snarfed from ../guile/src/core.c:2634
 @deffn {Scheme Procedure} x509-certificate-authority-key-id cert
 Return the key ID (a u8vector) of the X.509 certificate authority of @var{cert}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2598
+@c snarfed from ../guile/src/core.c:2602
 @deffn {Scheme Procedure} x509-certificate-key-id cert
 Return a statistically unique ID (a u8vector) for @var{cert} that depends on its public key parameters.  This is normally a 20-byte SHA-1 hash.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2576
+@c snarfed from ../guile/src/core.c:2580
 @deffn {Scheme Procedure} x509-certificate-version cert
 Return the version of @var{cert}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2549
+@c snarfed from ../guile/src/core.c:2553
 @deffn {Scheme Procedure} x509-certificate-key-usage cert
 Return the key usage of @var{cert} (i.e., a list of @code{key-usage/} values), or the empty list if @var{cert} does not contain such information.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2526
+@c snarfed from ../guile/src/core.c:2530
 @deffn {Scheme Procedure} x509-certificate-public-key-algorithm cert
 Return two values: the public key algorithm (i.e., one of the @code{pk-algorithm/} values) of @var{cert} and the number of bits used.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2503
+@c snarfed from ../guile/src/core.c:2507
 @deffn {Scheme Procedure} x509-certificate-signature-algorithm cert
 Return the signature algorithm used by @var{cert} (i.e., one of the @code{sign-algorithm/} values).
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2471
+@c snarfed from ../guile/src/core.c:2475
 @deffn {Scheme Procedure} x509-certificate-matches-hostname? cert hostname
 Return true if @var{cert} matches @var{hostname}, a string denoting a DNS host name.  This is the basic implementation of @uref{http://tools.ietf.org/html/rfc2818, RFC 2818} (aka. HTTPS).
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2453
+@c snarfed from ../guile/src/core.c:2457
 @deffn {Scheme Procedure} x509-certificate-issuer-dn-oid cert index
 Return the OID (a string) at @var{index} from @var{cert}'s issuer DN.  Return @code{#f} if no OID is available at @var{index}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2439
+@c snarfed from ../guile/src/core.c:2443
 @deffn {Scheme Procedure} x509-certificate-dn-oid cert index
 Return OID (a string) at @var{index} from @var{cert}.  Return @code{#f} if no OID is available at @var{index}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2377
+@c snarfed from ../guile/src/core.c:2381
 @deffn {Scheme Procedure} x509-certificate-issuer-dn cert
 Return the distinguished name (DN) of X.509 certificate @var{cert}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2364
+@c snarfed from ../guile/src/core.c:2368
 @deffn {Scheme Procedure} x509-certificate-dn cert
 Return the distinguished name (DN) of X.509 certificate @var{cert}.  The form of the DN is as described in @uref{http://tools.ietf.org/html/rfc2253, RFC 2253}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2274
+@c snarfed from ../guile/src/core.c:2278
 @deffn {Scheme Procedure} pkcs8-import-x509-private-key data format [pass [encrypted]]
 Return a new X.509 private key object resulting from the import of @var{data} (a uniform array) according to @var{format}.  Optionally, if @var{pass} is not @code{#f}, it should be a string denoting a passphrase.  @var{encrypted} tells whether the private key is encrypted (@code{#t} by default).
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2225
+@c snarfed from ../guile/src/core.c:2229
 @deffn {Scheme Procedure} import-x509-private-key data format
 Return a new X.509 private key object resulting from the import of @var{data} (a uniform array) according to @var{format}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2180
+@c snarfed from ../guile/src/core.c:2184
 @deffn {Scheme Procedure} import-x509-certificate data format
 Return a new X.509 certificate object resulting from the import of @var{data} (a uniform array) according to @var{format}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2152
+@c snarfed from ../guile/src/core.c:2156
 @deffn {Scheme Procedure} server-session-psk-username session
 Return the username associated with PSK server session @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2108
+@c snarfed from ../guile/src/core.c:2112
 @deffn {Scheme Procedure} set-psk-client-credentials! cred username key key-format
 Set the client credentials for @var{cred}, a PSK client credentials object.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2088
+@c snarfed from ../guile/src/core.c:2092
 @deffn {Scheme Procedure} make-psk-client-credentials 
 Return a new PSK client credentials object.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2060
+@c snarfed from ../guile/src/core.c:2064
 @deffn {Scheme Procedure} set-psk-server-credentials-file! cred file
 Use @var{file} as the password file for PSK server credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:2040
+@c snarfed from ../guile/src/core.c:2044
 @deffn {Scheme Procedure} make-psk-server-credentials 
 Return new PSK server credentials.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1752
+@c snarfed from ../guile/src/core.c:1756
 @deffn {Scheme Procedure} peer-certificate-status session
 Verify the peer certificate for @var{session} and return a list of @code{certificate-status} values (such as @code{certificate-status/revoked}), or the empty list if the certificate is valid.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1724
+@c snarfed from ../guile/src/core.c:1728
 @deffn {Scheme Procedure} set-certificate-credentials-verify-flags! cred [flags...]
 Set the certificate verification flags to @var{flags}, a series of @code{certificate-verify} values.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1702
+@c snarfed from ../guile/src/core.c:1706
 @deffn {Scheme Procedure} set-certificate-credentials-verify-limits! cred max-bits max-depth
 Set the verification limits of @code{peer-certificate-status} for certificate credentials @var{cred} to @var{max_bits} bits for an acceptable certificate and @var{max_depth} as the maximum depth of a certificate chain.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1665
+@c snarfed from ../guile/src/core.c:1669
 @deffn {Scheme Procedure} set-certificate-credentials-x509-keys! cred certs privkey
 Have certificate credentials @var{cred} use the X.509 certificates listed in @var{certs} and X.509 private key @var{privkey}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1619
+@c snarfed from ../guile/src/core.c:1623
 @deffn {Scheme Procedure} set-certificate-credentials-x509-key-data! cred cert key format
 Use X.509 certificate @var{cert} and private key @var{key}, both uniform arrays containing the X.509 certificate and key in format @var{format}, for certificate credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1599
+@c snarfed from ../guile/src/core.c:1603
 @deffn {Scheme Procedure} set-certificate-credentials-x509-crl-data! cred data format
 Use @var{data} (a uniform array) as the X.509 CRL (certificate revocation list) database for @var{cred}.  On success, return the number of CRLs processed.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1580
+@c snarfed from ../guile/src/core.c:1584
 @deffn {Scheme Procedure} set-certificate-credentials-x509-trust-data! cred data format
 Use @var{data} (a uniform array) as the X.509 trust database for @var{cred}.  On success, return the number of certificates processed.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1561
+@c snarfed from ../guile/src/core.c:1565
 @deffn {Scheme Procedure} set-certificate-credentials-x509-crl-file! cred file format
 Use @var{file} as the X.509 CRL (certificate revocation list) file for certificate credentials @var{cred}.  On success, return the number of CRLs processed.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1542
+@c snarfed from ../guile/src/core.c:1546
 @deffn {Scheme Procedure} set-certificate-credentials-x509-trust-file! cred file format
 Use @var{file} as the X.509 trust file for certificate credentials @var{cred}.  On success, return the number of certificates processed.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1500
+@c snarfed from ../guile/src/core.c:1504
 @deffn {Scheme Procedure} set-certificate-credentials-x509-key-files! cred cert-file key-file format
 Use @var{file} as the password file for PSK server credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1479
+@c snarfed from ../guile/src/core.c:1483
 @deffn {Scheme Procedure} set-certificate-credentials-rsa-export-parameters! cred rsa-params
 Use RSA parameters @var{rsa_params} for certificate credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1458
+@c snarfed from ../guile/src/core.c:1462
 @deffn {Scheme Procedure} set-certificate-credentials-dh-parameters! cred dh-params
 Use Diffie-Hellman parameters @var{dh_params} for certificate credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1438
+@c snarfed from ../guile/src/core.c:1442
 @deffn {Scheme Procedure} make-certificate-credentials 
 Return new certificate credentials (i.e., for use with either X.509 or OpenPGP certificates.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1332
+@c snarfed from ../guile/src/core.c:1336
 @deffn {Scheme Procedure} pkcs1-export-rsa-parameters rsa-params format
 Export Diffie-Hellman parameters @var{rsa_params} in PKCS1 format according for @var{format} (an @code{x509-certificate-format} value).  Return a @code{u8vector} containing the result.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1287
+@c snarfed from ../guile/src/core.c:1291
 @deffn {Scheme Procedure} pkcs1-import-rsa-parameters array format
 Import Diffie-Hellman parameters in PKCS1 format (further specified by @var{format}, an @code{x509-certificate-format} value) from @var{array} (a homogeneous array) and return a new @code{rsa-params} object.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1255
+@c snarfed from ../guile/src/core.c:1259
 @deffn {Scheme Procedure} make-rsa-parameters bits
 Return new RSA parameters.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1235
+@c snarfed from ../guile/src/core.c:1239
 @deffn {Scheme Procedure} set-anonymous-server-dh-parameters! cred dh-params
 Set the Diffie-Hellman parameters of anonymous server credentials @var{cred}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1215
+@c snarfed from ../guile/src/core.c:1219
 @deffn {Scheme Procedure} make-anonymous-client-credentials 
 Return anonymous client credentials.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1197
+@c snarfed from ../guile/src/core.c:1201
 @deffn {Scheme Procedure} make-anonymous-server-credentials 
 Return anonymous server credentials.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1176
+@c snarfed from ../guile/src/core.c:1180
 @deffn {Scheme Procedure} set-session-dh-prime-bits! session bits
 Use @var{bits} DH prime bits for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1154
+@c snarfed from ../guile/src/core.c:1158
 @deffn {Scheme Procedure} pkcs3-export-dh-parameters dh-params format
 Export Diffie-Hellman parameters @var{dh_params} in PKCS3 format according for @var{format} (an @code{x509-certificate-format} value).  Return a @code{u8vector} containing the result.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1109
+@c snarfed from ../guile/src/core.c:1113
 @deffn {Scheme Procedure} pkcs3-import-dh-parameters array format
 Import Diffie-Hellman parameters in PKCS3 format (further specified by @var{format}, an @code{x509-certificate-format} value) from @var{array} (a homogeneous array) and return a new @code{dh-params} object.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:1077
+@c snarfed from ../guile/src/core.c:1081
 @deffn {Scheme Procedure} make-dh-parameters bits
 Return new Diffie-Hellman parameters.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:996
+@c snarfed from ../guile/src/core.c:1000
 @deffn {Scheme Procedure} set-session-transport-port! session port
 Use @var{port} as the input/output port for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:946
+@c snarfed from ../guile/src/core.c:949
 @deffn {Scheme Procedure} set-session-transport-fd! session fd
 Use file descriptor @var{fd} as the underlying transport for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:901
+@c snarfed from ../guile/src/core.c:904
 @deffn {Scheme Procedure} session-record-port session
 Return a read-write port that may be used to communicate over @var{session}.  All invocations of @code{session-port} on a given session return the same object (in the sense of @code{eq?}).
 @end deffn
 
-@c snarfed from ../guile/src/core.c:674
+@c snarfed from ../guile/src/core.c:678
 @deffn {Scheme Procedure} record-receive! session array
 Receive data from @var{session} into @var{array}, a uniform homogeneous array.  Return the number of bytes actually received.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:641
+@c snarfed from ../guile/src/core.c:645
 @deffn {Scheme Procedure} record-send session array
 Send the record constituted by @var{array} through @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:559
+@c snarfed from ../guile/src/core.c:563
 @deffn {Scheme Procedure} set-session-credentials! session cred
 Use @var{cred} as @var{session}'s credentials.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:537
+@c snarfed from ../guile/src/core.c:541
 @deffn {Scheme Procedure} cipher-suite->string kx cipher mac
 Return the name of the given cipher suite.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:521
+@c snarfed from ../guile/src/core.c:525
 @deffn {Scheme Procedure} set-session-default-export-priority! session
 Have @var{session} use the default export priorities.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:505
+@c snarfed from ../guile/src/core.c:509
 @deffn {Scheme Procedure} set-session-default-priority! session
 Have @var{session} use the default priorities.
 @end deffn
@@ -305,97 +305,97 @@ Use @var{items} (a list) as the list of preferred mac for @var{session}.
 Use @var{items} (a list) as the list of preferred cipher for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:482
+@c snarfed from ../guile/src/core.c:486
 @deffn {Scheme Procedure} set-server-session-certificate-request! session request
 Tell how @var{session}, a server-side session, should deal with certificate requests.  @var{request} should be either @code{certificate-request/request} or @code{certificate-request/require}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:442
+@c snarfed from ../guile/src/core.c:446
 @deffn {Scheme Procedure} session-our-certificate-chain session
 Return our certificate chain for @var{session} (as sent to the peer) in raw format (a u8vector).  In the case of OpenPGP there is exactly one certificate.  Return the empty list if no certificate was used.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:395
+@c snarfed from ../guile/src/core.c:399
 @deffn {Scheme Procedure} session-peer-certificate-chain session
 Return the a list of certificates in raw format (u8vectors) where the first one is the peer's certificate.  In the case of OpenPGP, there is always exactly one certificate.  In the case of X.509, subsequent certificates indicate form a certificate chain.  Return the empty list if no certificate was sent.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:371
+@c snarfed from ../guile/src/core.c:375
 @deffn {Scheme Procedure} session-client-authentication-type session
 Return the client authentication type (a @code{credential-type} value) used in @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:351
+@c snarfed from ../guile/src/core.c:355
 @deffn {Scheme Procedure} session-server-authentication-type session
 Return the server authentication type (a @code{credential-type} value) used in @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:331
+@c snarfed from ../guile/src/core.c:335
 @deffn {Scheme Procedure} session-authentication-type session
 Return the authentication type (a @code{credential-type} value) used by @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:311
+@c snarfed from ../guile/src/core.c:315
 @deffn {Scheme Procedure} session-protocol session
 Return the protocol used by @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:295
+@c snarfed from ../guile/src/core.c:299
 @deffn {Scheme Procedure} session-certificate-type session
 Return @var{session}'s certificate type.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:278
+@c snarfed from ../guile/src/core.c:282
 @deffn {Scheme Procedure} session-compression-method session
 Return @var{session}'s compression method.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:261
+@c snarfed from ../guile/src/core.c:265
 @deffn {Scheme Procedure} session-mac session
 Return @var{session}'s MAC.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:245
+@c snarfed from ../guile/src/core.c:249
 @deffn {Scheme Procedure} session-kx session
 Return @var{session}'s kx.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:229
+@c snarfed from ../guile/src/core.c:233
 @deffn {Scheme Procedure} session-cipher session
 Return @var{session}'s cipher.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:202
+@c snarfed from ../guile/src/core.c:206
 @deffn {Scheme Procedure} alert-send session level alert
 Send @var{alert} via @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:185
+@c snarfed from ../guile/src/core.c:189
 @deffn {Scheme Procedure} alert-get session
 Get an aleter from @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:167
+@c snarfed from ../guile/src/core.c:171
 @deffn {Scheme Procedure} rehandshake session
 Perform a re-handshaking for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:149
+@c snarfed from ../guile/src/core.c:153
 @deffn {Scheme Procedure} handshake session
 Perform a handshake for @var{session}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:129
+@c snarfed from ../guile/src/core.c:133
 @deffn {Scheme Procedure} bye session how
 Close @var{session} according to @var{how}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:104
+@c snarfed from ../guile/src/core.c:108
 @deffn {Scheme Procedure} make-session end
 Return a new session for connection end @var{end}, either @code{connection-end/server} or @code{connection-end/client}.
 @end deffn
 
-@c snarfed from ../guile/src/core.c:93
+@c snarfed from ../guile/src/core.c:97
 @deffn {Scheme Procedure} gnutls-version 
 Return a string denoting the version number of the underlying GnuTLS library, e.g., @code{"1.7.2"}.
 @end deffn

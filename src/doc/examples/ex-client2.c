@@ -1,7 +1,7 @@
 /* This example code is placed in the public domain. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -50,9 +50,9 @@ main (void)
   if (ret < 0)
     {
       if (ret == GNUTLS_E_INVALID_REQUEST)
-	{
-	  fprintf (stderr, "Syntax error at: %s\n", err);
-	}
+        {
+          fprintf (stderr, "Syntax error at: %s\n", err);
+        }
       exit (1);
     }
 

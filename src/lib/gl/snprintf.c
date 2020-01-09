@@ -1,5 +1,5 @@
 /* Formatted output to strings.
-   Copyright (C) 2004, 2006-2008 Free Software Foundation, Inc.
+   Copyright (C) 2004, 2006-2012 Free Software Foundation, Inc.
    Written by Simon Josefsson and Paul Eggert.
 
    This program is free software; you can redistribute it and/or modify
@@ -13,8 +13,7 @@
    GNU Lesser General Public License for more details.
 
    You should have received a copy of the GNU Lesser General Public License along
-   with this program; if not, write to the Free Software Foundation,
-   Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.  */
+   with this program; if not, see <http://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
@@ -53,11 +52,11 @@ snprintf (char *str, size_t size, const char *format, ...)
   if (output != str)
     {
       if (size)
-	{
-	  size_t pruned_len = (len < size ? len : size - 1);
-	  memcpy (str, output, pruned_len);
-	  str[pruned_len] = '\0';
-	}
+        {
+          size_t pruned_len = (len < size ? len : size - 1);
+          memcpy (str, output, pruned_len);
+          str[pruned_len] = '\0';
+        }
 
       free (output);
     }

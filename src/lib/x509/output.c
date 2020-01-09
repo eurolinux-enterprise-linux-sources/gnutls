@@ -1,11 +1,11 @@
 /*
- * Copyright (C) 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -37,13 +37,14 @@
 #include "gettext.h"
 #define _(String) dgettext (PACKAGE, String)
 
-#define addf _gnutls_string_append_printf
-#define adds _gnutls_string_append_str
+#define addf _gnutls_buffer_append_printf
+#define adds _gnutls_buffer_append_str
 
 #define ERROR_STR (char*) "(error)"
 
 static void
-hexdump (gnutls_string * str, const char *data, size_t len, const char *spc)
+hexdump (gnutls_buffer_st * str, const char *data, size_t len,
+         const char *spc)
 {
   size_t j;
 
@@ -52,22 +53,22 @@ hexdump (gnutls_string * str, const char *data, size_t len, const char *spc)
   for (j = 0; j < len; j++)
     {
       if (((j + 1) % 16) == 0)
-	{
-	  addf (str, "%.2x\n", (unsigned char) data[j]);
-	  if (spc && j != (len - 1))
-	    adds (str, spc);
-	}
+        {
+          addf (str, "%.2x\n", (unsigned char) data[j]);
+          if (spc && j != (len - 1))
+            adds (str, spc);
+        }
       else if (j == (len - 1))
-	addf (str, "%.2x", (unsigned char) data[j]);
+        addf (str, "%.2x", (unsigned char) data[j]);
       else
-	addf (str, "%.2x:", (unsigned char) data[j]);
+        addf (str, "%.2x:", (unsigned char) data[j]);
     }
   if ((j % 16) != 0)
     adds (str, "\n");
 }
 
 static void
-hexprint (gnutls_string * str, const char *data, size_t len)
+hexprint (gnutls_buffer_st * str, const char *data, size_t len)
 {
   size_t j;
 
@@ -76,13 +77,13 @@ hexprint (gnutls_string * str, const char *data, size_t len)
   else
     {
       for (j = 0; j < len; j++)
-	addf (str, "%.2x", (unsigned char) data[j]);
+        addf (str, "%.2x", (unsigned char) data[j]);
     }
 }
 
 
 static void
-asciiprint (gnutls_string * str, const char *data, size_t len)
+asciiprint (gnutls_buffer_st * str, const char *data, size_t len)
 {
   size_t j;
 
@@ -120,14 +121,14 @@ ip_to_string (void *_ip, int ip_size, char *string, int string_size)
   switch (ip_size)
     {
     case 4:
-      sprintf (string, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+      snprintf (string, string_size, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
       break;
     case 16:
-      sprintf (string, "%x:%x:%x:%x:%x:%x:%x:%x",
-	       (ip[0] << 8) | ip[1], (ip[2] << 8) | ip[3],
-	       (ip[4] << 8) | ip[5], (ip[6] << 8) | ip[7],
-	       (ip[8] << 8) | ip[9], (ip[10] << 8) | ip[11],
-	       (ip[12] << 8) | ip[13], (ip[14] << 8) | ip[15]);
+      snprintf (string, string_size, "%x:%x:%x:%x:%x:%x:%x:%x",
+               (ip[0] << 8) | ip[1], (ip[2] << 8) | ip[3],
+               (ip[4] << 8) | ip[5], (ip[6] << 8) | ip[7],
+               (ip[8] << 8) | ip[9], (ip[10] << 8) | ip[11],
+               (ip[12] << 8) | ip[13], (ip[14] << 8) | ip[15]);
       break;
     }
 
@@ -135,7 +136,7 @@ ip_to_string (void *_ip, int ip_size, char *string, int string_size)
 }
 
 static void
-print_proxy (gnutls_string * str, gnutls_x509_crt_t cert)
+print_proxy (gnutls_buffer_st * str, gnutls_x509_crt_t cert)
 {
   int pathlen;
   char *policyLanguage;
@@ -144,8 +145,8 @@ print_proxy (gnutls_string * str, gnutls_x509_crt_t cert)
   int err;
 
   err = gnutls_x509_crt_get_proxy (cert, NULL,
-				   &pathlen, &policyLanguage,
-				   &policy, &npolicy);
+                                   &pathlen, &policyLanguage,
+                                   &policy, &npolicy);
   if (err < 0)
     {
       addf (str, "error: get_proxy: %s\n", gnutls_strerror (err));
@@ -172,7 +173,7 @@ print_proxy (gnutls_string * str, gnutls_x509_crt_t cert)
 }
 
 static void
-print_ski (gnutls_string * str, gnutls_x509_crt_t cert)
+print_ski (gnutls_buffer_st * str, gnutls_x509_crt_t cert)
 {
   char *buffer = NULL;
   size_t size = 0;
@@ -188,7 +189,8 @@ print_ski (gnutls_string * str, gnutls_x509_crt_t cert)
   buffer = gnutls_malloc (size);
   if (!buffer)
     {
-      addf (str, "error: malloc: %s\n", gnutls_strerror (err));
+      addf (str, "error: malloc: %s\n",
+            gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
       return;
     }
 
@@ -211,6 +213,10 @@ print_ski (gnutls_string * str, gnutls_x509_crt_t cert)
 #define TYPE_CRT 2
 #define TYPE_CRQ 3
 
+#define TYPE_CRT_SAN TYPE_CRT
+#define TYPE_CRQ_SAN TYPE_CRQ
+#define TYPE_CRT_IAN 4
+
 typedef union
 {
   gnutls_x509_crt_t crt;
@@ -219,7 +225,7 @@ typedef union
 } cert_type_t;
 
 static void
-print_aki (gnutls_string * str, int type, cert_type_t cert)
+print_aki (gnutls_buffer_st * str, int type, cert_type_t cert)
 {
   char *buffer = NULL;
   size_t size = 0;
@@ -246,7 +252,8 @@ print_aki (gnutls_string * str, int type, cert_type_t cert)
   buffer = gnutls_malloc (size);
   if (!buffer)
     {
-      addf (str, "error: malloc: %s\n", gnutls_strerror (err));
+      addf (str, "error: malloc: %s\n",
+            gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
       return;
     }
 
@@ -272,8 +279,8 @@ print_aki (gnutls_string * str, int type, cert_type_t cert)
 }
 
 static void
-print_key_usage (gnutls_string * str, const char *prefix, int type,
-		 cert_type_t cert)
+print_key_usage (gnutls_buffer_st * str, const char *prefix, int type,
+                 cert_type_t cert)
 {
   unsigned int key_usage;
   int err;
@@ -314,7 +321,7 @@ print_key_usage (gnutls_string * str, const char *prefix, int type,
 #ifdef ENABLE_PKI
 
 static void
-print_crldist (gnutls_string * str, gnutls_x509_crt_t cert)
+print_crldist (gnutls_buffer_st * str, gnutls_x509_crt_t cert)
 {
   char *buffer = NULL;
   size_t size;
@@ -327,80 +334,80 @@ print_crldist (gnutls_string * str, gnutls_x509_crt_t cert)
     {
       size = 0;
       err = gnutls_x509_crt_get_crl_dist_points (cert, indx, buffer, &size,
-						 NULL, NULL);
+                                                 NULL, NULL);
       if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-	return;
+        return;
       if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	{
-	  addf (str, "error: get_crl_dist_points: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: get_crl_dist_points: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       buffer = gnutls_malloc (size);
       if (!buffer)
-	{
-	  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: malloc: %s\n",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          return;
+        }
 
       err = gnutls_x509_crt_get_crl_dist_points (cert, indx, buffer, &size,
-						 NULL, NULL);
+                                                 NULL, NULL);
       if (err < 0)
-	{
-	  gnutls_free (buffer);
-	  addf (str, "error: get_crl_dist_points2: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          gnutls_free (buffer);
+          addf (str, "error: get_crl_dist_points2: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       if ((err == GNUTLS_SAN_DNSNAME
-	   || err == GNUTLS_SAN_RFC822NAME
-	   || err == GNUTLS_SAN_URI) &&
-	  strlen (buffer) != size)
-	{
-	  adds (str, _("warning: distributionPoint contains an embedded NUL, "
-		       "replacing with '!'\n"));
-	  while (strlen (buffer) < size)
-	    buffer[strlen (buffer)] = '!';
-	}
+           || err == GNUTLS_SAN_RFC822NAME
+           || err == GNUTLS_SAN_URI) && strlen (buffer) != size)
+        {
+          adds (str, _("warning: distributionPoint contains an embedded NUL, "
+                       "replacing with '!'\n"));
+          while (strlen (buffer) < size)
+            buffer[strlen (buffer)] = '!';
+        }
 
       switch (err)
-	{
-	case GNUTLS_SAN_DNSNAME:
-	  addf (str, "\t\t\tDNSname: %.*s\n", (int) size, buffer);
-	  break;
+        {
+        case GNUTLS_SAN_DNSNAME:
+          addf (str, "\t\t\tDNSname: %.*s\n", (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_RFC822NAME:
-	  addf (str, "\t\t\tRFC822name: %.*s\n", (int) size, buffer);
-	  break;
+        case GNUTLS_SAN_RFC822NAME:
+          addf (str, "\t\t\tRFC822name: %.*s\n", (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_URI:
-	  addf (str, "\t\t\tURI: %.*s\n", (int) size, buffer);
-	  break;
+        case GNUTLS_SAN_URI:
+          addf (str, "\t\t\tURI: %.*s\n", (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_IPADDRESS:
-	  p = ip_to_string (buffer, size, str_ip, sizeof (str_ip));
-	  if (p == NULL)
-	    p = ERROR_STR;
-	  addf (str, "\t\t\tIPAddress: %s\n", p);
-	  break;
+        case GNUTLS_SAN_IPADDRESS:
+          p = ip_to_string (buffer, size, str_ip, sizeof (str_ip));
+          if (p == NULL)
+            p = ERROR_STR;
+          addf (str, "\t\t\tIPAddress: %s\n", p);
+          break;
 
-	case GNUTLS_SAN_DN:
-	  addf (str, "\t\t\tdirectoryName: %.*s\n", (int) size, buffer);
-	  break;
+        case GNUTLS_SAN_DN:
+          addf (str, "\t\t\tdirectoryName: %.*s\n", (int) size, buffer);
+          break;
 
-	default:
-	  addf (str, "error: unknown SAN\n");
-	  break;
-	}
+        default:
+          addf (str, "error: unknown SAN\n");
+          break;
+        }
       gnutls_free (buffer);
     }
 }
 
 static void
-print_key_purpose (gnutls_string * str, const char *prefix, int type,
-		   cert_type_t cert)
+print_key_purpose (gnutls_buffer_st * str, const char *prefix, int type,
+                   cert_type_t cert)
 {
   int indx;
   char *buffer = NULL;
@@ -411,61 +418,64 @@ print_key_purpose (gnutls_string * str, const char *prefix, int type,
     {
       size = 0;
       if (type == TYPE_CRT)
-	err = gnutls_x509_crt_get_key_purpose_oid (cert.crt, indx, buffer,
-						   &size, NULL);
+        err = gnutls_x509_crt_get_key_purpose_oid (cert.crt, indx, buffer,
+                                                   &size, NULL);
       else if (type == TYPE_CRQ)
-	err = gnutls_x509_crq_get_key_purpose_oid (cert.crq, indx, buffer,
-						   &size, NULL);
+        err = gnutls_x509_crq_get_key_purpose_oid (cert.crq, indx, buffer,
+                                                   &size, NULL);
       else
-	return;
+        return;
 
       if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-	return;
+        return;
       if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	{
-	  addf (str, "error: get_key_purpose_oid: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: get_key_purpose_oid: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       buffer = gnutls_malloc (size);
       if (!buffer)
-	{
-	  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: malloc: %s\n",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          return;
+        }
 
       if (type == TYPE_CRT)
-	err = gnutls_x509_crt_get_key_purpose_oid (cert.crt, indx, buffer,
-						   &size, NULL);
+        err = gnutls_x509_crt_get_key_purpose_oid (cert.crt, indx, buffer,
+                                                   &size, NULL);
       else
-	err = gnutls_x509_crq_get_key_purpose_oid (cert.crq, indx, buffer,
-						   &size, NULL);
+        err = gnutls_x509_crq_get_key_purpose_oid (cert.crq, indx, buffer,
+                                                   &size, NULL);
 
       if (err < 0)
-	{
-	  gnutls_free (buffer);
-	  addf (str, "error: get_key_purpose_oid2: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          gnutls_free (buffer);
+          addf (str, "error: get_key_purpose_oid2: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       if (strcmp (buffer, GNUTLS_KP_TLS_WWW_SERVER) == 0)
-	addf (str, _("%s\t\t\tTLS WWW Server.\n"), prefix);
+        addf (str, _("%s\t\t\tTLS WWW Server.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_TLS_WWW_CLIENT) == 0)
-	addf (str, _("%s\t\t\tTLS WWW Client.\n"), prefix);
+        addf (str, _("%s\t\t\tTLS WWW Client.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_CODE_SIGNING) == 0)
-	addf (str, _("%s\t\t\tCode signing.\n"), prefix);
+        addf (str, _("%s\t\t\tCode signing.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_EMAIL_PROTECTION) == 0)
-	addf (str, _("%s\t\t\tEmail protection.\n"), prefix);
+        addf (str, _("%s\t\t\tEmail protection.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_TIME_STAMPING) == 0)
-	addf (str, _("%s\t\t\tTime stamping.\n"), prefix);
+        addf (str, _("%s\t\t\tTime stamping.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_OCSP_SIGNING) == 0)
-	addf (str, _("%s\t\t\tOCSP signing.\n"), prefix);
+        addf (str, _("%s\t\t\tOCSP signing.\n"), prefix);
+      else if (strcmp (buffer, GNUTLS_KP_IPSEC_IKE) == 0)
+        addf (str, _("%s\t\t\tIpsec IKE.\n"), prefix);
       else if (strcmp (buffer, GNUTLS_KP_ANY) == 0)
-	addf (str, _("%s\t\t\tAny purpose.\n"), prefix);
+        addf (str, _("%s\t\t\tAny purpose.\n"), prefix);
       else
-	addf (str, "%s\t\t\t%s\n", prefix, buffer);
+        addf (str, "%s\t\t\t%s\n", prefix, buffer);
 
       gnutls_free (buffer);
     }
@@ -474,8 +484,8 @@ print_key_purpose (gnutls_string * str, const char *prefix, int type,
 #endif
 
 static void
-print_basic (gnutls_string * str, const char *prefix, int type,
-	     cert_type_t cert)
+print_basic (gnutls_buffer_st * str, const char *prefix, int type,
+             cert_type_t cert)
 {
   int pathlen;
   int err;
@@ -506,422 +516,517 @@ print_basic (gnutls_string * str, const char *prefix, int type,
 
 
 static void
-print_san (gnutls_string * str, const char *prefix, int type,
-	   cert_type_t cert)
+print_altname (gnutls_buffer_st * str, const char *prefix, int altname_type,
+               cert_type_t cert)
 {
-  unsigned int san_idx;
+  unsigned int altname_idx;
   char str_ip[64];
   char *p;
 
-  for (san_idx = 0;; san_idx++)
+  for (altname_idx = 0;; altname_idx++)
     {
       char *buffer = NULL;
       size_t size = 0;
       int err;
 
-      if (type == TYPE_CRT)
-	err =
-	  gnutls_x509_crt_get_subject_alt_name (cert.crt, san_idx, buffer,
-						&size, NULL);
-      else if (type == TYPE_CRQ)
-	err =
-	  gnutls_x509_crq_get_subject_alt_name (cert.crq, san_idx, buffer,
-						&size, NULL, NULL);
+      if (altname_type == TYPE_CRT_SAN)
+        err =
+          gnutls_x509_crt_get_subject_alt_name (cert.crt, altname_idx, buffer,
+                                                &size, NULL);
+      else if (altname_type == TYPE_CRQ_SAN)
+        err =
+          gnutls_x509_crq_get_subject_alt_name (cert.crq, altname_idx, buffer,
+                                                &size, NULL, NULL);
+      else if (altname_type == TYPE_CRT_IAN)
+        err =
+          gnutls_x509_crt_get_issuer_alt_name (cert.crt, altname_idx, buffer,
+                                               &size, NULL);
       else
-	return;
+        return;
 
       if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-	break;
+        break;
       if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	{
-	  addf (str, "error: get_subject_alt_name: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: get_subject/issuer_alt_name: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       buffer = gnutls_malloc (size);
       if (!buffer)
-	{
-	  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: malloc: %s\n",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          return;
+        }
 
-      if (type == TYPE_CRT)
-	err =
-	  gnutls_x509_crt_get_subject_alt_name (cert.crt, san_idx, buffer,
-						&size, NULL);
-      else if (type == TYPE_CRQ)
-	err =
-	  gnutls_x509_crq_get_subject_alt_name (cert.crq, san_idx, buffer,
-						&size, NULL, NULL);
+      if (altname_type == TYPE_CRT_SAN)
+        err =
+          gnutls_x509_crt_get_subject_alt_name (cert.crt, altname_idx, buffer,
+                                                &size, NULL);
+      else if (altname_type == TYPE_CRQ_SAN)
+        err =
+          gnutls_x509_crq_get_subject_alt_name (cert.crq, altname_idx, buffer,
+                                                &size, NULL, NULL);
+      else if (altname_type == TYPE_CRT_IAN)
+        err = gnutls_x509_crt_get_issuer_alt_name (cert.crt, altname_idx,
+                                                   buffer, &size, NULL);
 
       if (err < 0)
-	{
-	  gnutls_free (buffer);
-	  addf (str, "error: get_subject_alt_name2: %s\n",
-		gnutls_strerror (err));
-	  return;
-	}
+        {
+          gnutls_free (buffer);
+          addf (str, "error: get_subject/issuer_alt_name2: %s\n",
+                gnutls_strerror (err));
+          return;
+        }
 
       if ((err == GNUTLS_SAN_DNSNAME
-	   || err == GNUTLS_SAN_RFC822NAME
-	   || err == GNUTLS_SAN_URI) &&
-	  strlen (buffer) != size)
-	{
-	  adds (str, _("warning: SAN contains an embedded NUL, "
-		       "replacing with '!'\n"));
-	  while (strlen (buffer) < size)
-	    buffer[strlen (buffer)] = '!';
-	}
+           || err == GNUTLS_SAN_RFC822NAME
+           || err == GNUTLS_SAN_URI) && strlen (buffer) != size)
+        {
+          adds (str, _("warning: altname contains an embedded NUL, "
+                       "replacing with '!'\n"));
+          while (strlen (buffer) < size)
+            buffer[strlen (buffer)] = '!';
+        }
 
       switch (err)
-	{
-	case GNUTLS_SAN_DNSNAME:
-	  addf (str, "%s\t\t\tDNSname: %.*s\n", prefix, (int) size, buffer);
-	  break;
+        {
+        case GNUTLS_SAN_DNSNAME:
+          addf (str, "%s\t\t\tDNSname: %.*s\n", prefix, (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_RFC822NAME:
-	  addf (str, "%s\t\t\tRFC822name: %.*s\n", prefix, (int) size, buffer);
-	  break;
+        case GNUTLS_SAN_RFC822NAME:
+          addf (str, "%s\t\t\tRFC822name: %.*s\n", prefix, (int) size,
+                buffer);
+          break;
 
-	case GNUTLS_SAN_URI:
-	  addf (str, "%s\t\t\tURI: %.*s\n", prefix, (int) size, buffer);
-	  break;
+        case GNUTLS_SAN_URI:
+          addf (str, "%s\t\t\tURI: %.*s\n", prefix, (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_IPADDRESS:
-	  p = ip_to_string (buffer, size, str_ip, sizeof (str_ip));
-	  if (p == NULL)
-	    p = ERROR_STR;
-	  addf (str, "%s\t\t\tIPAddress: %s\n", prefix, p);
-	  break;
+        case GNUTLS_SAN_IPADDRESS:
+          p = ip_to_string (buffer, size, str_ip, sizeof (str_ip));
+          if (p == NULL)
+            p = ERROR_STR;
+          addf (str, "%s\t\t\tIPAddress: %s\n", prefix, p);
+          break;
 
-	case GNUTLS_SAN_DN:
-	  addf (str, "%s\t\t\tdirectoryName: %.*s\n", prefix,
-		(int) size, buffer);
-	  break;
+        case GNUTLS_SAN_DN:
+          addf (str, "%s\t\t\tdirectoryName: %.*s\n", prefix,
+                (int) size, buffer);
+          break;
 
-	case GNUTLS_SAN_OTHERNAME:
-	  {
-	    char *oid = NULL;
-	    size_t oidsize;
+        case GNUTLS_SAN_OTHERNAME:
+          {
+            char *oid = NULL;
+            size_t oidsize;
 
-	    oidsize = 0;
-	    if (type == TYPE_CRT)
-	      err = gnutls_x509_crt_get_subject_alt_othername_oid
-		(cert.crt, san_idx, oid, &oidsize);
-	    else if (type == TYPE_CRQ)
-	      err = gnutls_x509_crq_get_subject_alt_othername_oid
-		(cert.crq, san_idx, oid, &oidsize);
+            oidsize = 0;
+            if (altname_type == TYPE_CRT_SAN)
+              err = gnutls_x509_crt_get_subject_alt_othername_oid
+                (cert.crt, altname_idx, oid, &oidsize);
+            else if (altname_type == TYPE_CRQ_SAN)
+              err = gnutls_x509_crq_get_subject_alt_othername_oid
+                (cert.crq, altname_idx, oid, &oidsize);
+            else if (altname_type == TYPE_CRT_IAN)
+              err = gnutls_x509_crt_get_issuer_alt_othername_oid
+                (cert.crt, altname_idx, oid, &oidsize);
 
-	    if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	      {
-		gnutls_free (buffer);
-		addf (str, "error: get_subject_alt_othername_oid: %s\n",
-		      gnutls_strerror (err));
-		return;
-	      }
+            if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
+              {
+                gnutls_free (buffer);
+                addf (str,
+                      "error: get_subject/issuer_alt_othername_oid: %s\n",
+                      gnutls_strerror (err));
+                return;
+              }
 
-	    oid = gnutls_malloc (oidsize);
-	    if (!oid)
-	      {
-		gnutls_free (buffer);
-		addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-		return;
-	      }
+            oid = gnutls_malloc (oidsize);
+            if (!oid)
+              {
+                gnutls_free (buffer);
+                addf (str, "error: malloc: %s\n",
+                      gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+                return;
+              }
 
-	    if (type == TYPE_CRT)
-	      err = gnutls_x509_crt_get_subject_alt_othername_oid
-		(cert.crt, san_idx, oid, &oidsize);
-	    else if (type == TYPE_CRQ)
-	      err = gnutls_x509_crq_get_subject_alt_othername_oid
-		(cert.crq, san_idx, oid, &oidsize);
-	    if (err < 0)
-	      {
-		gnutls_free (buffer);
-		gnutls_free (oid);
-		addf (str, "error: get_subject_alt_othername_oid2: %s\n",
-		      gnutls_strerror (err));
-		return;
-	      }
+            if (altname_type == TYPE_CRT_SAN)
+              err = gnutls_x509_crt_get_subject_alt_othername_oid
+                (cert.crt, altname_idx, oid, &oidsize);
+            else if (altname_type == TYPE_CRQ_SAN)
+              err = gnutls_x509_crq_get_subject_alt_othername_oid
+                (cert.crq, altname_idx, oid, &oidsize);
+            else if (altname_type == TYPE_CRT_IAN)
+              err = gnutls_x509_crt_get_issuer_alt_othername_oid
+                (cert.crt, altname_idx, oid, &oidsize);
 
-	    if (err == GNUTLS_SAN_OTHERNAME_XMPP)
-	      {
-		if (strlen (buffer) != size)
-		  {
-		    adds (str, _("warning: SAN contains an embedded NUL, "
-				 "replacing with '!'\n"));
-		    while (strlen (buffer) < size)
-		      buffer[strlen (buffer)] = '!';
-		  }
+            if (err < 0)
+              {
+                gnutls_free (buffer);
+                gnutls_free (oid);
+                addf (str, "error: get_subject_alt_othername_oid2: %s\n",
+                      gnutls_strerror (err));
+                return;
+              }
 
-		addf (str, _("%s\t\t\tXMPP Address: %.*s\n"), prefix,
-		      (int) size, buffer);
-	      }
-	    else
-	      {
-		addf (str, _("%s\t\t\totherName OID: %.*s\n"), prefix,
-		      (int) oidsize, oid);
-		addf (str, _("%s\t\t\totherName DER: "), prefix);
-		hexprint (str, buffer, size);
-		addf (str, _("\n%s\t\t\totherName ASCII: "), prefix);
-		asciiprint (str, buffer, size);
-		addf (str, "\n");
-	      }
-	    gnutls_free (oid);
-	  }
-	  break;
+            if (err == GNUTLS_SAN_OTHERNAME_XMPP)
+              {
+                if (strlen (buffer) != size)
+                  {
+                    adds (str, _("warning: altname contains an embedded NUL, "
+                                 "replacing with '!'\n"));
+                    while (strlen (buffer) < size)
+                      buffer[strlen (buffer)] = '!';
+                  }
 
-	default:
-	  addf (str, "error: unknown SAN\n");
-	  break;
-	}
+                addf (str, _("%s\t\t\tXMPP Address: %.*s\n"), prefix,
+                      (int) size, buffer);
+              }
+            else
+              {
+                addf (str, _("%s\t\t\totherName OID: %.*s\n"), prefix,
+                      (int) oidsize, oid);
+                addf (str, _("%s\t\t\totherName DER: "), prefix);
+                hexprint (str, buffer, size);
+                addf (str, _("\n%s\t\t\totherName ASCII: "), prefix);
+                asciiprint (str, buffer, size);
+                addf (str, "\n");
+              }
+            gnutls_free (oid);
+          }
+          break;
+
+        default:
+          addf (str, "error: unknown altname\n");
+          break;
+        }
 
       gnutls_free (buffer);
     }
 }
 
 static void
-print_extensions (gnutls_string * str, const char *prefix, int type,
-		  cert_type_t cert)
+guiddump (gnutls_buffer_st * str, const char *data, size_t len,
+          const char *spc)
+{
+  size_t j;
+
+  if (spc)
+    adds (str, spc);
+  addf (str, "{");
+  addf (str, "%.2X", (unsigned char) data[3]);
+  addf (str, "%.2X", (unsigned char) data[2]);
+  addf (str, "%.2X", (unsigned char) data[1]);
+  addf (str, "%.2X", (unsigned char) data[0]);
+  addf (str, "-");
+  addf (str, "%.2X", (unsigned char) data[5]);
+  addf (str, "%.2X", (unsigned char) data[4]);
+  addf (str, "-");
+  addf (str, "%.2X", (unsigned char) data[7]);
+  addf (str, "%.2X", (unsigned char) data[6]);
+  addf (str, "-");
+  addf (str, "%.2X", (unsigned char) data[8]);
+  addf (str, "%.2X", (unsigned char) data[9]);
+  addf (str, "-");
+  for (j = 10; j < 16; j++)
+    {
+      addf (str, "%.2X", (unsigned char) data[j]);
+    }
+  addf (str, "}\n");
+}
+
+static void
+print_unique_ids (gnutls_buffer_st * str, const gnutls_x509_crt_t cert)
+{
+  int result;
+  char buf[256];                /* if its longer, we won't bother to print it */
+  size_t buf_size = 256;
+
+  result = gnutls_x509_crt_get_issuer_unique_id (cert, buf, &buf_size);
+  if (result >= 0)
+    {
+      addf (str, ("\t\tIssuer Unique ID:\n"));
+      hexdump (str, buf, buf_size, "\t\t\t");
+      if (buf_size == 16)
+        {                       /* this could be a GUID */
+          guiddump (str, buf, buf_size, "\t\t\t");
+        }
+    }
+
+  buf_size = 256;
+  result = gnutls_x509_crt_get_subject_unique_id (cert, buf, &buf_size);
+  if (result >= 0)
+    {
+      addf (str, ("\t\tSubject Unique ID:\n"));
+      hexdump (str, buf, buf_size, "\t\t\t");
+      if (buf_size == 16)
+        {                       /* this could be a GUID */
+          guiddump (str, buf, buf_size, "\t\t\t");
+        }
+    }
+}
+
+static void
+print_extensions (gnutls_buffer_st * str, const char *prefix, int type,
+                  cert_type_t cert)
 {
   int i, err;
+  int san_idx = 0;
+  int ian_idx = 0;
+  int proxy_idx = 0;
+  int basic_idx = 0;
+  int keyusage_idx = 0;
+  int keypurpose_idx = 0;
+  int ski_idx = 0;
+  int aki_idx = 0;
+  int crldist_idx = 0;
 
   for (i = 0;; i++)
     {
       char oid[MAX_OID_SIZE] = "";
       size_t sizeof_oid = sizeof (oid);
       int critical;
-      size_t san_idx = 0;
-      size_t proxy_idx = 0;
-      size_t basic_idx = 0;
-      size_t keyusage_idx = 0;
-      size_t keypurpose_idx = 0;
-      size_t ski_idx = 0;
-      size_t aki_idx = 0;
-      size_t crldist_idx = 0;
 
       if (type == TYPE_CRT)
-	err = gnutls_x509_crt_get_extension_info (cert.crt, i,
-						  oid, &sizeof_oid,
-						  &critical);
+        err = gnutls_x509_crt_get_extension_info (cert.crt, i,
+                                                  oid, &sizeof_oid,
+                                                  &critical);
 
       else if (type == TYPE_CRQ)
-	err = gnutls_x509_crq_get_extension_info (cert.crq, i,
-						  oid, &sizeof_oid,
-						  &critical);
+        err = gnutls_x509_crq_get_extension_info (cert.crq, i,
+                                                  oid, &sizeof_oid,
+                                                  &critical);
       else
-	{
-	  gnutls_assert ();
-	  return;
-	}
+        {
+          gnutls_assert ();
+          return;
+        }
 
       if (err < 0)
-	{
-	  if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-	    break;
-	  addf (str, "error: get_extension_info: %s\n",
-		gnutls_strerror (err));
-	  continue;
-	}
+        {
+          if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
+            break;
+          addf (str, "error: get_extension_info: %s\n",
+                gnutls_strerror (err));
+          continue;
+        }
 
       if (i == 0)
-	addf (str, _("%s\tExtensions:\n"), prefix);
+        addf (str, _("%s\tExtensions:\n"), prefix);
 
       if (strcmp (oid, "2.5.29.19") == 0)
-	{
-	  if (basic_idx)
-	    {
-	      addf (str, "error: more than one basic constraint\n");
-	      continue;
-	    }
+        {
+          if (basic_idx)
+            {
+              addf (str, "error: more than one basic constraint\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tBasic Constraints (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tBasic Constraints (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  print_basic (str, prefix, type, cert);
+          print_basic (str, prefix, type, cert);
 
-	  basic_idx++;
-	}
+          basic_idx++;
+        }
       else if (strcmp (oid, "2.5.29.14") == 0)
-	{
-	  if (ski_idx)
-	    {
-	      addf (str, "error: more than one SKI extension\n");
-	      continue;
-	    }
+        {
+          if (ski_idx)
+            {
+              addf (str, "error: more than one SKI extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tSubject Key Identifier (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tSubject Key Identifier (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  if (type == TYPE_CRT)
-	    print_ski (str, cert.crt);
+          if (type == TYPE_CRT)
+            print_ski (str, cert.crt);
 
-	  ski_idx++;
-	}
+          ski_idx++;
+        }
       else if (strcmp (oid, "2.5.29.35") == 0)
-	{
+        {
 
-	  if (aki_idx)
-	    {
-	      addf (str, "error: more than one AKI extension\n");
-	      continue;
-	    }
+          if (aki_idx)
+            {
+              addf (str, "error: more than one AKI extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tAuthority Key Identifier (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tAuthority Key Identifier (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  if (type == TYPE_CRT)
-	    print_aki (str, TYPE_CRT, cert);
+          if (type == TYPE_CRT)
+            print_aki (str, TYPE_CRT, cert);
 
-	  aki_idx++;
-	}
+          aki_idx++;
+        }
       else if (strcmp (oid, "2.5.29.15") == 0)
-	{
-	  if (keyusage_idx)
-	    {
-	      addf (str, "error: more than one key usage extension\n");
-	      continue;
-	    }
+        {
+          if (keyusage_idx)
+            {
+              addf (str, "error: more than one key usage extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tKey Usage (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tKey Usage (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  print_key_usage (str, prefix, type, cert);
+          print_key_usage (str, prefix, type, cert);
 
-	  keyusage_idx++;
-	}
+          keyusage_idx++;
+        }
       else if (strcmp (oid, "2.5.29.37") == 0)
-	{
-	  if (keypurpose_idx)
-	    {
-	      addf (str, "error: more than one key purpose extension\n");
-	      continue;
-	    }
+        {
+          if (keypurpose_idx)
+            {
+              addf (str, "error: more than one key purpose extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tKey Purpose (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tKey Purpose (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
 #ifdef ENABLE_PKI
-	  print_key_purpose (str, prefix, type, cert);
+          print_key_purpose (str, prefix, type, cert);
 #endif
 
-	  keypurpose_idx++;
-	}
+          keypurpose_idx++;
+        }
       else if (strcmp (oid, "2.5.29.17") == 0)
-	{
-	  if (san_idx)
-	    {
-	      addf (str, "error: more than one SKI extension\n");
-	      continue;
-	    }
+        {
+          if (san_idx)
+            {
+              addf (str, "error: more than one SKI extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tSubject Alternative Name (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tSubject Alternative Name (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  print_san (str, prefix, type, cert);
+          print_altname (str, prefix, type, cert);
 
-	  san_idx++;
-	}
+          san_idx++;
+        }
+      else if (strcmp (oid, "2.5.29.18") == 0)
+        {
+          if (ian_idx)
+            {
+              addf (str, "error: more than one Issuer AltName extension\n");
+              continue;
+            }
+
+          addf (str, _("%s\t\tIssuer Alternative Name (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
+
+          print_altname (str, prefix, TYPE_CRT_IAN, cert);
+
+          ian_idx++;
+        }
       else if (strcmp (oid, "2.5.29.31") == 0)
-	{
-	  if (crldist_idx)
-	    {
-	      addf (str, "error: more than one CRL distribution point\n");
-	      continue;
-	    }
+        {
+          if (crldist_idx)
+            {
+              addf (str, "error: more than one CRL distribution point\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tCRL Distribution points (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tCRL Distribution points (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
 #ifdef ENABLE_PKI
-	  if (type == TYPE_CRT)
-	    print_crldist (str, cert.crt);
+          if (type == TYPE_CRT)
+            print_crldist (str, cert.crt);
 #endif
 
-	  crldist_idx++;
-	}
+          crldist_idx++;
+        }
       else if (strcmp (oid, "1.3.6.1.5.5.7.1.14") == 0)
-	{
-	  if (proxy_idx)
-	    {
-	      addf (str, "error: more than one proxy extension\n");
-	      continue;
-	    }
+        {
+          if (proxy_idx)
+            {
+              addf (str, "error: more than one proxy extension\n");
+              continue;
+            }
 
-	  addf (str, _("%s\t\tProxy Certificate Information (%s):\n"), prefix,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tProxy Certificate Information (%s):\n"), prefix,
+                critical ? _("critical") : _("not critical"));
 
-	  if (type == TYPE_CRT)
-	    print_proxy (str, cert.crt);
+          if (type == TYPE_CRT)
+            print_proxy (str, cert.crt);
 
-	  proxy_idx++;
-	}
+          proxy_idx++;
+        }
       else
-	{
-	  char *buffer;
-	  size_t extlen = 0;
+        {
+          char *buffer;
+          size_t extlen = 0;
 
-	  addf (str, _("%s\t\tUnknown extension %s (%s):\n"), prefix, oid,
-		critical ? _("critical") : _("not critical"));
+          addf (str, _("%s\t\tUnknown extension %s (%s):\n"), prefix, oid,
+                critical ? _("critical") : _("not critical"));
 
-	  if (type == TYPE_CRT)
-	    err =
-	      gnutls_x509_crt_get_extension_data (cert.crt, i, NULL, &extlen);
-	  else if (type == TYPE_CRQ)
-	    err =
-	      gnutls_x509_crq_get_extension_data (cert.crq, i, NULL, &extlen);
-	  else
-	    {
-	      gnutls_assert ();
-	      return;
-	    }
+          if (type == TYPE_CRT)
+            err =
+              gnutls_x509_crt_get_extension_data (cert.crt, i, NULL, &extlen);
+          else if (type == TYPE_CRQ)
+            err =
+              gnutls_x509_crq_get_extension_data (cert.crq, i, NULL, &extlen);
+          else
+            {
+              gnutls_assert ();
+              return;
+            }
 
-	  if (err < 0)
-	    {
-	      addf (str, "error: get_extension_data: %s\n",
-		    gnutls_strerror (err));
-	      continue;
-	    }
+          if (err < 0)
+            {
+              addf (str, "error: get_extension_data: %s\n",
+                    gnutls_strerror (err));
+              continue;
+            }
 
-	  buffer = gnutls_malloc (extlen);
-	  if (!buffer)
-	    {
-	      addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	      continue;
-	    }
+          buffer = gnutls_malloc (extlen);
+          if (!buffer)
+            {
+              addf (str, "error: malloc: %s\n",
+                    gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+              continue;
+            }
 
-	  if (type == TYPE_CRT)
-	    err =
-	      gnutls_x509_crt_get_extension_data (cert.crt, i, buffer,
-						  &extlen);
-	  else if (type == TYPE_CRQ)
-	    err =
-	      gnutls_x509_crq_get_extension_data (cert.crq, i, buffer,
-						  &extlen);
+          if (type == TYPE_CRT)
+            err =
+              gnutls_x509_crt_get_extension_data (cert.crt, i, buffer,
+                                                  &extlen);
+          else if (type == TYPE_CRQ)
+            err =
+              gnutls_x509_crq_get_extension_data (cert.crq, i, buffer,
+                                                  &extlen);
 
-	  if (err < 0)
-	    {
-	      gnutls_free (buffer);
-	      addf (str, "error: get_extension_data2: %s\n",
-		    gnutls_strerror (err));
-	      continue;
-	    }
+          if (err < 0)
+            {
+              gnutls_free (buffer);
+              addf (str, "error: get_extension_data2: %s\n",
+                    gnutls_strerror (err));
+              continue;
+            }
 
-	  addf (str, _("%s\t\t\tASCII: "), prefix);
-	  asciiprint (str, buffer, extlen);
-	  addf (str, "\n");
+          addf (str, _("%s\t\t\tASCII: "), prefix);
+          asciiprint (str, buffer, extlen);
+          addf (str, "\n");
 
-	  addf (str, _("%s\t\t\tHexdump: "), prefix);
-	  hexprint (str, buffer, extlen);
-	  adds (str, "\n");
+          addf (str, _("%s\t\t\tHexdump: "), prefix);
+          hexprint (str, buffer, extlen);
+          adds (str, "\n");
 
-	  gnutls_free (buffer);
-	}
+          gnutls_free (buffer);
+        }
     }
 }
 
 static void
-print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
+print_cert (gnutls_buffer_st * str, gnutls_x509_crt_t cert, int notsigned)
 {
   /* Version. */
   {
@@ -943,24 +1048,39 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
       addf (str, "error: get_serial: %s\n", gnutls_strerror (err));
     else
       {
-	adds (str, _("\tSerial Number (hex): "));
-	hexprint (str, serial, serial_size);
-	adds (str, "\n");
+        adds (str, _("\tSerial Number (hex): "));
+        hexprint (str, serial, serial_size);
+        adds (str, "\n");
       }
   }
 
   /* Issuer. */
   if (!notsigned)
     {
-      char dn[1024];
-      size_t dn_size = sizeof (dn);
+      char *dn;
+      size_t dn_size = 0;
       int err;
 
-      err = gnutls_x509_crt_get_issuer_dn (cert, dn, &dn_size);
-      if (err < 0)
-	addf (str, "error: get_issuer_dn: %s\n", gnutls_strerror (err));
+      err = gnutls_x509_crt_get_issuer_dn (cert, NULL, &dn_size);
+      if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
+        addf (str, "error: get_issuer_dn: %s\n", gnutls_strerror (err));
       else
-	addf (str, _("\tIssuer: %s\n"), dn);
+        {
+          dn = gnutls_malloc (dn_size);
+          if (!dn)
+            addf (str, "error: malloc (%d): %s\n", (int) dn_size,
+                  gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          else
+            {
+              err = gnutls_x509_crt_get_issuer_dn (cert, dn, &dn_size);
+              if (err < 0)
+                addf (str, "error: get_issuer_dn: %s\n",
+                      gnutls_strerror (err));
+              else
+                addf (str, _("\tIssuer: %s\n"), dn);
+              gnutls_free (dn);
+            }
+        }
     }
 
   /* Validity. */
@@ -976,11 +1096,11 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
       struct tm t;
 
       if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
+        addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
       else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
-	addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
+        addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
       else
-	addf (str, _("\t\tNot Before: %s\n"), s);
+        addf (str, _("\t\tNot Before: %s\n"), s);
     }
 
     tim = gnutls_x509_crt_get_expiration_time (cert);
@@ -990,25 +1110,39 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
       struct tm t;
 
       if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
+        addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
       else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
-	addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
+        addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
       else
-	addf (str, _("\t\tNot After: %s\n"), s);
+        addf (str, _("\t\tNot After: %s\n"), s);
     }
   }
 
   /* Subject. */
   {
-    char dn[1024];
-    size_t dn_size = sizeof (dn);
+    char *dn;
+    size_t dn_size = 0;
     int err;
 
-    err = gnutls_x509_crt_get_dn (cert, dn, &dn_size);
-    if (err < 0)
+    err = gnutls_x509_crt_get_dn (cert, NULL, &dn_size);
+    if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
       addf (str, "error: get_dn: %s\n", gnutls_strerror (err));
     else
-      addf (str, _("\tSubject: %s\n"), dn);
+      {
+        dn = gnutls_malloc (dn_size);
+        if (!dn)
+          addf (str, "error: malloc (%d): %s\n", (int) dn_size,
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+        else
+          {
+            err = gnutls_x509_crt_get_dn (cert, dn, &dn_size);
+            if (err < 0)
+              addf (str, "error: get_dn: %s\n", gnutls_strerror (err));
+            else
+              addf (str, _("\tSubject: %s\n"), dn);
+            gnutls_free (dn);
+          }
+      }
   }
 
   /* SubjectPublicKeyInfo. */
@@ -1021,70 +1155,76 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
       addf (str, "error: get_pk_algorithm: %s\n", gnutls_strerror (err));
     else
       {
-	const char *name = gnutls_pk_algorithm_get_name (err);
-	if (name == NULL)
-	  name = _("unknown");
+        const char *name = gnutls_pk_algorithm_get_name (err);
+        if (name == NULL)
+          name = _("unknown");
 
-	addf (str, _("\tSubject Public Key Algorithm: %s\n"), name);
+        addf (str, _("\tSubject Public Key Algorithm: %s\n"), name);
+        addf (str, _("\tCertificate Security Level: %s\n"),
+              gnutls_sec_param_get_name (gnutls_pk_bits_to_sec_param
+                                         (err, bits)));
+
 #ifdef ENABLE_PKI
-	switch (err)
-	  {
-	  case GNUTLS_PK_RSA:
-	    {
-	      gnutls_datum_t m, e;
+        switch (err)
+          {
+          case GNUTLS_PK_RSA:
+            {
+              gnutls_datum_t m, e;
 
-	      err = gnutls_x509_crt_get_pk_rsa_raw (cert, &m, &e);
-	      if (err < 0)
-		addf (str, "error: get_pk_rsa_raw: %s\n",
-		      gnutls_strerror (err));
-	      else
-		{
-		  addf (str, _("\t\tModulus (bits %d):\n"), bits);
-		  hexdump (str, m.data, m.size, "\t\t\t");
-		  addf (str, _("\t\tExponent (bits %d):\n"), e.size * 8);
-		  hexdump (str, e.data, e.size, "\t\t\t");
+              err = gnutls_x509_crt_get_pk_rsa_raw (cert, &m, &e);
+              if (err < 0)
+                addf (str, "error: get_pk_rsa_raw: %s\n",
+                      gnutls_strerror (err));
+              else
+                {
+                  addf (str, _("\t\tModulus (bits %d):\n"), bits);
+                  hexdump (str, m.data, m.size, "\t\t\t");
+                  addf (str, _("\t\tExponent (bits %d):\n"), e.size * 8);
+                  hexdump (str, e.data, e.size, "\t\t\t");
 
-		  gnutls_free (m.data);
-		  gnutls_free (e.data);
-		}
+                  gnutls_free (m.data);
+                  gnutls_free (e.data);
+                }
 
-	    }
-	    break;
+            }
+            break;
 
-	  case GNUTLS_PK_DSA:
-	    {
-	      gnutls_datum_t p, q, g, y;
+          case GNUTLS_PK_DSA:
+            {
+              gnutls_datum_t p, q, g, y;
 
-	      err = gnutls_x509_crt_get_pk_dsa_raw (cert, &p, &q, &g, &y);
-	      if (err < 0)
-		addf (str, "error: get_pk_dsa_raw: %s\n",
-		      gnutls_strerror (err));
-	      else
-		{
-		  addf (str, _("\t\tPublic key (bits %d):\n"), bits);
-		  hexdump (str, y.data, y.size, "\t\t\t");
-		  adds (str, _("\t\tP:\n"));
-		  hexdump (str, p.data, p.size, "\t\t\t");
-		  adds (str, _("\t\tQ:\n"));
-		  hexdump (str, q.data, q.size, "\t\t\t");
-		  adds (str, _("\t\tG:\n"));
-		  hexdump (str, g.data, g.size, "\t\t\t");
+              err = gnutls_x509_crt_get_pk_dsa_raw (cert, &p, &q, &g, &y);
+              if (err < 0)
+                addf (str, "error: get_pk_dsa_raw: %s\n",
+                      gnutls_strerror (err));
+              else
+                {
+                  addf (str, _("\t\tPublic key (bits %d):\n"), bits);
+                  hexdump (str, y.data, y.size, "\t\t\t");
+                  adds (str, _("\t\tP:\n"));
+                  hexdump (str, p.data, p.size, "\t\t\t");
+                  adds (str, _("\t\tQ:\n"));
+                  hexdump (str, q.data, q.size, "\t\t\t");
+                  adds (str, _("\t\tG:\n"));
+                  hexdump (str, g.data, g.size, "\t\t\t");
 
-		  gnutls_free (p.data);
-		  gnutls_free (q.data);
-		  gnutls_free (g.data);
-		  gnutls_free (y.data);
+                  gnutls_free (p.data);
+                  gnutls_free (q.data);
+                  gnutls_free (g.data);
+                  gnutls_free (y.data);
 
-		}
-	    }
-	    break;
+                }
+            }
+            break;
 
-	  default:
-	    break;
-	  }
+          default:
+            break;
+          }
 #endif
       }
   }
+
+  print_unique_ids (str, cert);
 
   /* Extensions. */
   if (gnutls_x509_crt_get_version (cert) >= 3)
@@ -1104,42 +1244,43 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
 
       err = gnutls_x509_crt_get_signature_algorithm (cert);
       if (err < 0)
-	addf (str, "error: get_signature_algorithm: %s\n",
-	      gnutls_strerror (err));
+        addf (str, "error: get_signature_algorithm: %s\n",
+              gnutls_strerror (err));
       else
-	{
-	  const char *name = gnutls_sign_algorithm_get_name (err);
-	  if (name == NULL)
-	    name = _("unknown");
-	  addf (str, _("\tSignature Algorithm: %s\n"), name);
-	}
+        {
+          const char *name = gnutls_sign_algorithm_get_name (err);
+          if (name == NULL)
+            name = _("unknown");
+          addf (str, _("\tSignature Algorithm: %s\n"), name);
+        }
       if (err == GNUTLS_SIGN_RSA_MD5 || err == GNUTLS_SIGN_RSA_MD2)
-	{
-	  adds (str, _("warning: signed using a broken signature "
-		       "algorithm that can be forged.\n"));
-	}
+        {
+          adds (str, _("warning: signed using a broken signature "
+                       "algorithm that can be forged.\n"));
+        }
 
       err = gnutls_x509_crt_get_signature (cert, buffer, &size);
       if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	{
-	  addf (str, "error: get_signature: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: get_signature: %s\n", gnutls_strerror (err));
+          return;
+        }
 
       buffer = gnutls_malloc (size);
       if (!buffer)
-	{
-	  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: malloc: %s\n",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          return;
+        }
 
       err = gnutls_x509_crt_get_signature (cert, buffer, &size);
       if (err < 0)
-	{
-	  gnutls_free (buffer);
-	  addf (str, "error: get_signature2: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          gnutls_free (buffer);
+          addf (str, "error: get_signature2: %s\n", gnutls_strerror (err));
+          return;
+        }
 
       adds (str, _("\tSignature:\n"));
       hexdump (str, buffer, size, "\t\t");
@@ -1149,8 +1290,8 @@ print_cert (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
 }
 
 static void
-print_fingerprint (gnutls_string * str, gnutls_x509_crt_t cert,
-		   gnutls_digest_algorithm_t algo)
+print_fingerprint (gnutls_buffer_st * str, gnutls_x509_crt_t cert,
+                   gnutls_digest_algorithm_t algo)
 {
   int err;
   char buffer[MAX_HASH_SIZE];
@@ -1172,7 +1313,7 @@ print_fingerprint (gnutls_string * str, gnutls_x509_crt_t cert,
 }
 
 static void
-print_keyid (gnutls_string * str, gnutls_x509_crt_t cert)
+print_keyid (gnutls_buffer_st * str, gnutls_x509_crt_t cert)
 {
   int err;
   char buffer[20];
@@ -1191,7 +1332,7 @@ print_keyid (gnutls_string * str, gnutls_x509_crt_t cert)
 }
 
 static void
-print_other (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
+print_other (gnutls_buffer_st * str, gnutls_x509_crt_t cert, int notsigned)
 {
   if (!notsigned)
     {
@@ -1202,33 +1343,60 @@ print_other (gnutls_string * str, gnutls_x509_crt_t cert, int notsigned)
 }
 
 static void
-print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
+print_oneline (gnutls_buffer_st * str, gnutls_x509_crt_t cert)
 {
-
   /* Subject. */
   {
-    char dn[1024];
-    size_t dn_size = sizeof (dn);
+    char *dn;
+    size_t dn_size = 0;
     int err;
 
-    err = gnutls_x509_crt_get_dn (cert, dn, &dn_size);
-    if (err < 0)
+    err = gnutls_x509_crt_get_dn (cert, NULL, &dn_size);
+    if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
       addf (str, "unknown subject (%s), ", gnutls_strerror (err));
     else
-      addf (str, "subject `%s', ", dn);
+      {
+        dn = gnutls_malloc (dn_size);
+        if (!dn)
+          addf (str, "unknown subject (%s), ",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+        else
+          {
+            err = gnutls_x509_crt_get_dn (cert, dn, &dn_size);
+            if (err < 0)
+              addf (str, "unknown subject (%s), ", gnutls_strerror (err));
+            else
+              addf (str, "subject `%s', ", dn);
+            gnutls_free (dn);
+          }
+      }
   }
 
   /* Issuer. */
   {
-    char dn[1024];
-    size_t dn_size = sizeof (dn);
+    char *dn;
+    size_t dn_size = 0;
     int err;
 
-    err = gnutls_x509_crt_get_issuer_dn (cert, dn, &dn_size);
-    if (err < 0)
+    err = gnutls_x509_crt_get_issuer_dn (cert, NULL, &dn_size);
+    if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
       addf (str, "unknown issuer (%s), ", gnutls_strerror (err));
     else
-      addf (str, "issuer `%s', ", dn);
+      {
+        dn = gnutls_malloc (dn_size);
+        if (!dn)
+          addf (str, "unknown issuer (%s), ",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+        else
+          {
+            err = gnutls_x509_crt_get_issuer_dn (cert, dn, &dn_size);
+            if (err < 0)
+              addf (str, "unknown issuer (%s), ", gnutls_strerror (err));
+            else
+              addf (str, "issuer `%s', ", dn);
+            gnutls_free (dn);
+          }
+      }
   }
 
   /* Key algorithm and size. */
@@ -1247,17 +1415,16 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
 
     err = gnutls_x509_crt_get_signature_algorithm (cert);
     if (err < 0)
-      addf (str, "unknown signature algorithm (%s), ",
-	    gnutls_strerror (err));
+      addf (str, "unknown signature algorithm (%s), ", gnutls_strerror (err));
     else
       {
-	const char *name = gnutls_sign_algorithm_get_name (err);
-	if (name == NULL)
-	  name = _("unknown");
-	if (err == GNUTLS_SIGN_RSA_MD5 || err == GNUTLS_SIGN_RSA_MD2)
-	  addf (str, _("signed using %s (broken!), "), name);
-	else
-	  addf (str, _("signed using %s, "), name);
+        const char *name = gnutls_sign_algorithm_get_name (err);
+        if (name == NULL)
+          name = _("unknown");
+        if (err == GNUTLS_SIGN_RSA_MD5 || err == GNUTLS_SIGN_RSA_MD2)
+          addf (str, _("signed using %s (broken!), "), name);
+        else
+          addf (str, _("signed using %s, "), name);
       }
   }
 
@@ -1272,11 +1439,11 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
       struct tm t;
 
       if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "unknown activation (%ld), ", (unsigned long) tim);
+        addf (str, "unknown activation (%ld), ", (unsigned long) tim);
       else if (strftime (s, max, "%Y-%m-%d %H:%M:%S UTC", &t) == 0)
-	addf (str, "failed activation (%ld), ", (unsigned long) tim);
+        addf (str, "failed activation (%ld), ", (unsigned long) tim);
       else
-	addf (str, "activated `%s', ", s);
+        addf (str, "activated `%s', ", s);
     }
 
     tim = gnutls_x509_crt_get_expiration_time (cert);
@@ -1286,11 +1453,11 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
       struct tm t;
 
       if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "unknown expiry (%ld), ", (unsigned long) tim);
+        addf (str, "unknown expiry (%ld), ", (unsigned long) tim);
       else if (strftime (s, max, "%Y-%m-%d %H:%M:%S UTC", &t) == 0)
-	addf (str, "failed expiry (%ld), ", (unsigned long) tim);
+        addf (str, "failed expiry (%ld), ", (unsigned long) tim);
       else
-	addf (str, "expires `%s', ", s);
+        addf (str, "expires `%s', ", s);
     }
   }
 
@@ -1300,21 +1467,21 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
     int err;
 
     err = gnutls_x509_crt_get_proxy (cert, NULL,
-				     &pathlen, &policyLanguage, NULL, NULL);
+                                     &pathlen, &policyLanguage, NULL, NULL);
     if (err == 0)
       {
-	addf (str, "proxy certificate (policy=");
-	if (strcmp (policyLanguage, "1.3.6.1.5.5.7.21.1") == 0)
-	  addf (str, "id-ppl-inheritALL");
-	else if (strcmp (policyLanguage, "1.3.6.1.5.5.7.21.2") == 0)
-	  addf (str, "id-ppl-independent");
-	else
-	  addf (str, "%s", policyLanguage);
-	if (pathlen >= 0)
-	  addf (str, ", pathlen=%d), ", pathlen);
-	else
-	  addf (str, "), ");
-	gnutls_free (policyLanguage);
+        addf (str, "proxy certificate (policy=");
+        if (strcmp (policyLanguage, "1.3.6.1.5.5.7.21.1") == 0)
+          addf (str, "id-ppl-inheritALL");
+        else if (strcmp (policyLanguage, "1.3.6.1.5.5.7.21.2") == 0)
+          addf (str, "id-ppl-independent");
+        else
+          addf (str, "%s", policyLanguage);
+        if (pathlen >= 0)
+          addf (str, ", pathlen=%d), ", pathlen);
+        else
+          addf (str, "), ");
+        gnutls_free (policyLanguage);
       }
   }
 
@@ -1324,23 +1491,23 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
     int err;
 
     err = gnutls_x509_crt_get_fingerprint (cert, GNUTLS_DIG_SHA1,
-					   buffer, &size);
+                                           buffer, &size);
     if (err < 0)
       {
-	addf (str, "unknown fingerprint (%s)", gnutls_strerror (err));
+        addf (str, "unknown fingerprint (%s)", gnutls_strerror (err));
       }
     else
       {
-	addf (str, "SHA-1 fingerprint `");
-	hexprint (str, buffer, size);
-	adds (str, "'");
+        addf (str, "SHA-1 fingerprint `");
+        hexprint (str, buffer, size);
+        adds (str, "'");
       }
   }
 
 }
 
 /**
- * gnutls_x509_crt_print - Pretty print X.509 certificates
+ * gnutls_x509_crt_print:
  * @cert: The structure to be printed
  * @format: Indicate the format to use
  * @out: Newly allocated datum with zero terminated string.
@@ -1360,35 +1527,35 @@ print_oneline (gnutls_string * str, gnutls_x509_crt_t cert)
  **/
 int
 gnutls_x509_crt_print (gnutls_x509_crt_t cert,
-		       gnutls_certificate_print_formats_t format,
-		       gnutls_datum_t * out)
+                       gnutls_certificate_print_formats_t format,
+                       gnutls_datum_t * out)
 {
-  gnutls_string str;
+  gnutls_buffer_st str;
 
   if (format == GNUTLS_CRT_PRINT_FULL
       || format == GNUTLS_CRT_PRINT_UNSIGNED_FULL)
     {
-      _gnutls_string_init (&str, gnutls_malloc, gnutls_realloc, gnutls_free);
+      _gnutls_buffer_init (&str);
 
-      _gnutls_string_append_str (&str, _("X.509 Certificate Information:\n"));
+      _gnutls_buffer_append_str (&str, _("X.509 Certificate Information:\n"));
 
       print_cert (&str, cert, format == GNUTLS_CRT_PRINT_UNSIGNED_FULL);
 
-      _gnutls_string_append_str (&str, _("Other Information:\n"));
+      _gnutls_buffer_append_str (&str, _("Other Information:\n"));
 
       print_other (&str, cert, format == GNUTLS_CRT_PRINT_UNSIGNED_FULL);
 
-      _gnutls_string_append_data (&str, "\0", 1);
+      _gnutls_buffer_append_data (&str, "\0", 1);
       out->data = str.data;
       out->size = strlen (str.data);
     }
   else if (format == GNUTLS_CRT_PRINT_ONELINE)
     {
-      _gnutls_string_init (&str, gnutls_malloc, gnutls_realloc, gnutls_free);
+      _gnutls_buffer_init (&str);
 
       print_oneline (&str, cert);
 
-      _gnutls_string_append_data (&str, "\0", 1);
+      _gnutls_buffer_append_data (&str, "\0", 1);
       out->data = str.data;
       out->size = strlen (str.data);
     }
@@ -1404,7 +1571,7 @@ gnutls_x509_crt_print (gnutls_x509_crt_t cert,
 #ifdef ENABLE_PKI
 
 static void
-print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
+print_crl (gnutls_buffer_st * str, gnutls_x509_crl_t crl, int notsigned)
 {
   /* Version. */
   {
@@ -1420,15 +1587,30 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
   /* Issuer. */
   if (!notsigned)
     {
-      char dn[1024];
-      size_t dn_size = sizeof (dn);
+      char *dn;
+      size_t dn_size = 0;
       int err;
 
-      err = gnutls_x509_crl_get_issuer_dn (crl, dn, &dn_size);
-      if (err < 0)
-	addf (str, "error: get_issuer_dn: %s\n", gnutls_strerror (err));
+      err = gnutls_x509_crl_get_issuer_dn (crl, NULL, &dn_size);
+      if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
+        addf (str, "error: get_issuer_dn: %s\n", gnutls_strerror (err));
       else
-	addf (str, _("\tIssuer: %s\n"), dn);
+        {
+          dn = gnutls_malloc (dn_size);
+          if (!dn)
+            addf (str, "error: malloc (%d): %s\n", (int) dn_size,
+                  gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          else
+            {
+              err = gnutls_x509_crl_get_issuer_dn (crl, dn, &dn_size);
+              if (err < 0)
+                addf (str, "error: get_issuer_dn: %s\n",
+                      gnutls_strerror (err));
+              else
+                addf (str, _("\tIssuer: %s\n"), dn);
+            }
+          gnutls_free (dn);
+        }
     }
 
   /* Validity. */
@@ -1444,11 +1626,11 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
       struct tm t;
 
       if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
+        addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
       else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
-	addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
+        addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
       else
-	addf (str, _("\t\tIssued: %s\n"), s);
+        addf (str, _("\t\tIssued: %s\n"), s);
     }
 
     tim = gnutls_x509_crl_get_next_update (crl);
@@ -1458,13 +1640,13 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
       struct tm t;
 
       if (tim == -1)
-	addf (str, "\t\tNo next update time.\n");
+        addf (str, "\t\tNo next update time.\n");
       else if (gmtime_r (&tim, &t) == NULL)
-	addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
+        addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
       else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
-	addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
+        addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
       else
-	addf (str, _("\t\tNext at: %s\n"), s);
+        addf (str, _("\t\tNext at: %s\n"), s);
     }
   }
 
@@ -1473,119 +1655,120 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
     {
       size_t i;
       int err = 0;
+      int aki_idx = 0;
+      int crl_nr = 0;
 
       for (i = 0;; i++)
-	{
-	  char oid[MAX_OID_SIZE] = "";
-	  size_t sizeof_oid = sizeof (oid);
-	  int critical;
-	  int crl_nr = 0;
-	  int aki_idx = 0;
+        {
+          char oid[MAX_OID_SIZE] = "";
+          size_t sizeof_oid = sizeof (oid);
+          int critical;
 
-	  err = gnutls_x509_crl_get_extension_info (crl, i,
-						    oid, &sizeof_oid,
-						    &critical);
-	  if (err < 0)
-	    {
-	      if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-		break;
-	      addf (str, "error: get_extension_info: %s\n",
-		    gnutls_strerror (err));
-	      continue;
-	    }
+          err = gnutls_x509_crl_get_extension_info (crl, i,
+                                                    oid, &sizeof_oid,
+                                                    &critical);
+          if (err < 0)
+            {
+              if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
+                break;
+              addf (str, "error: get_extension_info: %s\n",
+                    gnutls_strerror (err));
+              continue;
+            }
 
-	  if (i == 0)
-	    adds (str, _("\tExtensions:\n"));
+          if (i == 0)
+            adds (str, _("\tExtensions:\n"));
 
-	  if (strcmp (oid, "2.5.29.20") == 0)
-	    {
-	      char nr[128];
-	      size_t nr_size = sizeof (nr);
+          if (strcmp (oid, "2.5.29.20") == 0)
+            {
+              char nr[128];
+              size_t nr_size = sizeof (nr);
 
-	      if (crl_nr)
-		{
-		  addf (str, "error: more than one CRL number\n");
-		  continue;
-		}
+              if (crl_nr)
+                {
+                  addf (str, "error: more than one CRL number\n");
+                  continue;
+                }
 
-	      err = gnutls_x509_crl_get_number (crl, nr, &nr_size, &critical);
+              err = gnutls_x509_crl_get_number (crl, nr, &nr_size, &critical);
 
-	      addf (str, _("\t\tCRL Number (%s): "),
-		    critical ? _("critical") : _("not critical"));
+              addf (str, _("\t\tCRL Number (%s): "),
+                    critical ? _("critical") : _("not critical"));
 
-	      if (err < 0)
-		addf (str, "error: get_number: %s\n", gnutls_strerror (err));
-	      else
-		{
-		  hexprint (str, nr, nr_size);
-		  addf (str, "\n");
-		}
+              if (err < 0)
+                addf (str, "error: get_number: %s\n", gnutls_strerror (err));
+              else
+                {
+                  hexprint (str, nr, nr_size);
+                  addf (str, "\n");
+                }
 
-	      crl_nr++;
-	    }
-	  else if (strcmp (oid, "2.5.29.35") == 0)
-	    {
-	      cert_type_t ccert;
+              crl_nr++;
+            }
+          else if (strcmp (oid, "2.5.29.35") == 0)
+            {
+              cert_type_t ccert;
 
-	      if (aki_idx)
-		{
-		  addf (str, "error: more than one AKI extension\n");
-		  continue;
-		}
+              if (aki_idx)
+                {
+                  addf (str, "error: more than one AKI extension\n");
+                  continue;
+                }
 
-	      addf (str, _("\t\tAuthority Key Identifier (%s):\n"),
-		    critical ? _("critical") : _("not critical"));
+              addf (str, _("\t\tAuthority Key Identifier (%s):\n"),
+                    critical ? _("critical") : _("not critical"));
 
-	      ccert.crl = crl;
-	      print_aki (str, TYPE_CRL, ccert);
+              ccert.crl = crl;
+              print_aki (str, TYPE_CRL, ccert);
 
-	      aki_idx++;
-	    }
-	  else
-	    {
-	      char *buffer;
-	      size_t extlen = 0;
+              aki_idx++;
+            }
+          else
+            {
+              char *buffer;
+              size_t extlen = 0;
 
-	      addf (str, _("\t\tUnknown extension %s (%s):\n"), oid,
-		    critical ? _("critical") : _("not critical"));
+              addf (str, _("\t\tUnknown extension %s (%s):\n"), oid,
+                    critical ? _("critical") : _("not critical"));
 
-	      err = gnutls_x509_crl_get_extension_data (crl, i,
-							NULL, &extlen);
-	      if (err < 0)
-		{
-		  addf (str, "error: get_extension_data: %s\n",
-			gnutls_strerror (err));
-		  continue;
-		}
+              err = gnutls_x509_crl_get_extension_data (crl, i,
+                                                        NULL, &extlen);
+              if (err < 0)
+                {
+                  addf (str, "error: get_extension_data: %s\n",
+                        gnutls_strerror (err));
+                  continue;
+                }
 
-	      buffer = gnutls_malloc (extlen);
-	      if (!buffer)
-		{
-		  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-		  continue;
-		}
+              buffer = gnutls_malloc (extlen);
+              if (!buffer)
+                {
+                  addf (str, "error: malloc: %s\n",
+                        gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+                  continue;
+                }
 
-	      err = gnutls_x509_crl_get_extension_data (crl, i,
-							buffer, &extlen);
-	      if (err < 0)
-		{
-		  gnutls_free (buffer);
-		  addf (str, "error: get_extension_data2: %s\n",
-			gnutls_strerror (err));
-		  continue;
-		}
+              err = gnutls_x509_crl_get_extension_data (crl, i,
+                                                        buffer, &extlen);
+              if (err < 0)
+                {
+                  gnutls_free (buffer);
+                  addf (str, "error: get_extension_data2: %s\n",
+                        gnutls_strerror (err));
+                  continue;
+                }
 
-	      adds (str, _("\t\t\tASCII: "));
-	      asciiprint (str, buffer, extlen);
-	      adds (str, "\n");
+              adds (str, _("\t\t\tASCII: "));
+              asciiprint (str, buffer, extlen);
+              adds (str, "\n");
 
-	      adds (str, _("\t\t\tHexdump: "));
-	      hexprint (str, buffer, extlen);
-	      adds (str, "\n");
+              adds (str, _("\t\t\tHexdump: "));
+              hexprint (str, buffer, extlen);
+              adds (str, "\n");
 
-	      gnutls_free (buffer);
-	    }
-	}
+              gnutls_free (buffer);
+            }
+        }
     }
 
 
@@ -1601,32 +1784,32 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
 
     for (j = 0; j < num; j++)
       {
-	char serial[128];
-	size_t serial_size = sizeof (serial);
-	int err;
-	time_t tim;
+        char serial[128];
+        size_t serial_size = sizeof (serial);
+        int err;
+        time_t tim;
 
-	err = gnutls_x509_crl_get_crt_serial (crl, j, serial,
-					      &serial_size, &tim);
-	if (err < 0)
-	  addf (str, "error: get_crt_serial: %s\n", gnutls_strerror (err));
-	else
-	  {
-	    char s[42];
-	    size_t max = sizeof (s);
-	    struct tm t;
+        err = gnutls_x509_crl_get_crt_serial (crl, j, serial,
+                                              &serial_size, &tim);
+        if (err < 0)
+          addf (str, "error: get_crt_serial: %s\n", gnutls_strerror (err));
+        else
+          {
+            char s[42];
+            size_t max = sizeof (s);
+            struct tm t;
 
-	    adds (str, _("\t\tSerial Number (hex): "));
-	    hexprint (str, serial, serial_size);
-	    adds (str, "\n");
+            adds (str, _("\t\tSerial Number (hex): "));
+            hexprint (str, serial, serial_size);
+            adds (str, "\n");
 
-	    if (gmtime_r (&tim, &t) == NULL)
-	      addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
-	    else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
-	      addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
-	    else
-	      addf (str, _("\t\tRevoked at: %s\n"), s);
-	  }
+            if (gmtime_r (&tim, &t) == NULL)
+              addf (str, "error: gmtime_r (%ld)\n", (unsigned long) tim);
+            else if (strftime (s, max, "%a %b %d %H:%M:%S UTC %Y", &t) == 0)
+              addf (str, "error: strftime (%ld)\n", (unsigned long) tim);
+            else
+              addf (str, _("\t\tRevoked at: %s\n"), s);
+          }
       }
   }
 
@@ -1639,42 +1822,43 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
 
       err = gnutls_x509_crl_get_signature_algorithm (crl);
       if (err < 0)
-	addf (str, "error: get_signature_algorithm: %s\n",
-	      gnutls_strerror (err));
+        addf (str, "error: get_signature_algorithm: %s\n",
+              gnutls_strerror (err));
       else
-	{
-	  const char *name = gnutls_sign_algorithm_get_name (err);
-	  if (name == NULL)
-	    name = _("unknown");
-	  addf (str, _("\tSignature Algorithm: %s\n"), name);
-	}
+        {
+          const char *name = gnutls_sign_algorithm_get_name (err);
+          if (name == NULL)
+            name = _("unknown");
+          addf (str, _("\tSignature Algorithm: %s\n"), name);
+        }
       if (err == GNUTLS_SIGN_RSA_MD5 || err == GNUTLS_SIGN_RSA_MD2)
-	{
-	  adds (str, _("warning: signed using a broken signature "
-		       "algorithm that can be forged.\n"));
-	}
+        {
+          adds (str, _("warning: signed using a broken signature "
+                       "algorithm that can be forged.\n"));
+        }
 
       err = gnutls_x509_crl_get_signature (crl, buffer, &size);
       if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
-	{
-	  addf (str, "error: get_signature: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: get_signature: %s\n", gnutls_strerror (err));
+          return;
+        }
 
       buffer = gnutls_malloc (size);
       if (!buffer)
-	{
-	  addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          addf (str, "error: malloc: %s\n",
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+          return;
+        }
 
       err = gnutls_x509_crl_get_signature (crl, buffer, &size);
       if (err < 0)
-	{
-	  gnutls_free (buffer);
-	  addf (str, "error: get_signature2: %s\n", gnutls_strerror (err));
-	  return;
-	}
+        {
+          gnutls_free (buffer);
+          addf (str, "error: get_signature2: %s\n", gnutls_strerror (err));
+          return;
+        }
 
       adds (str, _("\tSignature:\n"));
       hexdump (str, buffer, size, "\t\t");
@@ -1684,7 +1868,7 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
 }
 
 /**
- * gnutls_x509_crl_print - Pretty print X.509 certificate revocation list
+ * gnutls_x509_crl_print:
  * @crl: The structure to be printed
  * @format: Indicate the format to use
  * @out: Newly allocated datum with zero terminated string.
@@ -1699,19 +1883,19 @@ print_crl (gnutls_string * str, gnutls_x509_crl_t crl, int notsigned)
  **/
 int
 gnutls_x509_crl_print (gnutls_x509_crl_t crl,
-		       gnutls_certificate_print_formats_t format,
-		       gnutls_datum_t * out)
+                       gnutls_certificate_print_formats_t format,
+                       gnutls_datum_t * out)
 {
-  gnutls_string str;
+  gnutls_buffer_st str;
 
-  _gnutls_string_init (&str, gnutls_malloc, gnutls_realloc, gnutls_free);
+  _gnutls_buffer_init (&str);
 
-  _gnutls_string_append_str
+  _gnutls_buffer_append_str
     (&str, _("X.509 Certificate Revocation List Information:\n"));
 
   print_crl (&str, crl, format == GNUTLS_CRT_PRINT_UNSIGNED_FULL);
 
-  _gnutls_string_append_data (&str, "\0", 1);
+  _gnutls_buffer_append_data (&str, "\0", 1);
   out->data = str.data;
   out->size = strlen (str.data);
 
@@ -1719,7 +1903,7 @@ gnutls_x509_crl_print (gnutls_x509_crl_t crl,
 }
 
 static void
-print_crq (gnutls_string * str, gnutls_x509_crq_t cert)
+print_crq (gnutls_buffer_st * str, gnutls_x509_crq_t cert)
 {
   /* Version. */
   {
@@ -1732,15 +1916,29 @@ print_crq (gnutls_string * str, gnutls_x509_crq_t cert)
 
   /* Subject */
   {
-    char dn[1024];
-    size_t dn_size = sizeof (dn);
+    char *dn;
+    size_t dn_size = 0;
     int err;
 
-    err = gnutls_x509_crq_get_dn (cert, dn, &dn_size);
-    if (err < 0)
+    err = gnutls_x509_crq_get_dn (cert, NULL, &dn_size);
+    if (err != GNUTLS_E_SHORT_MEMORY_BUFFER)
       addf (str, "error: get_dn: %s\n", gnutls_strerror (err));
     else
-      addf (str, _("\tSubject: %s\n"), dn);
+      {
+        dn = gnutls_malloc (dn_size);
+        if (!dn)
+          addf (str, "error: malloc (%d): %s\n", (int) dn_size,
+                gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+        else
+          {
+            err = gnutls_x509_crq_get_dn (cert, dn, &dn_size);
+            if (err < 0)
+              addf (str, "error: get_dn: %s\n", gnutls_strerror (err));
+            else
+              addf (str, _("\tSubject: %s\n"), dn);
+            gnutls_free (dn);
+          }
+      }
   }
 
   /* SubjectPublicKeyInfo. */
@@ -1753,66 +1951,66 @@ print_crq (gnutls_string * str, gnutls_x509_crq_t cert)
       addf (str, "error: get_pk_algorithm: %s\n", gnutls_strerror (err));
     else
       {
-	const char *name = gnutls_pk_algorithm_get_name (err);
-	if (name == NULL)
-	  name = _("unknown");
+        const char *name = gnutls_pk_algorithm_get_name (err);
+        if (name == NULL)
+          name = _("unknown");
 
-	addf (str, _("\tSubject Public Key Algorithm: %s\n"), name);
-	switch (err)
-	  {
-	  case GNUTLS_PK_RSA:
-	    {
-	      gnutls_datum_t m, e;
+        addf (str, _("\tSubject Public Key Algorithm: %s\n"), name);
+        switch (err)
+          {
+          case GNUTLS_PK_RSA:
+            {
+              gnutls_datum_t m, e;
 
-	      err = gnutls_x509_crq_get_key_rsa_raw (cert, &m, &e);
-	      if (err < 0)
-		addf (str, "error: get_pk_rsa_raw: %s\n",
-		      gnutls_strerror (err));
-	      else
-		{
-		  addf (str, _("\t\tModulus (bits %d):\n"), bits);
-		  hexdump (str, m.data, m.size, "\t\t\t");
-		  adds (str, _("\t\tExponent:\n"));
-		  hexdump (str, e.data, e.size, "\t\t\t");
+              err = gnutls_x509_crq_get_key_rsa_raw (cert, &m, &e);
+              if (err < 0)
+                addf (str, "error: get_pk_rsa_raw: %s\n",
+                      gnutls_strerror (err));
+              else
+                {
+                  addf (str, _("\t\tModulus (bits %d):\n"), bits);
+                  hexdump (str, m.data, m.size, "\t\t\t");
+                  adds (str, _("\t\tExponent:\n"));
+                  hexdump (str, e.data, e.size, "\t\t\t");
 
-		  gnutls_free (m.data);
-		  gnutls_free (e.data);
-		}
+                  gnutls_free (m.data);
+                  gnutls_free (e.data);
+                }
 
-	    }
-	    break;
-#if 0				/* not implemented yet */
-	  case GNUTLS_PK_DSA:
-	    {
-	      gnutls_datum_t p, q, g, y;
+            }
+            break;
+#if 0                           /* not implemented yet */
+          case GNUTLS_PK_DSA:
+            {
+              gnutls_datum_t p, q, g, y;
 
-	      err = gnutls_x509_crq_get_key_dsa_raw (cert, &p, &q, &g, &y);
-	      if (err < 0)
-		addf (str, "error: get_pk_dsa_raw: %s\n",
-		      gnutls_strerror (err));
-	      else
-		{
-		  addf (str, _("\t\tPublic key (bits %d):\n"), bits);
-		  hexdump (str, y.data, y.size, "\t\t\t");
-		  addf (str, _("\t\tP:\n"));
-		  hexdump (str, p.data, p.size, "\t\t\t");
-		  addf (str, _("\t\tQ:\n"));
-		  hexdump (str, q.data, q.size, "\t\t\t");
-		  addf (str, _("\t\tG:\n"));
-		  hexdump (str, g.data, g.size, "\t\t\t");
+              err = gnutls_x509_crq_get_key_dsa_raw (cert, &p, &q, &g, &y);
+              if (err < 0)
+                addf (str, "error: get_pk_dsa_raw: %s\n",
+                      gnutls_strerror (err));
+              else
+                {
+                  addf (str, _("\t\tPublic key (bits %d):\n"), bits);
+                  hexdump (str, y.data, y.size, "\t\t\t");
+                  addf (str, _("\t\tP:\n"));
+                  hexdump (str, p.data, p.size, "\t\t\t");
+                  addf (str, _("\t\tQ:\n"));
+                  hexdump (str, q.data, q.size, "\t\t\t");
+                  addf (str, _("\t\tG:\n"));
+                  hexdump (str, g.data, g.size, "\t\t\t");
 
-		  gnutls_free (p.data);
-		  gnutls_free (q.data);
-		  gnutls_free (g.data);
-		  gnutls_free (y.data);
+                  gnutls_free (p.data);
+                  gnutls_free (q.data);
+                  gnutls_free (g.data);
+                  gnutls_free (y.data);
 
-		}
-	    }
-	    break;
+                }
+            }
+            break;
 #endif
-	  default:
-	    break;
-	  }
+          default:
+            break;
+          }
       }
   }
 
@@ -1820,112 +2018,132 @@ print_crq (gnutls_string * str, gnutls_x509_crq_t cert)
   {
     size_t i;
     int err = 0;
+    int extensions = 0;
+    int challenge = 0;
 
     for (i = 0;; i++)
       {
-	char oid[MAX_OID_SIZE] = "";
-	size_t sizeof_oid = sizeof (oid);
-	int extensions = 0;
-	int challenge = 0;
+        char oid[MAX_OID_SIZE] = "";
+        size_t sizeof_oid = sizeof (oid);
 
-	err = gnutls_x509_crq_get_attribute_info (cert, i, oid, &sizeof_oid);
-	if (err < 0)
-	  {
-	    if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
-	      break;
-	    addf (str, "error: get_extension_info: %s\n",
-		  gnutls_strerror (err));
-	    continue;
-	  }
+        err = gnutls_x509_crq_get_attribute_info (cert, i, oid, &sizeof_oid);
+        if (err < 0)
+          {
+            if (err == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE)
+              break;
+            addf (str, "error: get_extension_info: %s\n",
+                  gnutls_strerror (err));
+            continue;
+          }
 
-	if (i == 0)
-	  adds (str, _("\tAttributes:\n"));
+        if (i == 0)
+          adds (str, _("\tAttributes:\n"));
 
-	if (strcmp (oid, "1.2.840.113549.1.9.14") == 0)
-	  {
-	    cert_type_t ccert;
+        if (strcmp (oid, "1.2.840.113549.1.9.14") == 0)
+          {
+            cert_type_t ccert;
 
-	    if (extensions)
-	      {
-		addf (str, "error: more than one extensionsRequest\n");
-		continue;
-	      }
+            if (extensions)
+              {
+                addf (str, "error: more than one extensionsRequest\n");
+                continue;
+              }
 
-	    ccert.crq = cert;
-	    print_extensions (str, "\t", TYPE_CRQ, ccert);
+            ccert.crq = cert;
+            print_extensions (str, "\t", TYPE_CRQ, ccert);
 
-	    extensions++;
-	  }
-	else if (strcmp (oid, "1.2.840.113549.1.9.7") == 0)
-	  {
-	    char pass[1024];
-	    size_t pass_size = sizeof (pass);
+            extensions++;
+          }
+        else if (strcmp (oid, "1.2.840.113549.1.9.7") == 0)
+          {
+            char *pass;
+            size_t size;
 
-	    if (challenge)
-	      {
-		addf (str,
-		      "error: more than one Challenge password attribute\n");
-		continue;
-	      }
+            if (challenge)
+              {
+                adds (str,
+                      "error: more than one Challenge password attribute\n");
+                continue;
+              }
 
-	    err =
-	      gnutls_x509_crq_get_challenge_password (cert, pass, &pass_size);
-	    if (err < 0)
-	      addf (str, "error: get_challenge_password: %s\n",
-		    gnutls_strerror (err));
-	    else
-	      addf (str, _("\t\tChallenge password: %s\n"), pass);
+            err = gnutls_x509_crq_get_challenge_password (cert, NULL, &size);
+            if (err < 0)
+              {
+                addf (str, "error: get_challenge_password: %s\n",
+                      gnutls_strerror (err));
+                continue;
+              }
 
-	    challenge++;
-	  }
-	else
-	  {
-	    char *buffer;
-	    size_t extlen = 0;
+            size++;
 
-	    addf (str, _("\t\tUnknown attribute %s:\n"), oid);
+            pass = gnutls_malloc (size);
+            if (!pass)
+              {
+                addf (str, "error: malloc: %s\n",
+                      gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+                continue;
+              }
 
-	    err = gnutls_x509_crq_get_attribute_data (cert, i, NULL, &extlen);
-	    if (err < 0)
-	      {
-		addf (str, "error: get_attribute_data: %s\n",
-		      gnutls_strerror (err));
-		continue;
-	      }
+            err = gnutls_x509_crq_get_challenge_password (cert, pass, &size);
+            if (err < 0)
+              addf (str, "error: get_challenge_password: %s\n",
+                    gnutls_strerror (err));
+            else
+              addf (str, _("\t\tChallenge password: %s\n"), pass);
 
-	    buffer = gnutls_malloc (extlen);
-	    if (!buffer)
-	      {
-		addf (str, "error: malloc: %s\n", gnutls_strerror (err));
-		continue;
-	      }
+            gnutls_free (pass);
 
-	    err = gnutls_x509_crq_get_attribute_data (cert, i,
-						      buffer, &extlen);
-	    if (err < 0)
-	      {
-		gnutls_free (buffer);
-		addf (str, "error: get_attribute_data2: %s\n",
-		      gnutls_strerror (err));
-		continue;
-	      }
+            challenge++;
+          }
+        else
+          {
+            char *buffer;
+            size_t extlen = 0;
 
-	    adds (str, _("\t\t\tASCII: "));
-	    asciiprint (str, buffer, extlen);
-	    adds (str, "\n");
+            addf (str, _("\t\tUnknown attribute %s:\n"), oid);
 
-	    adds (str, _("\t\t\tHexdump: "));
-	    hexprint (str, buffer, extlen);
-	    adds (str, "\n");
+            err = gnutls_x509_crq_get_attribute_data (cert, i, NULL, &extlen);
+            if (err < 0)
+              {
+                addf (str, "error: get_attribute_data: %s\n",
+                      gnutls_strerror (err));
+                continue;
+              }
 
-	    gnutls_free (buffer);
-	  }
+            buffer = gnutls_malloc (extlen);
+            if (!buffer)
+              {
+                addf (str, "error: malloc: %s\n",
+                      gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
+                continue;
+              }
+
+            err = gnutls_x509_crq_get_attribute_data (cert, i,
+                                                      buffer, &extlen);
+            if (err < 0)
+              {
+                gnutls_free (buffer);
+                addf (str, "error: get_attribute_data2: %s\n",
+                      gnutls_strerror (err));
+                continue;
+              }
+
+            adds (str, _("\t\t\tASCII: "));
+            asciiprint (str, buffer, extlen);
+            adds (str, "\n");
+
+            adds (str, _("\t\t\tHexdump: "));
+            hexprint (str, buffer, extlen);
+            adds (str, "\n");
+
+            gnutls_free (buffer);
+          }
       }
   }
 }
 
 static void
-print_crq_other (gnutls_string * str, gnutls_x509_crq_t crq)
+print_crq_other (gnutls_buffer_st * str, gnutls_x509_crq_t crq)
 {
   int err;
   size_t size = 0;
@@ -1941,7 +2159,8 @@ print_crq_other (gnutls_string * str, gnutls_x509_crq_t crq)
   buffer = gnutls_malloc (size);
   if (!buffer)
     {
-      addf (str, "error: malloc: %s\n", gnutls_strerror (err));
+      addf (str, "error: malloc: %s\n",
+            gnutls_strerror (GNUTLS_E_MEMORY_ERROR));
       return;
     }
 
@@ -1961,7 +2180,7 @@ print_crq_other (gnutls_string * str, gnutls_x509_crq_t crq)
 }
 
 /**
- * gnutls_x509_crq_print - Pretty print PKCS 10 certificate request
+ * gnutls_x509_crq_print:
  * @crq: The structure to be printed
  * @format: Indicate the format to use
  * @out: Newly allocated datum with zero terminated string.
@@ -1978,23 +2197,23 @@ print_crq_other (gnutls_string * str, gnutls_x509_crq_t crq)
  **/
 int
 gnutls_x509_crq_print (gnutls_x509_crq_t crq,
-		       gnutls_certificate_print_formats_t format,
-		       gnutls_datum_t * out)
+                       gnutls_certificate_print_formats_t format,
+                       gnutls_datum_t * out)
 {
-  gnutls_string str;
+  gnutls_buffer_st str;
 
-  _gnutls_string_init (&str, gnutls_malloc, gnutls_realloc, gnutls_free);
+  _gnutls_buffer_init (&str);
 
-  _gnutls_string_append_str
+  _gnutls_buffer_append_str
     (&str, _("PKCS #10 Certificate Request Information:\n"));
 
   print_crq (&str, crq);
 
-  _gnutls_string_append_str (&str, _("Other Information:\n"));
+  _gnutls_buffer_append_str (&str, _("Other Information:\n"));
 
   print_crq_other (&str, crq);
 
-  _gnutls_string_append_data (&str, "\0", 1);
+  _gnutls_buffer_append_data (&str, "\0", 1);
   out->data = str.data;
   out->size = strlen (str.data);
 

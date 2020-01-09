@@ -129,6 +129,7 @@ static void __gaa_helpsingle(char short_name, char *name,
 void gaa_help(void)
 {
 	printf("Srptool help\nUsage : srptool [options]\n");
+	__gaa_helpsingle('d', "debug", "integer ", "Enable debugging");
 	__gaa_helpsingle('u', "username", "username ", "specify username.");
 	__gaa_helpsingle('p', "passwd", "FILE ", "specify a password file.");
 	__gaa_helpsingle('i', "index", "INDEX ", "specify the index of the group parameters in tpasswd.conf to use.");
@@ -152,20 +153,22 @@ typedef struct _gaainfo gaainfo;
 
 struct _gaainfo
 {
-#line 34 "crypt.gaa"
+#line 37 "crypt.gaa"
 	char *create_conf;
-#line 31 "crypt.gaa"
+#line 34 "crypt.gaa"
 	char *passwd_conf;
-#line 28 "crypt.gaa"
+#line 31 "crypt.gaa"
 	int verify;
-#line 25 "crypt.gaa"
+#line 28 "crypt.gaa"
 	int salt;
-#line 22 "crypt.gaa"
+#line 25 "crypt.gaa"
 	int index;
-#line 19 "crypt.gaa"
+#line 22 "crypt.gaa"
 	char *passwd;
-#line 16 "crypt.gaa"
+#line 19 "crypt.gaa"
 	char *username;
+#line 16 "crypt.gaa"
+	int debug;
 
 #line 114 "gaa.skel"
 };
@@ -220,7 +223,7 @@ static int gaa_error = 0;
 #define GAA_MULTIPLE_OPTION     3
 
 #define GAA_REST                0
-#define GAA_NB_OPTION           9
+#define GAA_NB_OPTION           10
 #define GAAOPTID_help	1
 #define GAAOPTID_version	2
 #define GAAOPTID_create_conf	3
@@ -230,6 +233,7 @@ static int gaa_error = 0;
 #define GAAOPTID_index	7
 #define GAAOPTID_passwd	8
 #define GAAOPTID_username	9
+#define GAAOPTID_debug	10
 
 #line 168 "gaa.skel"
 
@@ -389,12 +393,31 @@ static int gaa_getint(char *arg)
     return tmp;
 }
 
+static char gaa_getchar(char *arg)
+{
+    if(strlen(arg) != 1)
+    {
+        printf("Option %s: '%s' isn't an character\n", gaa_current_option, arg);
+        GAAERROR(-1);
+    }
+    return arg[0];
+}
 
 static char* gaa_getstr(char *arg)
 {
     return arg;
 }
-
+static float gaa_getfloat(char *arg)
+{
+    float tmp;
+    char a;
+    if(sscanf(arg, "%f%c", &tmp, &a) < 1)
+    {
+        printf("Option %s: '%s' isn't a float number\n", gaa_current_option, arg);
+        GAAERROR(-1);
+    }
+    return tmp;
+}
 /* option structures */
 
 struct GAAOPTION_create_conf 
@@ -430,6 +453,12 @@ struct GAAOPTION_passwd
 struct GAAOPTION_username 
 {
 	char* arg1;
+	int size1;
+};
+
+struct GAAOPTION_debug 
+{
+	int arg1;
 	int size1;
 };
          
@@ -468,6 +497,7 @@ static int gaa_get_option_num(char *str, int status)
 			GAA_CHECK1STR("i", GAAOPTID_index);
 			GAA_CHECK1STR("p", GAAOPTID_passwd);
 			GAA_CHECK1STR("u", GAAOPTID_username);
+			GAA_CHECK1STR("d", GAAOPTID_debug);
         case GAA_MULTIPLE_OPTION:
 #line 375 "gaa.skel"
 			GAA_CHECK1STR("h", GAAOPTID_help);
@@ -486,6 +516,7 @@ static int gaa_get_option_num(char *str, int status)
 			GAA_CHECKSTR("index", GAAOPTID_index);
 			GAA_CHECKSTR("passwd", GAAOPTID_passwd);
 			GAA_CHECKSTR("username", GAAOPTID_username);
+			GAA_CHECKSTR("debug", GAAOPTID_debug);
 
 #line 281 "gaa.skel"
 	break;
@@ -504,6 +535,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 	struct GAAOPTION_index GAATMP_index;
 	struct GAAOPTION_passwd GAATMP_passwd;
 	struct GAAOPTION_username GAATMP_username;
+	struct GAAOPTION_debug GAATMP_debug;
 
 #line 393 "gaa.skel"
 #ifdef GAA_REST_EXISTS
@@ -526,14 +558,14 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
     {
 	case GAAOPTID_help:
 	OK = 0;
-#line 38 "crypt.gaa"
+#line 41 "crypt.gaa"
 { gaa_help(); exit(0); ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_version:
 	OK = 0;
-#line 37 "crypt.gaa"
+#line 40 "crypt.gaa"
 { srptool_version(); exit(0); ;};
 
 		return GAA_OK;
@@ -543,7 +575,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_create_conf.arg1, gaa_getstr, GAATMP_create_conf.size1);
 		gaa_index++;
-#line 35 "crypt.gaa"
+#line 38 "crypt.gaa"
 { gaaval->create_conf = GAATMP_create_conf.arg1 ;};
 
 		return GAA_OK;
@@ -553,14 +585,14 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_passwd_conf.arg1, gaa_getstr, GAATMP_passwd_conf.size1);
 		gaa_index++;
-#line 32 "crypt.gaa"
+#line 35 "crypt.gaa"
 { gaaval->passwd_conf = GAATMP_passwd_conf.arg1 ;};
 
 		return GAA_OK;
 		break;
 	case GAAOPTID_verify:
 	OK = 0;
-#line 29 "crypt.gaa"
+#line 32 "crypt.gaa"
 { gaaval->verify = 1 ;};
 
 		return GAA_OK;
@@ -570,7 +602,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_salt.arg1, gaa_getint, GAATMP_salt.size1);
 		gaa_index++;
-#line 26 "crypt.gaa"
+#line 29 "crypt.gaa"
 { gaaval->salt = GAATMP_salt.arg1 ;};
 
 		return GAA_OK;
@@ -580,7 +612,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_index.arg1, gaa_getint, GAATMP_index.size1);
 		gaa_index++;
-#line 23 "crypt.gaa"
+#line 26 "crypt.gaa"
 { gaaval->index = GAATMP_index.arg1 ;};
 
 		return GAA_OK;
@@ -590,7 +622,7 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_passwd.arg1, gaa_getstr, GAATMP_passwd.size1);
 		gaa_index++;
-#line 20 "crypt.gaa"
+#line 23 "crypt.gaa"
 { gaaval->passwd = GAATMP_passwd.arg1 ;};
 
 		return GAA_OK;
@@ -600,8 +632,18 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 		GAA_TESTMOREARGS;
 		GAA_FILL(GAATMP_username.arg1, gaa_getstr, GAATMP_username.size1);
 		gaa_index++;
-#line 17 "crypt.gaa"
+#line 20 "crypt.gaa"
 { gaaval->username = GAATMP_username.arg1 ;};
+
+		return GAA_OK;
+		break;
+	case GAAOPTID_debug:
+	OK = 0;
+		GAA_TESTMOREARGS;
+		GAA_FILL(GAATMP_debug.arg1, gaa_getint, GAATMP_debug.size1);
+		gaa_index++;
+#line 17 "crypt.gaa"
+{ gaaval->debug = GAATMP_debug.arg1 ;};
 
 		return GAA_OK;
 		break;
@@ -615,27 +657,24 @@ static int gaa_try(int gaa_num, int gaa_index, gaainfo *gaaval, char *opt_list)
 int gaa(int argc, char **argv, gaainfo *gaaval)
 {
     int tmp1, tmp2;
-    int l;
-    size_t i, j;
+    int i, j;
     char *opt_list;
-
-    i = 0;
 
     GAAargv = argv;
     GAAargc = argc;
 
     opt_list = (char*) gaa_malloc(GAA_NB_OPTION + 1);
 
-    for(l = 0; l < GAA_NB_OPTION + 1; l++)
-        opt_list[l] = 0;
+    for(i = 0; i < GAA_NB_OPTION + 1; i++)
+        opt_list[i] = 0;
     /* initialization */
     if(inited == 0)
     {
 
-#line 40 "crypt.gaa"
+#line 43 "crypt.gaa"
 { gaaval->username=NULL; gaaval->passwd=NULL; gaaval->salt=0;
        gaaval->create_conf=NULL; gaaval->passwd_conf=NULL; gaaval->verify = 0; 
-       gaaval->index = 1; ;};
+       gaaval->index = 1; gaaval->debug = 0; ;};
 
     }
     inited = 1;
@@ -646,27 +685,27 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
       gaa_arg_used = gaa_malloc(argc * sizeof(char));
     }
 
-    for(l = 1; l < argc; l++)
-        gaa_arg_used[l] = 0;
-    for(l = 1; l < argc; l++)
+    for(i = 1; i < argc; i++)
+        gaa_arg_used[i] = 0;
+    for(i = 1; i < argc; i++)
     {
-        if(gaa_arg_used[l] == 0)
+        if(gaa_arg_used[i] == 0)
         {
             j = 0;
-            tmp1 = gaa_is_an_argument(GAAargv[l]);
+            tmp1 = gaa_is_an_argument(GAAargv[i]);
             switch(tmp1)
             {
             case GAA_WORD_OPTION:
                 j++;
             case GAA_LETTER_OPTION:
                 j++;
-                tmp2 = gaa_get_option_num(argv[l]+j, tmp1);
+                tmp2 = gaa_get_option_num(argv[i]+j, tmp1);
                 if(tmp2 == GAA_ERROR_NOMATCH)
                 {
-                    printf("Invalid option '%s'\n", argv[l]+j);
+                    printf("Invalid option '%s'\n", argv[i]+j);
                     return 0;
                 }
-                switch(gaa_try(tmp2, l+1, gaaval, opt_list))
+                switch(gaa_try(tmp2, i+1, gaaval, opt_list))
                 {
                 case GAA_ERROR_NOTENOUGH_ARGS:
                     printf("'%s': not enough arguments\n",gaa_current_option);
@@ -679,18 +718,18 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
                 default:
                     printf("Unknown error\n");
                 }
-                gaa_arg_used[l] = 1;
+                gaa_arg_used[i] = 1;
                 break;
             case GAA_MULTIPLE_OPTION:
-                for(j = 1; j < strlen(argv[l]); j++)
+                for(j = 1; j < strlen(argv[i]); j++)
                 {
-                    tmp2 = gaa_get_option_num(argv[l]+j, tmp1);
+                    tmp2 = gaa_get_option_num(argv[i]+j, tmp1);
                     if(tmp2 == GAA_ERROR_NOMATCH)
                     {
-                        printf("Invalid option '%c'\n", *(argv[l]+j));
+                        printf("Invalid option '%c'\n", *(argv[i]+j));
                         return 0;
                     }
-                    switch(gaa_try(tmp2, l+1, gaaval, opt_list))
+                    switch(gaa_try(tmp2, i+1, gaaval, opt_list))
                     {
                     case GAA_ERROR_NOTENOUGH_ARGS:
                         printf("'%s': not enough arguments\n",gaa_current_option);
@@ -704,7 +743,7 @@ int gaa(int argc, char **argv, gaainfo *gaaval)
                         printf("Unknown error\n");
                     }
                 }
-                gaa_arg_used[l] = 1;
+                gaa_arg_used[i] = 1;
                 break;
             default: break;
             }
@@ -730,9 +769,9 @@ if(gaa_processing_file == 0)
     }
 #endif
 }
-    for(l = 1; l < argc; l++)
+    for(i = 1; i < argc; i++)
     {
-        if(gaa_arg_used[l] == 0)
+        if(gaa_arg_used[i] == 0)
         {
             printf("Too many arguments\n");
             return 0;
@@ -783,7 +822,7 @@ static int gaa_internal_get_next_str(FILE *file, gaa_str_node *tmp_str, int argc
 
         len++;
         a = fgetc( file);
-        if(a==EOF) return 0; /* a = ' '; */
+        if(a==EOF) return 0;
     }
 
     len += 1;

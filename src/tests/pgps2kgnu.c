@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008  Free Software Foundation, Inc.
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Daniel Kahn Gillmor <dkg@fifthhorseman.net>
 
@@ -8,25 +8,25 @@
  *            extension.
 
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
@@ -87,16 +87,16 @@ main (void)
   if (rc)
     {
       printf ("gnutls_openpgp_privkey_init rc %d: %s\n",
-	      rc, gnutls_strerror (rc));
+              rc, gnutls_strerror (rc));
       return 1;
     }
 
   rc = gnutls_openpgp_privkey_import (key, &keydatum,
-				      GNUTLS_OPENPGP_FMT_BASE64, NULL, 0);
+                                      GNUTLS_OPENPGP_FMT_BASE64, NULL, 0);
   if (rc)
     {
       printf ("gnutls_openpgp_privkey_import rc %d: %s\n",
-	      rc, gnutls_strerror (rc));
+              rc, gnutls_strerror (rc));
       return 1;
     }
 

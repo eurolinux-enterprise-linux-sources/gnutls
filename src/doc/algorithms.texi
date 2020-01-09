@@ -18,6 +18,12 @@ Available cipher suites:
 @item TLS_ANON_DH_CAMELLIA_256_CBC_SHA1
 @tab 0x00 0x89
 @tab TLS1.0
+@item TLS_ANON_DH_AES_128_CBC_SHA256
+@tab 0x00 0x6c
+@tab TLS1.2
+@item TLS_ANON_DH_AES_256_CBC_SHA256
+@tab 0x00 0x6d
+@tab TLS1.2
 @item TLS_PSK_SHA_ARCFOUR_SHA1
 @tab 0x00 0x8a
 @tab TLS1.0
@@ -87,6 +93,12 @@ Available cipher suites:
 @item TLS_DHE_DSS_CAMELLIA_256_CBC_SHA1
 @tab 0x00 0x87
 @tab TLS1.0
+@item TLS_DHE_DSS_AES_128_CBC_SHA256
+@tab 0x00 0x40
+@tab TLS1.2
+@item TLS_DHE_DSS_AES_256_CBC_SHA256
+@tab 0x00 0x6a
+@tab TLS1.2
 @item TLS_DHE_RSA_3DES_EDE_CBC_SHA1
 @tab 0x00 0x16
 @tab SSL3.0
@@ -102,9 +114,21 @@ Available cipher suites:
 @item TLS_DHE_RSA_CAMELLIA_256_CBC_SHA1
 @tab 0x00 0x88
 @tab TLS1.0
+@item TLS_DHE_RSA_AES_128_CBC_SHA256
+@tab 0x00 0x67
+@tab TLS1.2
+@item TLS_DHE_RSA_AES_256_CBC_SHA256
+@tab 0x00 0x6b
+@tab TLS1.2
 @item TLS_RSA_NULL_MD5
 @tab 0x00 0x01
 @tab SSL3.0
+@item TLS_RSA_NULL_SHA1
+@tab 0x00 0x02
+@tab SSL3.0
+@item TLS_RSA_NULL_SHA256
+@tab 0x00 0x3b
+@tab TLS1.2
 @item TLS_RSA_EXPORT_ARCFOUR_40_MD5
 @tab 0x00 0x03
 @tab SSL3.0
@@ -129,6 +153,12 @@ Available cipher suites:
 @item TLS_RSA_CAMELLIA_256_CBC_SHA1
 @tab 0x00 0x84
 @tab TLS1.0
+@item TLS_RSA_AES_128_CBC_SHA256
+@tab 0x00 0x3c
+@tab TLS1.2
+@item TLS_RSA_AES_256_CBC_SHA256
+@tab 0x00 0x3d
+@tab TLS1.2
 @end multitable
 
 
@@ -169,7 +199,7 @@ Available MAC algorithms:
 @item SHA512
 @item MD2
 @item RIPEMD160
-@item NULL
+@item MAC-NULL
 @end itemize
 
 Available key exchange methods:
@@ -194,12 +224,15 @@ Available public key algorithms:
 
 Available public key signature algorithms:
 @itemize
-@item RSA-SHA
+@item RSA-SHA1
+@item RSA-SHA224
 @item RSA-SHA256
 @item RSA-SHA384
 @item RSA-SHA512
 @item RSA-RMD160
-@item DSA-SHA
+@item DSA-SHA1
+@item DSA-SHA224
+@item DSA-SHA256
 @item RSA-MD5
 @item RSA-MD2
 @end itemize

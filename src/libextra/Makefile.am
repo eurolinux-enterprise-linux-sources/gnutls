@@ -1,28 +1,29 @@
 ## Process this file with automake to produce Makefile.in
-# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+# Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010
+# Free Software Foundation, Inc.
 #
 # Author: Nikos Mavrogiannopoulos
 #
-# This file is part of GNUTLS-EXTRA.
+# This file is part of GnuTLS-EXTRA.
 #
-# GNUTLS-EXTRA is free software; you can redistribute it and/or
+# GnuTLS-extra is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 3 of the
 # License, or (at your option) any later version.
 #
-# GNUTLS-EXTRA is distributed in the hope that it will be useful, but
+# GnuTLS-extra is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with GNUTLS-EXTRA; if not, write to the Free Software
+# along with GnuTLS-EXTRA; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 
 ACLOCAL_AMFLAGS = -I m4 -I gl/m4 -I ../lib/m4 -I ../lib/gl/m4
 
-AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
+AM_CFLAGS = $(WERROR_CFLAGS) $(WSTACK_CFLAGS) $(WARN_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(srcdir)/../lib/gl		\
 	-I$(builddir)/../lib/gl		\
@@ -42,8 +43,6 @@ SUBDIRS = gl includes
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gnutls-extra.pc
 DISTCLEANFILES = $(pkgconfig_DATA)
-
-EXTRA_DIST = gnutls-extra-api.texi ia-api.texi
 
 defexecdir = $(bindir)
 defexec_DATA = 
@@ -65,7 +64,7 @@ libgnutls_openssl_la_SOURCES = gnutls_openssl.c openssl_compat.h	\
 libgnutls_openssl_la_LIBADD = ../lib/gl/liblgnu.la $(LIBSOCKET) \
 	../lib/libgnutls.la
 
-libgnutls_openssl_la_LDFLAGS += -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+libgnutls_openssl_la_LDFLAGS += -version-info $(LT_SSL_CURRENT):$(LT_SSL_REVISION):$(LT_SSL_AGE)
 
 if ENABLE_MINITASN1
 libgnutls_openssl_la_LIBADD += ../lib/minitasn1/libminitasn1.la
@@ -90,6 +89,10 @@ libgnutls_extra_la_LDFLAGS = -no-undefined
 libgnutls_extra_la_SOURCES += \
 	ext_inner_application.h ext_inner_application.c gnutls_ia.c
 
+if !ENABLE_NETTLE
+libgnutls_extra_la_LIBADD += $(LTLIBGCRYPT)
+endif
+
 # Rest
 
 if HAVE_LD_OUTPUT_DEF
@@ -113,21 +116,3 @@ libgnutls_extra_la_LDFLAGS += \
 else
 libgnutls_extra_la_LDFLAGS += -export-symbols-regex '^(gnutls_).*'
 endif
-
-gnutls-extra-api.texi: gnutls_extra.c
-	@echo "" > $@
-	@for i in $<; do \
-		echo -n "Creating documentation for file $$i... " && \
-		$(srcdir)/../doc/scripts/gdoc -texinfo $$i >> $@ && \
-		echo "ok"; \
-	done
-
-ia-api.texi: gnutls_ia.c
-	@echo "" > $@
-	@for i in $<; do \
-		echo -n "Creating documentation for file $$i... " && \
-		$(srcdir)/../doc/scripts/gdoc -texinfo $$i >> $@ && \
-		echo "ok"; \
-	done
-
-dist-hook: gnutls-extra-api.texi ia-api.texi

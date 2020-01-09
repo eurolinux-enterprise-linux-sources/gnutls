@@ -9,14 +9,15 @@ x509
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
 
 
 <!-- ##### MACRO GNUTLS_OID_X520_COUNTRY_NAME ##### -->
@@ -104,6 +105,20 @@ x509
 
 
 <!-- ##### MACRO GNUTLS_OID_X520_PSEUDONYM ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_OID_X520_POSTALCODE ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_OID_X520_NAME ##### -->
 <para>
 
 </para>
@@ -208,6 +223,13 @@ x509
 
 
 
+<!-- ##### MACRO GNUTLS_KP_IPSEC_IKE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### MACRO GNUTLS_KP_ANY ##### -->
 <para>
 
@@ -235,6 +257,7 @@ x509
 </para>
 
 @GNUTLS_X509_CRT_LIST_IMPORT_FAIL_IF_EXCEED: 
+@GNUTLS_X509_CRT_LIST_FAIL_IF_UNSORTED: 
 
 <!-- ##### FUNCTION gnutls_x509_crt_init ##### -->
 <para>
@@ -449,6 +472,28 @@ x509
 @Returns: 
 
 
+<!-- ##### FUNCTION gnutls_x509_crt_get_subject_unique_id ##### -->
+<para>
+
+</para>
+
+@crt: 
+@buf: 
+@sizeof_buf: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_x509_crt_get_issuer_unique_id ##### -->
+<para>
+
+</para>
+
+@crt: 
+@buf: 
+@sizeof_buf: 
+@Returns: 
+
+
 <!-- ##### MACRO GNUTLS_CRL_REASON_UNUSED ##### -->
 <para>
 
@@ -471,6 +516,13 @@ x509
 
 
 <!-- ##### MACRO GNUTLS_CRL_REASON_AFFILIATION_CHANGED ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO GNUTLS_CRL_REASON_SUPERSEDED ##### -->
 <para>
 
 </para>
@@ -652,6 +704,45 @@ x509
 
 
 <!-- ##### FUNCTION gnutls_x509_crt_get_subject_alt_othername_oid ##### -->
+<para>
+
+</para>
+
+@cert: 
+@seq: 
+@ret: 
+@ret_size: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_x509_crt_get_issuer_alt_name ##### -->
+<para>
+
+</para>
+
+@cert: 
+@seq: 
+@ret: 
+@ret_size: 
+@critical: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_x509_crt_get_issuer_alt_name2 ##### -->
+<para>
+
+</para>
+
+@cert: 
+@seq: 
+@ret: 
+@ret_size: 
+@ret_type: 
+@critical: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_x509_crt_get_issuer_alt_othername_oid ##### -->
 <para>
 
 </para>
@@ -1172,6 +1263,16 @@ x509
 @Returns: 
 
 
+<!-- ##### FUNCTION gnutls_x509_crl_get_raw_issuer_dn ##### -->
+<para>
+
+</para>
+
+@crl: 
+@dn: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gnutls_x509_crl_get_issuer_dn ##### -->
 <para>
 
@@ -1309,30 +1410,6 @@ x509
 
 @crl: 
 @version: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crl_sign ##### -->
-<para>
-
-</para>
-
-@crl: 
-@issuer: 
-@issuer_key: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crl_sign2 ##### -->
-<para>
-
-</para>
-
-@crl: 
-@issuer: 
-@issuer_key: 
-@dig: 
-@flags: 
 @Returns: 
 
 
@@ -1628,6 +1705,8 @@ x509
 @GNUTLS_VERIFY_ALLOW_SIGN_RSA_MD2: 
 @GNUTLS_VERIFY_ALLOW_SIGN_RSA_MD5: 
 @GNUTLS_VERIFY_DISABLE_TIME_CHECKS: 
+@GNUTLS_VERIFY_DISABLE_TRUSTED_TIME_CHECKS: 
+@GNUTLS_VERIFY_DO_NOT_ALLOW_X509_V1_CA_CRT: 
 
 <!-- ##### FUNCTION gnutls_x509_crt_check_issuer ##### -->
 <para>
@@ -1734,38 +1813,17 @@ x509
 </para>
 
 @GNUTLS_PKCS_PLAIN: 
+@GNUTLS_PKCS8_PLAIN: 
 @GNUTLS_PKCS_USE_PKCS12_3DES: 
+@GNUTLS_PKCS8_USE_PKCS12_3DES: 
 @GNUTLS_PKCS_USE_PKCS12_ARCFOUR: 
+@GNUTLS_PKCS8_USE_PKCS12_ARCFOUR: 
 @GNUTLS_PKCS_USE_PKCS12_RC2_40: 
+@GNUTLS_PKCS8_USE_PKCS12_RC2_40: 
 @GNUTLS_PKCS_USE_PBES2_3DES: 
-
-<!-- ##### MACRO GNUTLS_PKCS8_PLAIN ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GNUTLS_PKCS8_USE_PKCS12_3DES ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GNUTLS_PKCS8_USE_PKCS12_ARCFOUR ##### -->
-<para>
-
-</para>
-
-
-
-<!-- ##### MACRO GNUTLS_PKCS8_USE_PKCS12_RC2_40 ##### -->
-<para>
-
-</para>
-
-
+@GNUTLS_PKCS_USE_PBES2_AES_128: 
+@GNUTLS_PKCS_USE_PBES2_AES_192: 
+@GNUTLS_PKCS_USE_PBES2_AES_256: 
 
 <!-- ##### FUNCTION gnutls_x509_privkey_init ##### -->
 <para>
@@ -1782,6 +1840,15 @@ x509
 </para>
 
 @key: 
+
+
+<!-- ##### FUNCTION gnutls_x509_privkey_sec_param ##### -->
+<para>
+
+</para>
+
+@key: 
+@Returns: 
 
 
 <!-- ##### FUNCTION gnutls_x509_privkey_cpy ##### -->
@@ -1830,6 +1897,23 @@ x509
 @p: 
 @q: 
 @u: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_x509_privkey_import_rsa_raw2 ##### -->
+<para>
+
+</para>
+
+@key: 
+@m: 
+@e: 
+@d: 
+@p: 
+@q: 
+@u: 
+@e1: 
+@e2: 
 @Returns: 
 
 
@@ -1929,6 +2013,23 @@ x509
 @Returns: 
 
 
+<!-- ##### FUNCTION gnutls_x509_privkey_export_rsa_raw2 ##### -->
+<para>
+
+</para>
+
+@key: 
+@m: 
+@e: 
+@d: 
+@p: 
+@q: 
+@u: 
+@e1: 
+@e2: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gnutls_x509_privkey_export_rsa_raw ##### -->
 <para>
 
@@ -1942,90 +2043,6 @@ x509
 @q: 
 @u: 
 @Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_privkey_sign_data ##### -->
-<para>
-
-</para>
-
-@key: 
-@digest: 
-@flags: 
-@data: 
-@signature: 
-@signature_size: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_privkey_verify_data ##### -->
-<para>
-
-</para>
-
-@key: 
-@flags: 
-@data: 
-@signature: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crt_verify_data ##### -->
-<para>
-
-</para>
-
-@crt: 
-@flags: 
-@data: 
-@signature: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crt_verify_hash ##### -->
-<para>
-
-</para>
-
-@crt: 
-@flags: 
-@hash: 
-@signature: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crt_get_verify_algorithm ##### -->
-<para>
-
-</para>
-
-@crt: 
-@signature: 
-@hash: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_privkey_sign_hash ##### -->
-<para>
-
-</para>
-
-@key: 
-@hash: 
-@signature: 
-@Returns: 
-
-
-<!-- ##### STRUCT gnutls_x509_crq_int ##### -->
-<para>
-
-</para>
-
-
-<!-- ##### TYPEDEF gnutls_x509_crq_t ##### -->
-<para>
-
-</para>
 
 
 <!-- ##### FUNCTION gnutls_x509_crq_print ##### -->
@@ -2137,28 +2154,6 @@ x509
 
 
 <!-- ##### FUNCTION gnutls_x509_crq_set_key ##### -->
-<para>
-
-</para>
-
-@crq: 
-@key: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crq_sign2 ##### -->
-<para>
-
-</para>
-
-@crq: 
-@key: 
-@dig: 
-@flags: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_x509_crq_sign ##### -->
 <para>
 
 </para>
@@ -2296,7 +2291,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @oid: 
 @critical: 
 @Returns: 
@@ -2307,7 +2302,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @indx: 
 @oid: 
 @sizeof_oid: 
@@ -2320,7 +2315,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @indx: 
 @data: 
 @sizeof_data: 
@@ -2332,7 +2327,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @indx: 
 @oid: 
 @sizeof_oid: 
@@ -2345,7 +2340,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @indx: 
 @data: 
 @sizeof_data: 
@@ -2357,7 +2352,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @indx: 
 @oid: 
 @sizeof_oid: 
@@ -2402,7 +2397,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @key_usage: 
 @critical: 
 @Returns: 
@@ -2413,7 +2408,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @critical: 
 @ca: 
 @pathlen: 
@@ -2425,7 +2420,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @seq: 
 @ret: 
 @ret_size: 
@@ -2439,7 +2434,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @seq: 
 @ret: 
 @ret_size: 
@@ -2451,7 +2446,7 @@ x509
 
 </para>
 
-@cert: 
+@crq: 
 @oid: 
 @indx: 
 @buf: 

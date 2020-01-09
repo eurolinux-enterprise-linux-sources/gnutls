@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2009 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2009, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -49,12 +50,12 @@ const mod_auth_st anon_auth_struct = {
   NULL,
   NULL,
   gen_anon_server_kx,
-  _gnutls_gen_dh_common_client_kx,	/* this can be shared */
+  _gnutls_gen_dh_common_client_kx,      /* this can be shared */
   NULL,
   NULL,
 
   NULL,
-  NULL,				/* certificate */
+  NULL,                         /* certificate */
   proc_anon_server_kx,
   proc_anon_client_kx,
   NULL,
@@ -92,7 +93,7 @@ gen_anon_server_kx (gnutls_session_t session, opaque ** data)
 
   if ((ret =
        _gnutls_auth_info_set (session, GNUTLS_CRD_ANON,
-			      sizeof (anon_auth_info_st), 1)) < 0)
+                              sizeof (anon_auth_info_st), 1)) < 0)
     {
       gnutls_assert ();
       return ret;
@@ -112,7 +113,7 @@ gen_anon_server_kx (gnutls_session_t session, opaque ** data)
 
 static int
 proc_anon_client_kx (gnutls_session_t session, opaque * data,
-		     size_t _data_size)
+                     size_t _data_size)
 {
   gnutls_anon_server_credentials_t cred;
   int ret;
@@ -148,7 +149,7 @@ proc_anon_client_kx (gnutls_session_t session, opaque * data,
 
 int
 proc_anon_server_kx (gnutls_session_t session, opaque * data,
-		     size_t _data_size)
+                     size_t _data_size)
 {
 
   int ret;
@@ -156,7 +157,7 @@ proc_anon_server_kx (gnutls_session_t session, opaque * data,
   /* set auth_info */
   if ((ret =
        _gnutls_auth_info_set (session, GNUTLS_CRD_ANON,
-			      sizeof (anon_auth_info_st), 1)) < 0)
+                              sizeof (anon_auth_info_st), 1)) < 0)
     {
       gnutls_assert ();
       return ret;

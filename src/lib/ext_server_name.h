@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -21,8 +22,27 @@
  * USA
  *
  */
+#ifndef EXT_SERVER_NAME_H
+#define EXT_SERVER_NAME_H
 
-int _gnutls_server_name_recv_params (gnutls_session_t session,
-				     const opaque * data, size_t data_size);
-int _gnutls_server_name_send_params (gnutls_session_t session,
-				     opaque * data, size_t);
+#include <gnutls_extensions.h>
+
+typedef struct
+{
+  opaque name[MAX_SERVER_NAME_SIZE];
+  unsigned name_length;
+  gnutls_server_name_type_t type;
+} server_name_st;
+
+#define MAX_SERVER_NAME_EXTENSIONS 3
+
+typedef struct
+{
+  server_name_st server_names[MAX_SERVER_NAME_EXTENSIONS];
+  /* limit server_name extensions */
+  unsigned server_names_size;
+} server_name_ext_st;
+
+extern extension_entry_st ext_mod_server_name;
+
+#endif

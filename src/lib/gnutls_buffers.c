@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+ * 2009, 2010 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -52,21 +53,21 @@
 #include <gnutls_num.h>
 #include <gnutls_record.h>
 #include <gnutls_buffers.h>
+#include <gnutls_mbuffers.h>
+#include <system.h>
 
 #include <errno.h>
-
-/* We need to disable gnulib's replacement wrappers to get native
-   Windows interfaces. */
-#undef recv
-#undef send
+#ifdef _WIN32
+# include <windows.h>
+#endif
 
 #ifndef EAGAIN
-# define EAGAIN EWOULDBLOCK
+#define EAGAIN EWOULDBLOCK
 #endif
 
-#ifdef IO_DEBUG
-# include <io_debug.h>
-#endif
+/* this is the maximum number of messages allowed to queue.
+ */
+#define MAX_QUEUE 16
 
 /**
  * gnutls_transport_set_errno:
@@ -117,7 +118,24 @@ gnutls_transport_set_errno (gnutls_session_t session, int err)
 void
 gnutls_transport_set_global_errno (int err)
 {
+#ifdef _WIN32
+  /* Keep this in sync with system_errno */
+  switch (err)
+    {
+    case EAGAIN:
+      SetLastError (WSAEWOULDBLOCK);
+      break;
+    case EINTR:
+      SetLastError (WSAEINTR);
+      break;
+    default:
+      /* We don't care about anything else */
+      SetLastError (NO_ERROR);
+      break;
+    }
+#else
   errno = err;
+#endif
 }
 
 /* Buffers received packets of type APPLICATION DATA and
@@ -125,10 +143,10 @@ gnutls_transport_set_global_errno (int err)
  */
 int
 _gnutls_record_buffer_put (content_type_t type,
-			   gnutls_session_t session, opaque * data,
-			   size_t length)
+                           gnutls_session_t session, opaque * data,
+                           size_t length)
 {
-  gnutls_buffer *buf;
+  gnutls_buffer_st *buf;
 
   if (length == 0)
     return 0;
@@ -138,19 +156,19 @@ _gnutls_record_buffer_put (content_type_t type,
     case GNUTLS_APPLICATION_DATA:
       buf = &session->internals.application_data_buffer;
       _gnutls_buffers_log ("BUF[REC]: Inserted %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     case GNUTLS_HANDSHAKE:
       buf = &session->internals.handshake_data_buffer;
       _gnutls_buffers_log ("BUF[HSK]: Inserted %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     case GNUTLS_INNER_APPLICATION:
       buf = &session->internals.ia_data_buffer;
       _gnutls_buffers_log ("BUF[IA]: Inserted %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     default:
@@ -158,7 +176,7 @@ _gnutls_record_buffer_put (content_type_t type,
       return GNUTLS_E_INVALID_REQUEST;
     }
 
-  if (_gnutls_buffer_append (buf, data, length) < 0)
+  if (_gnutls_buffer_append_data (buf, data, length) < 0)
     {
       gnutls_assert ();
       return GNUTLS_E_MEMORY_ERROR;
@@ -187,15 +205,11 @@ _gnutls_record_buffer_get_size (content_type_t type, gnutls_session_t session)
 }
 
 /**
- * gnutls_record_check_pending - checks if there are any data to receive in gnutls buffers.
+ * gnutls_record_check_pending:
  * @session: is a #gnutls_session_t structure.
  *
  * This function checks if there are any data to receive in the gnutls
  * buffers.
- *
- * Notice that you may also use select() to check for data in a TCP
- * connection, instead of this function.  GnuTLS leaves some data in
- * the tcp buffer in order for select to work.
  *
  * Returns: the size of that data or 0.
  **/
@@ -207,8 +221,8 @@ gnutls_record_check_pending (gnutls_session_t session)
 
 int
 _gnutls_record_buffer_get (content_type_t type,
-			   gnutls_session_t session, opaque * data,
-			   size_t length)
+                           gnutls_session_t session, opaque * data,
+                           size_t length)
 {
   if (length == 0 || data == NULL)
     {
@@ -219,22 +233,25 @@ _gnutls_record_buffer_get (content_type_t type,
   switch (type)
     {
     case GNUTLS_APPLICATION_DATA:
-      _gnutls_buffer_get_data( &session->internals.application_data_buffer, data, &length);
+      _gnutls_buffer_pop_data (&session->internals.application_data_buffer,
+                               data, &length);
       _gnutls_buffers_log ("BUFFER[REC][AD]: Read %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     case GNUTLS_HANDSHAKE:
-      _gnutls_buffer_get_data( &session->internals.handshake_data_buffer, data, &length);
+      _gnutls_buffer_pop_data (&session->internals.handshake_data_buffer,
+                               data, &length);
       _gnutls_buffers_log ("BUF[REC][HD]: Read %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     case GNUTLS_INNER_APPLICATION:
 
-      _gnutls_buffer_get_data( &session->internals.ia_data_buffer, data, &length);
+      _gnutls_buffer_pop_data (&session->internals.ia_data_buffer, data,
+                               &length);
       _gnutls_buffers_log ("BUF[REC][IA]: Read %d bytes of Data(%d)\n",
-			   length, type);
+                           (int) length, (int) type);
       break;
 
     default:
@@ -246,6 +263,22 @@ _gnutls_record_buffer_get (content_type_t type,
   return length;
 }
 
+inline static void
+reset_errno (gnutls_session_t session)
+{
+  session->internals.errnum = 0;
+}
+
+inline static int
+get_errno (gnutls_session_t session)
+{
+  if (session->internals.errnum != 0)
+    return session->internals.errnum;
+  else
+    return session->internals.errno_func (session->
+                                          internals.transport_recv_ptr);
+}
+
 
 /* This function is like read. But it does not return -1 on error.
  * It does return gnutls_errno instead.
@@ -253,130 +286,154 @@ _gnutls_record_buffer_get (content_type_t type,
  * Flags are only used if the default recv() function is being used.
  */
 static ssize_t
-_gnutls_read (gnutls_session_t session, void *iptr,
-	      size_t sizeOfPtr, int flags)
+_gnutls_read (gnutls_session_t session, mbuffer_st ** bufel,
+              size_t size, gnutls_pull_func pull_func)
 {
   size_t left;
   ssize_t i = 0;
-  char *ptr = iptr;
-  unsigned j, x, sum = 0;
+  char *ptr;
   gnutls_transport_ptr_t fd = session->internals.transport_recv_ptr;
+
+  if (!bufel)
+    {
+      gnutls_assert ();
+      return GNUTLS_E_INTERNAL_ERROR;
+    }
+
+  *bufel = _mbuffer_alloc (0, size);
+  if (!*bufel)
+    {
+      gnutls_assert ();
+      return GNUTLS_E_MEMORY_ERROR;
+    }
+  ptr = (*bufel)->msg.data;
 
   session->internals.direction = 0;
 
-  left = sizeOfPtr;
+  left = size;
   while (left > 0)
     {
+      reset_errno (session);
 
-      session->internals.errnum = 0;
-
-      if (session->internals._gnutls_pull_func == NULL)
-	{
-	  i = recv (GNUTLS_POINTER_TO_INT (fd), &ptr[sizeOfPtr - left],
-		    left, flags);
-#if HAVE_WINSOCK2_H
-	  if (i < 0)
-	    {
-	      int tmperr = WSAGetLastError ();
-	      switch (tmperr)
-		{
-		case WSAEWOULDBLOCK:
-		  session->internals.errnum = EAGAIN;
-		  break;
-
-		case WSAEINTR:
-		  session->internals.errnum = EINTR;
-		  break;
-
-		default:
-		  session->internals.errnum = EIO;
-		  break;
-		}
-	      WSASetLastError (tmperr);
-	    }
-#endif
-	}
-      else
-	i = session->internals._gnutls_pull_func (fd,
-						  &ptr[sizeOfPtr -
-						       left], left);
+      i = pull_func (fd, &ptr[size - left], left);
 
       if (i < 0)
-	{
-	  int err = session->internals.errnum ? session->internals.errnum
-	    : errno;
+        {
+          int err = get_errno (session);
 
-	  _gnutls_read_log ("READ: %d returned from %p, errno=%d gerrno=%d\n",
-			    i, fd, errno, session->internals.errnum);
+          _gnutls_read_log ("READ: %d returned from %p, errno=%d gerrno=%d\n",
+                            (int) i, fd, errno, session->internals.errnum);
 
-	  if (err == EAGAIN || err == EINTR)
-	    {
-	      if (sizeOfPtr - left > 0)
-		{
+          if (err == EAGAIN || err == EINTR)
+            {
+              if (size - left > 0)
+                {
 
-		  _gnutls_read_log ("READ: returning %d bytes from %p\n",
-				    sizeOfPtr - left, fd);
+                  _gnutls_read_log ("READ: returning %d bytes from %p\n",
+                                    (int) (size - left), fd);
 
-		  goto finish;
-		}
-	      gnutls_assert ();
+                  goto finish;
+                }
 
-	      if (err == EAGAIN)
-		return GNUTLS_E_AGAIN;
-	      return GNUTLS_E_INTERRUPTED;
-	    }
-	  else
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_PULL_ERROR;
-	    }
-	}
+              if (err == EAGAIN)
+                return GNUTLS_E_AGAIN;
+              return GNUTLS_E_INTERRUPTED;
+            }
+          else
+            {
+              gnutls_assert ();
+              return GNUTLS_E_PULL_ERROR;
+            }
+        }
       else
-	{
+        {
 
-	  _gnutls_read_log ("READ: Got %d bytes from %p\n", i, fd);
+          _gnutls_read_log ("READ: Got %d bytes from %p\n", (int) i, fd);
 
-	  if (i == 0)
-	    break;		/* EOF */
-	}
+          if (i == 0)
+            break;              /* EOF */
+        }
 
       left -= i;
-
+      (*bufel)->msg.size += i;
     }
 
 finish:
 
   if (_gnutls_log_level >= 7)
     {
-      char line[128];
-      char tmp[16];
-
-
       _gnutls_read_log ("READ: read %d bytes from %p\n",
-			(sizeOfPtr - left), fd);
+                        (int) (size - left), fd);
 
-      for (x = 0; x < ((sizeOfPtr - left) / 16) + 1; x++)
-	{
-	  line[0] = 0;
-
-	  sprintf (tmp, "%.4x - ", x);
-	  _gnutls_str_cat (line, sizeof (line), tmp);
-
-	  for (j = 0; j < 16; j++)
-	    {
-	      if (sum < (sizeOfPtr - left))
-		{
-		  sprintf (tmp, "%.2x ", ((unsigned char *) ptr)[sum++]);
-		  _gnutls_str_cat (line, sizeof (line), tmp);
-		}
-	    }
-	  _gnutls_read_log ("%s\n", line);
-	}
     }
 
-  return (sizeOfPtr - left);
+  return (size - left);
 }
 
+
+
+static ssize_t
+_gnutls_writev_emu (gnutls_session_t session, const giovec_t * giovec,
+                    int giovec_cnt)
+{
+  int ret = 0, j = 0;
+  gnutls_transport_ptr_t fd = session->internals.transport_send_ptr;
+  void *iptr;
+  size_t sizeOfPtr;
+  size_t total = 0;
+
+  for (j = 0; j < giovec_cnt; j++)
+    {
+      sizeOfPtr = giovec[j].iov_len;
+      iptr = giovec[j].iov_base;
+
+      ret = session->internals.push_func (fd, iptr, sizeOfPtr);
+
+      if (ret == -1)
+        break;
+
+      total += ret;
+
+      if (ret != giovec[j].iov_len)
+        break;
+    }
+
+  if (total > 0)
+    return total;
+
+  return ret;
+}
+
+static ssize_t
+_gnutls_writev (gnutls_session_t session, const giovec_t * giovec,
+                int giovec_cnt)
+{
+  int i;
+  gnutls_transport_ptr_t fd = session->internals.transport_send_ptr;
+
+  reset_errno (session);
+
+  if (session->internals.push_func != NULL)
+    i = _gnutls_writev_emu (session, giovec, giovec_cnt);
+  else
+    i = session->internals.vec_push_func (fd, giovec, giovec_cnt);
+
+  if (i == -1)
+    {
+      int err = get_errno (session);
+      _gnutls_debug_log ("errno: %d\n", err);
+      if (err == EAGAIN)
+        return GNUTLS_E_AGAIN;
+      else if (err == EINTR)
+        return GNUTLS_E_INTERRUPTED;
+      else
+        {
+          gnutls_assert ();
+          return GNUTLS_E_PUSH_ERROR;
+        }
+    }
+  return i;
+}
 
 #define RCVLOWAT session->internals.lowat
 
@@ -386,31 +443,25 @@ finish:
 int
 _gnutls_io_clear_peeked_data (gnutls_session_t session)
 {
-  char *peekdata;
+  mbuffer_st *peekdata;
   int ret, sum;
 
   if (session->internals.have_peeked_data == 0 || RCVLOWAT == 0)
     return 0;
 
-  peekdata = gnutls_malloc (RCVLOWAT);
-  if (peekdata == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_MEMORY_ERROR;
-    }
-
   /* this was already read by using MSG_PEEK - so it shouldn't fail */
   sum = 0;
   do
-    {				/* we need this to finish now */
-      ret = _gnutls_read (session, peekdata, RCVLOWAT - sum, 0);
+    {                           /* we need this to finish now */
+      ret =
+        _gnutls_read (session, &peekdata, RCVLOWAT - sum,
+                      session->internals.pull_func);
       if (ret > 0)
-	sum += ret;
+        sum += ret;
+      _mbuffer_xfree (&peekdata);
     }
   while (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN
-	 || sum < RCVLOWAT);
-
-  gnutls_free (peekdata);
+         || sum < RCVLOWAT);
 
   if (ret < 0)
     {
@@ -423,45 +474,34 @@ _gnutls_io_clear_peeked_data (gnutls_session_t session)
   return 0;
 }
 
-
-void
-_gnutls_io_clear_read_buffer (gnutls_session_t session)
-{
-  session->internals.record_recv_buffer.length = 0;
-}
-
 /* This function is like recv(with MSG_PEEK). But it does not return -1 on error.
  * It does return gnutls_errno instead.
  * This function reads data from the socket and keeps them in a buffer, of up to
  * MAX_RECV_SIZE. 
  *
  * This is not a general purpose function. It returns EXACTLY the data requested,
- * which are stored in a local (in the session) buffer. A pointer (iptr) to this buffer is returned.
+ * which are stored in a local (in the session) buffer.
  *
  */
 ssize_t
-_gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
-			  size_t sizeOfPtr, content_type_t recv_type)
+_gnutls_io_read_buffered (gnutls_session_t session, size_t total,
+                          content_type_t recv_type)
 {
   ssize_t ret = 0, ret2 = 0;
   size_t min;
-  int buf_pos;
-  opaque *buf;
-  int recvlowat;
-  int recvdata;
+  mbuffer_st *bufel = NULL;
+  size_t recvlowat, recvdata, readsize;
 
-  *iptr = session->internals.record_recv_buffer.data;
-
-  if (sizeOfPtr > MAX_RECV_SIZE || sizeOfPtr == 0)
+  if (total > MAX_RECV_SIZE || total == 0)
     {
-      gnutls_assert ();		/* internal error */
+      gnutls_assert ();         /* internal error */
       return GNUTLS_E_INVALID_REQUEST;
     }
 
   /* If an external pull function is used, then do not leave
    * any data into the kernel buffer.
    */
-  if (session->internals._gnutls_pull_func != NULL)
+  if (session->internals.pull_func != system_read)
     {
       recvlowat = 0;
     }
@@ -472,10 +512,10 @@ _gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
        * data in gnutls session.
        */
       if (recv_type != GNUTLS_APPLICATION_DATA
-	  && session->internals.have_peeked_data == 0)
-	recvlowat = 0;
+          && session->internals.have_peeked_data == 0)
+        recvlowat = 0;
       else
-	recvlowat = RCVLOWAT;
+        recvlowat = RCVLOWAT;
     }
 
 
@@ -483,61 +523,56 @@ _gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
   /* calculate the actual size, ie. get the minimum of the
    * buffered data and the requested data.
    */
-  min = MIN (session->internals.record_recv_buffer.length, sizeOfPtr);
+  min = MIN (session->internals.record_recv_buffer.byte_length, total);
   if (min > 0)
     {
       /* if we have enough buffered data
        * then just return them.
        */
-      if (min == sizeOfPtr)
-	{
-	  return min;
-	}
+      if (min == total)
+        {
+          return min;
+        }
     }
 
   /* min is over zero. recvdata is the data we must
    * receive in order to return the requested data.
    */
-  recvdata = sizeOfPtr - min;
+  recvdata = total - min;
+  readsize = recvdata - recvlowat;
 
   /* Check if the previously read data plus the new data to
    * receive are longer than the maximum receive buffer size.
    */
-  if ((session->internals.record_recv_buffer.length + recvdata) >
+  if ((session->internals.record_recv_buffer.byte_length + recvdata) >
       MAX_RECV_SIZE)
     {
-      gnutls_assert ();		/* internal error */
+      gnutls_assert ();         /* internal error */
       return GNUTLS_E_INVALID_REQUEST;
     }
 
-  /* Allocate the data required to store the new packet.
-   */
-  ret = _gnutls_buffer_resize( &session->internals.record_recv_buffer, 
-      recvdata + session->internals.record_recv_buffer.length); 
-
   if (ret < 0)
     {
-      gnutls_assert();
+      gnutls_assert ();
       return ret;
     }
 
-  buf_pos = session->internals.record_recv_buffer.length;
-  buf = session->internals.record_recv_buffer.data;
-  *iptr = buf;
-
   /* READ DATA - but leave RCVLOWAT bytes in the kernel buffer.
    */
-  if (recvdata - recvlowat > 0)
+  if (readsize > 0)
     {
-      ret = _gnutls_read (session, &buf[buf_pos], recvdata - recvlowat, 0);
+      ret =
+        _gnutls_read (session, &bufel, readsize,
+                      session->internals.pull_func);
 
       /* return immediately if we got an interrupt or eagain
        * error.
        */
       if (ret < 0 && gnutls_error_is_fatal (ret) == 0)
-	{
-	  return ret;
-	}
+        {
+          _mbuffer_xfree (&bufel);
+          return ret;
+        }
     }
 
   /* copy fresh data to our buffer.
@@ -545,38 +580,44 @@ _gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
   if (ret > 0)
     {
       _gnutls_read_log
-	("RB: Have %d bytes into buffer. Adding %d bytes.\n",
-	 session->internals.record_recv_buffer.length, ret);
-      _gnutls_read_log ("RB: Requested %d bytes\n", sizeOfPtr);
-      session->internals.record_recv_buffer.length += ret;
-    }
+        ("RB: Have %d bytes into buffer. Adding %d bytes.\n",
+         (int) session->internals.record_recv_buffer.byte_length, (int) ret);
+      _gnutls_read_log ("RB: Requested %d bytes\n", (int) total);
 
-  buf_pos = session->internals.record_recv_buffer.length;
+      _mbuffer_enqueue (&session->internals.record_recv_buffer, bufel);
+    }
+  else
+    _mbuffer_xfree (&bufel);
+
 
   /* This is hack in order for select to work. Just leave recvlowat data,
    * into the kernel buffer (using a read with MSG_PEEK), thus making
    * select think, that the socket is ready for reading.
    * MSG_PEEK is only used with berkeley style sockets.
    */
-  if (ret == (recvdata - recvlowat) && recvlowat > 0)
+  if (ret == readsize && recvlowat > 0)
     {
-      ret2 = _gnutls_read (session, &buf[buf_pos], recvlowat, MSG_PEEK);
+      ret2 = _gnutls_read (session, &bufel, recvlowat, system_read_peek);
 
       if (ret2 < 0 && gnutls_error_is_fatal (ret2) == 0)
-	{
-	  return ret2;
-	}
+        {
+          _mbuffer_xfree (&bufel);
+          return ret2;
+        }
 
       if (ret2 > 0)
-	{
-	  _gnutls_read_log ("RB-PEEK: Read %d bytes in PEEK MODE.\n", ret2);
-	  _gnutls_read_log
-	    ("RB-PEEK: Have %d bytes into buffer. Adding %d bytes.\nRB: Requested %d bytes\n",
-	     session->internals.record_recv_buffer.length, ret2, sizeOfPtr);
-	  session->internals.have_peeked_data = 1;
-	  session->internals.record_recv_buffer.length += ret2;
-
-	}
+        {
+          _gnutls_read_log ("RB-PEEK: Read %d bytes in PEEK MODE.\n",
+                            (int) ret2);
+          _gnutls_read_log
+            ("RB-PEEK: Have %d bytes into buffer. Adding %d bytes.\nRB: Requested %d bytes\n",
+             (int) session->internals.record_recv_buffer.byte_length,
+             (int) ret2, (int) total);
+          session->internals.have_peeked_data = 1;
+          _mbuffer_enqueue (&session->internals.record_recv_buffer, bufel);
+        }
+      else
+        _mbuffer_xfree (&bufel);
     }
 
   if (ret < 0 || ret2 < 0)
@@ -595,14 +636,14 @@ _gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
     }
 
   if (ret == 0)
-    {				/* EOF */
+    {                           /* EOF */
       gnutls_assert ();
       return 0;
     }
 
-  ret = session->internals.record_recv_buffer.length;
+  ret = session->internals.record_recv_buffer.byte_length;
 
-  if ((ret > 0) && ((size_t) ret < sizeOfPtr))
+  if ((ret > 0) && ((size_t) ret < total))
     {
       /* Short Read */
       gnutls_assert ();
@@ -617,170 +658,40 @@ _gnutls_io_read_buffered (gnutls_session_t session, opaque ** iptr,
 /* This function is like write. But it does not return -1 on error.
  * It does return gnutls_errno instead.
  *
- * In case of E_AGAIN and E_INTERRUPTED errors, you must call gnutls_write_flush(),
- * until it returns ok (0).
+ * This function takes full responsibility of freeing msg->data.
  *
- * We need to push exactly the data in n, since we cannot send less
- * data. In TLS the peer must receive the whole packet in order
- * to decrypt and verify the integrity. 
+ * In case of E_AGAIN and E_INTERRUPTED errors, you must call
+ * gnutls_write_flush(), until it returns ok (0).
+ *
+ * We need to push exactly the data in msg->size, since we cannot send
+ * less data. In TLS the peer must receive the whole packet in order
+ * to decrypt and verify the integrity.
  *
  */
 ssize_t
 _gnutls_io_write_buffered (gnutls_session_t session,
-			   const void *iptr, size_t n)
+                           mbuffer_st * bufel, unsigned int mflag)
 {
-  size_t left;
-  unsigned j, x, sum = 0;
-  ssize_t retval, i;
-  const opaque *ptr;
-  gnutls_transport_ptr_t fd = session->internals.transport_send_ptr;
+  mbuffer_head_st *const send_buffer = &session->internals.record_send_buffer;
 
   /* to know where the procedure was interrupted.
    */
   session->internals.direction = 1;
 
-  ptr = iptr;
+  _mbuffer_enqueue (send_buffer, bufel);
 
-  /* In case the previous write was interrupted, check if the
-   * iptr != NULL and we have data in the buffer.
-   * If this is true then return an error.
-   */
-  if (session->internals.record_send_buffer.length > 0 && iptr != NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INVALID_REQUEST;
-    }
+  _gnutls_write_log
+    ("WRITE: enqueued %d bytes for %p. Total %d bytes.\n",
+     (int) bufel->msg.size, session->internals.transport_recv_ptr,
+     (int) send_buffer->byte_length);
 
-  /* If data in the buffer exist
-   */
-  if (iptr == NULL)
-    {
-      gnutls_datum bdata;
-      /* checking is handled above */
-      _gnutls_buffer_get_datum (&session->internals.record_send_buffer, &bdata, session->internals.record_send_buffer.length);
-
-      ptr = bdata.data;
-      n = bdata.size;
-
-      _gnutls_write_log
-	("WRITE: Restoring old write. (%d bytes to send)\n", n);
-    }
-
-  _gnutls_write_log ("WRITE: Will write %d bytes to %p.\n", n, fd);
-
-  i = 0;
-  left = n;
-  while (left > 0)
-    {
-
-      session->internals.errnum = 0;
-
-      if (session->internals._gnutls_push_func == NULL)
-	{
-	  i = send (GNUTLS_POINTER_TO_INT (fd), &ptr[n - left], left, 0);
-#if HAVE_WINSOCK2_H
-	  if (i < 0)
-	    {
-	      int tmperr = WSAGetLastError ();
-	      switch (tmperr)
-		{
-		case WSAEWOULDBLOCK:
-		  session->internals.errnum = EAGAIN;
-		  break;
-
-		case WSAEINTR:
-		  session->internals.errnum = EINTR;
-		  break;
-
-		default:
-		  session->internals.errnum = EIO;
-		  break;
-		}
-	      WSASetLastError (tmperr);
-	    }
-#endif
-	}
-      else
-	i = session->internals._gnutls_push_func (fd, &ptr[n - left], left);
-
-      if (i == -1)
-	{
-	  int err = session->internals.errnum ? session->internals.errnum
-	    : errno;
-
-	  if (err == EAGAIN || err == EINTR)
-	    {
-	      session->internals.record_send_buffer_prev_size += n - left;
-
-	      retval =
-		_gnutls_buffer_append (&session->internals.record_send_buffer,
-				       &ptr[n - left], left);
-	      if (retval < 0)
-		{
-		  gnutls_assert ();
-		  return retval;
-		}
-
-	      _gnutls_write_log
-		("WRITE: Interrupted. Stored %d bytes to buffer. Already sent %d bytes.\n",
-		 left, n - left);
-
-	      if (err == EAGAIN)
-		return GNUTLS_E_AGAIN;
-	      return GNUTLS_E_INTERRUPTED;
-	    }
-	  else
-	    {
-	      gnutls_assert ();
-	      return GNUTLS_E_PUSH_ERROR;
-	    }
-	}
-      left -= i;
-
-
-      if (_gnutls_log_level >= 7)
-	{
-	  char line[128];
-	  char tmp[16];
-
-
-	  _gnutls_write_log
-	    ("WRITE: wrote %d bytes to %p. Left %d bytes. Total %d bytes.\n",
-	     i, fd, left, n);
-	  for (x = 0; x < (unsigned) ((i) / 16) + 1; x++)
-	    {
-	      line[0] = 0;
-
-	      if (sum > n - left)
-		break;
-
-	      sprintf (tmp, "%.4x - ", x);
-	      _gnutls_str_cat (line, sizeof (line), tmp);
-
-	      for (j = 0; j < 16; j++)
-		{
-		  if (sum < n - left)
-		    {
-		      sprintf (tmp, "%.2x ",
-			       ((const unsigned char *) ptr)[sum++]);
-		      _gnutls_str_cat (line, sizeof (line), tmp);
-		    }
-		  else
-		    break;
-		}
-	      _gnutls_write_log ("%s\n", line);
-	    }
-	}
-    }
-
-  retval = n + session->internals.record_send_buffer_prev_size;
-
-  session->internals.record_send_buffer.length = 0;
-  session->internals.record_send_buffer_prev_size = 0;
-
-  return retval;
-
+  if (mflag == MBUFFER_FLUSH)
+    return _gnutls_io_write_flush (session);
+  else
+    return bufel->msg.size;
 }
+
+typedef ssize_t (*send_func) (gnutls_session_t, const giovec_t *, int);
 
 /* This function writes the data that are left in the
  * TLS write buffer (ie. because the previous write was
@@ -789,178 +700,141 @@ _gnutls_io_write_buffered (gnutls_session_t session,
 ssize_t
 _gnutls_io_write_flush (gnutls_session_t session)
 {
-  ssize_t ret;
+  gnutls_datum_t msg;
+  mbuffer_head_st *send_buffer = &session->internals.record_send_buffer;
+  int ret;
+  ssize_t sent = 0, tosend = 0;
+  giovec_t iovec[MAX_QUEUE];
+  int i = 0;
+  mbuffer_st *cur;
 
-  if (session->internals.record_send_buffer.length == 0)
-    return 0;			/* done */
+  _gnutls_write_log ("WRITE FLUSH: %d bytes in buffer.\n",
+                     (int) send_buffer->byte_length);
 
-  ret = _gnutls_io_write_buffered (session, NULL, 0);
-  _gnutls_write_log ("WRITE FLUSH: %d [buffer: %d]\n", ret,
-		     session->internals.record_send_buffer.length);
+  for (cur = _mbuffer_get_first (send_buffer, &msg);
+       cur != NULL; cur = _mbuffer_get_next (cur, &msg))
+    {
+      iovec[i].iov_base = msg.data;
+      iovec[i++].iov_len = msg.size;
+      tosend += msg.size;
 
-  return ret;
+      /* we buffer up to MAX_QUEUE messages */
+      if (i >= sizeof (iovec) / sizeof (iovec[0]))
+        {
+          gnutls_assert ();
+          return GNUTLS_E_INTERNAL_ERROR;
+        }
+    }
+
+  if (tosend == 0)
+    {
+      gnutls_assert();
+      return 0;
+    }
+
+  ret = _gnutls_writev (session, iovec, i);
+  if (ret >= 0)
+    {
+      _mbuffer_remove_bytes (send_buffer, ret);
+      _gnutls_write_log ("WRITE: wrote %d bytes, %d bytes left.\n",
+                         ret, (int) send_buffer->byte_length);
+
+      sent += ret;
+    }
+  else if (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN)
+    {
+      _gnutls_write_log ("WRITE interrupted: %d bytes left.\n",
+                         (int) send_buffer->byte_length);
+      return ret;
+    }
+  else
+    {
+      _gnutls_write_log ("WRITE error: code %d, %d bytes left.\n",
+                         ret, (int) send_buffer->byte_length);
+
+      gnutls_assert ();
+      return ret;
+    }
+
+  if (sent < tosend)
+    {
+      gnutls_assert ();
+      return GNUTLS_E_AGAIN;
+    }
+
+  return sent;
 }
 
 /* This function writes the data that are left in the
  * Handshake write buffer (ie. because the previous write was
  * interrupted.
+ *
  */
 ssize_t
 _gnutls_handshake_io_write_flush (gnutls_session_t session)
 {
-  ssize_t ret;
-  ret = _gnutls_handshake_io_send_int (session, 0, 0, NULL, 0);
-  if (ret < 0)
+  mbuffer_head_st *const send_buffer =
+    &session->internals.handshake_send_buffer;
+  gnutls_datum_t msg;
+  int ret;
+  ssize_t total = 0;
+  mbuffer_st *cur;
+
+  _gnutls_write_log ("HWRITE FLUSH: %d bytes in buffer.\n",
+                     (int) send_buffer->byte_length);
+
+  for (cur = _mbuffer_get_first (send_buffer, &msg);
+       cur != NULL; cur = _mbuffer_get_first (send_buffer, &msg))
     {
-      gnutls_assert ();
-      return ret;
+      ret = _gnutls_send_int (session, GNUTLS_HANDSHAKE,
+                              session->internals.handshake_send_buffer_htype,
+                              EPOCH_WRITE_CURRENT,
+                              msg.data, msg.size, 0 /* do not flush */ );
+
+      if (ret >= 0)
+        {
+          _mbuffer_remove_bytes (send_buffer, ret);
+
+          _gnutls_write_log ("HWRITE: wrote %d bytes, %d bytes left.\n",
+                             ret, (int) send_buffer->byte_length);
+
+          total += ret;
+        }
+      else
+        {
+          _gnutls_write_log ("HWRITE error: code %d, %d bytes left.\n",
+                             ret, (int) send_buffer->byte_length);
+
+          gnutls_assert ();
+          return ret;
+        }
     }
 
-  _gnutls_write_log ("HANDSHAKE_FLUSH: written[1] %d bytes\n", ret);
+  return _gnutls_io_write_flush (session);
 
-  if (session->internals.handshake_send_buffer.length == 0)
-    {
-      ret = session->internals.handshake_send_buffer_prev_size;	/* done */
-      session->internals.handshake_send_buffer_prev_size = 0;
-    }
-
-  return ret;
 }
 
 
 /* This is a send function for the gnutls handshake 
  * protocol. Just makes sure that all data have been sent.
+ *
  */
-ssize_t
-_gnutls_handshake_io_send_int (gnutls_session_t session,
-			       content_type_t type,
-			       gnutls_handshake_description_t htype,
-			       const void *iptr, size_t n)
+void
+_gnutls_handshake_io_cache_int (gnutls_session_t session,
+                                gnutls_handshake_description_t htype,
+                                mbuffer_st * bufel)
 {
-  size_t left;
-  ssize_t ret = 0;
-  const opaque *ptr;
-  ssize_t retval = 0;
+  mbuffer_head_st *const send_buffer =
+    &session->internals.handshake_send_buffer;
 
-  ptr = iptr;
+  _mbuffer_enqueue (send_buffer, bufel);
+  session->internals.handshake_send_buffer_htype = htype;
 
-  if (session->internals.handshake_send_buffer.length > 0 && ptr == NULL
-      && n == 0)
-    {
-      gnutls_datum bdata;
+  _gnutls_write_log
+    ("HWRITE: enqueued %d. Total %d bytes.\n",
+     (int) bufel->msg.size, (int) send_buffer->byte_length);
 
-      /* resuming previously interrupted write
-       */
-      gnutls_assert ();
-
-      /* checking is handled above */
-      _gnutls_buffer_get_datum (&session->internals.handshake_send_buffer, &bdata, session->internals.handshake_send_buffer.length);
-
-      ptr = bdata.data;
-      n = bdata.size;
-
-      type = session->internals.handshake_send_buffer_type;
-      htype = session->internals.handshake_send_buffer_htype;
-
-    }
-  else if (session->internals.handshake_send_buffer.length > 0)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INTERNAL_ERROR;
-    }
-#ifdef WRITE_DEBUG
-  else
-    {
-      size_t sum = 0, x, j;
-
-      _gnutls_write_log ("HWRITE: will write %d bytes to %d.\n", n,
-			 gnutls_transport_get_ptr (session));
-      for (x = 0; x < ((n) / 16) + 1; x++)
-	{
-	  if (sum > n)
-	    break;
-
-	  _gnutls_write_log ("%.4x - ", x);
-	  for (j = 0; j < 16; j++)
-	    {
-	      if (sum < n)
-		{
-		  _gnutls_write_log ("%.2x ", ((unsigned char *) ptr)[sum++]);
-		}
-	      else
-		break;
-	    }
-	  _gnutls_write_log ("\n");
-	}
-      _gnutls_write_log ("\n");
-    }
-#endif
-
-  if (n == 0)
-    {				/* if we have no data to send */
-      gnutls_assert ();
-      return 0;
-    }
-  else if (ptr == NULL)
-    {
-      gnutls_assert ();
-      return GNUTLS_E_INTERNAL_ERROR;
-    }
-
-
-  left = n;
-  while (left > 0)
-    {
-      ret = _gnutls_send_int (session, type, htype, &ptr[n - left], left);
-
-      if (ret <= 0)
-	{
-	  if (ret == 0)
-	    {
-	      gnutls_assert ();
-	      ret = GNUTLS_E_INTERNAL_ERROR;
-	    }
-
-	  if (left > 0
-	      && (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN))
-	    {
-	      gnutls_assert ();
-
-	      retval =
-		_gnutls_buffer_append (&session->internals.
-				       handshake_send_buffer, &ptr[n - left],
-				       left);
-	      if (retval < 0)
-		{
-		  gnutls_assert ();
-		  return retval;
-		}
-
-	      session->internals.handshake_send_buffer_prev_size += n - left;
-
-	      session->internals.handshake_send_buffer_type = type;
-	      session->internals.handshake_send_buffer_htype = htype;
-
-	    }
-	  else
-	    {
-	      session->internals.handshake_send_buffer_prev_size = 0;
-	      session->internals.handshake_send_buffer.length = 0;
-	    }
-
-	  gnutls_assert ();
-	  return ret;
-	}
-      left -= ret;
-    }
-
-  retval = n + session->internals.handshake_send_buffer_prev_size;
-
-  session->internals.handshake_send_buffer.length = 0;
-  session->internals.handshake_send_buffer_prev_size = 0;
-
-  return retval;
-
+  return;
 }
 
 /* This is a receive function for the gnutls handshake 
@@ -968,9 +842,9 @@ _gnutls_handshake_io_send_int (gnutls_session_t session,
  */
 ssize_t
 _gnutls_handshake_io_recv_int (gnutls_session_t session,
-			       content_type_t type,
-			       gnutls_handshake_description_t htype,
-			       void *iptr, size_t sizeOfPtr)
+                               content_type_t type,
+                               gnutls_handshake_description_t htype,
+                               void *iptr, size_t sizeOfPtr)
 {
   size_t left;
   ssize_t i;
@@ -989,22 +863,24 @@ _gnutls_handshake_io_recv_int (gnutls_session_t session,
   if (session->internals.handshake_recv_buffer.length > 0)
     {
       size_t tmp;
-      
+
       /* if we have already received some data */
       if (sizeOfPtr <= session->internals.handshake_recv_buffer.length)
-	{
-	  /* if requested less data then return it.
-	   */
-	  gnutls_assert ();
-	  
-	  tmp = sizeOfPtr;
-	  _gnutls_string_get_data( &session->internals.handshake_recv_buffer, iptr, &tmp);
-	  return tmp;
-	}
+        {
+          /* if requested less data then return it.
+           */
+          gnutls_assert ();
+
+          tmp = sizeOfPtr;
+          _gnutls_buffer_pop_data (&session->internals.handshake_recv_buffer,
+                                   iptr, &tmp);
+          return tmp;
+        }
       gnutls_assert ();
 
-      tmp = sizeOfPtr; 
-      _gnutls_string_get_data( &session->internals.handshake_recv_buffer, iptr, &tmp);
+      tmp = sizeOfPtr;
+      _gnutls_buffer_pop_data (&session->internals.handshake_recv_buffer,
+                               iptr, &tmp);
       left -= tmp;
 
       htype = session->internals.handshake_recv_buffer_htype;
@@ -1016,28 +892,26 @@ _gnutls_handshake_io_recv_int (gnutls_session_t session,
       dsize = sizeOfPtr - left;
       i = _gnutls_recv_int (session, type, htype, &ptr[dsize], left);
       if (i < 0)
-	{
+        {
 
-	  if (dsize > 0 && (i == GNUTLS_E_INTERRUPTED || i == GNUTLS_E_AGAIN))
-	    {
-	      gnutls_assert ();
+          if (dsize > 0 && (i == GNUTLS_E_INTERRUPTED || i == GNUTLS_E_AGAIN))
+            {
+              gnutls_assert ();
 
-	      _gnutls_buffer_append (&session->internals.handshake_recv_buffer, iptr,
-		      dsize);
+              _gnutls_buffer_append_data (&session->internals.
+                                          handshake_recv_buffer, iptr, dsize);
 
-	      session->internals.handshake_recv_buffer_htype = htype;
-	      session->internals.handshake_recv_buffer_type = type;
-	    }
+              session->internals.handshake_recv_buffer_htype = htype;
+              session->internals.handshake_recv_buffer_type = type;
+            }
 
-	  gnutls_assert ();
-
-	  return i;
-	}
+          return i;
+        }
       else
-	{
-	  if (i == 0)
-	    break;		/* EOF */
-	}
+        {
+          if (i == 0)
+            break;              /* EOF */
+        }
 
       left -= i;
 
@@ -1054,7 +928,7 @@ _gnutls_handshake_io_recv_int (gnutls_session_t session,
  */
 int
 _gnutls_handshake_buffer_put (gnutls_session_t session, opaque * data,
-			      size_t length)
+                              size_t length)
 {
 
   if (length == 0)
@@ -1068,10 +942,9 @@ _gnutls_handshake_buffer_put (gnutls_session_t session, opaque * data,
       return GNUTLS_E_HANDSHAKE_TOO_LARGE;
     }
 
-  _gnutls_buffers_log ("BUF[HSK]: Inserted %d bytes of Data\n", length);
-
-  if (_gnutls_buffer_append (&session->internals.handshake_hash_buffer,
-			     data, length) < 0)
+  _gnutls_buffers_log ("BUF[HSK]: Inserted %d bytes of Data\n", (int) length);
+  if (_gnutls_buffer_append_data (&session->internals.handshake_hash_buffer,
+                                  data, length) < 0)
     {
       gnutls_assert ();
       return GNUTLS_E_MEMORY_ERROR;
@@ -1091,31 +964,14 @@ _gnutls_handshake_buffer_get_size (gnutls_session_t session)
  * and returns data from it (peek mode!)
  */
 int
-_gnutls_handshake_buffer_peek (gnutls_session_t session, opaque * data,
-			       size_t length)
-{
-  if (length > session->internals.handshake_hash_buffer.length)
-    {
-      length = session->internals.handshake_hash_buffer.length;
-    }
-
-  _gnutls_buffers_log ("BUF[HSK]: Peeked %d bytes of Data\n", length);
-
-  memcpy (data, session->internals.handshake_hash_buffer.data, length);
-  return length;
-}
-
-/* this function does not touch the buffer
- * and returns data from it (peek mode!)
- */
-int
 _gnutls_handshake_buffer_get_ptr (gnutls_session_t session,
-				  opaque ** data_ptr, size_t * length)
+                                  opaque ** data_ptr, size_t * length)
 {
   if (length != NULL)
     *length = session->internals.handshake_hash_buffer.length;
 
-  _gnutls_buffers_log ("BUF[HSK]: Peeked %d bytes of Data\n", (int)session->internals.handshake_hash_buffer.length);
+  _gnutls_buffers_log ("BUF[HSK]: Peeked %d bytes of Data\n",
+                       (int) session->internals.handshake_hash_buffer.length);
 
   if (data_ptr != NULL)
     *data_ptr = session->internals.handshake_hash_buffer.data;
@@ -1142,8 +998,89 @@ _gnutls_handshake_buffer_clear (gnutls_session_t session)
 {
 
   _gnutls_buffers_log ("BUF[HSK]: Cleared Data from buffer\n");
-
   _gnutls_buffer_clear (&session->internals.handshake_hash_buffer);
 
   return 0;
+}
+
+/**
+ * gnutls_transport_set_pull_function:
+ * @session: is a #gnutls_session_t structure.
+ * @pull_func: a callback function similar to read()
+ *
+ * This is the function where you set a function for gnutls to receive
+ * data.  Normally, if you use berkeley style sockets, do not need to
+ * use this function since the default (recv(2)) will probably be ok.
+ *
+ * PULL_FUNC is of the form,
+ * ssize_t (*gnutls_pull_func)(gnutls_transport_ptr_t, void*, size_t);
+ **/
+void
+gnutls_transport_set_pull_function (gnutls_session_t session,
+                                    gnutls_pull_func pull_func)
+{
+  session->internals.pull_func = pull_func;
+}
+
+/**
+ * gnutls_transport_set_push_function:
+ * @session: is a #gnutls_session_t structure.
+ * @push_func: a callback function similar to write()
+ *
+ * This is the function where you set a push function for gnutls to
+ * use in order to send data.  If you are going to use berkeley style
+ * sockets, you do not need to use this function since the default
+ * (send(2)) will probably be ok.  Otherwise you should specify this
+ * function for gnutls to be able to send data.
+ *
+ * PUSH_FUNC is of the form,
+ * ssize_t (*gnutls_push_func)(gnutls_transport_ptr_t, const void*, size_t);
+ **/
+void
+gnutls_transport_set_push_function (gnutls_session_t session,
+                                    gnutls_push_func push_func)
+{
+  session->internals.push_func = push_func;
+  session->internals.vec_push_func = NULL;
+}
+
+/**
+ * gnutls_transport_set_vec_push_function:
+ * @session: is a #gnutls_session_t structure.
+ * @vec_func: a callback function similar to writev()
+ *
+ * This is the function where you set a push function for gnutls to
+ * use in order to send data.  If you are going to use berkeley style
+ * sockets, you do not need to use this function since the default
+ * (send(2)) will probably be ok.  Otherwise you should specify this
+ * function for gnutls to be able to send data.
+ *
+ * PUSH_FUNC is of the form,
+ * ssize_t (*gnutls_push_func)(gnutls_transport_ptr_t, const void*, size_t);
+ **/
+void
+gnutls_transport_set_vec_push_function (gnutls_session_t session,
+                                     gnutls_vec_push_func vec_func)
+{
+  session->internals.push_func = NULL;
+  session->internals.vec_push_func = vec_func;
+}
+
+/**
+ * gnutls_transport_set_errno_function:
+ * @session: is a #gnutls_session_t structure.
+ * @errno_func: a callback function similar to write()
+ *
+ * This is the function where you set a function to retrieve errno
+ * after a failed push or pull operation.
+ *
+ * errno_func is of the form,
+ * int (*gnutls_errno_func)(gnutls_transport_ptr_t);
+ * and should return the errno.
+ **/
+void
+gnutls_transport_set_errno_function (gnutls_session_t session,
+                                     gnutls_errno_func errno_func)
+{
+  session->internals.errno_func = errno_func;
 }

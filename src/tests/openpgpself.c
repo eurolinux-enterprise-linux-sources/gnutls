@@ -1,39 +1,42 @@
 /*
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * GNUTLS is free software; you can redistribute it and/or modify it
+ * GnuTLS is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 3 of the License, or
  * (at your option) any later version.
  *
- * GNUTLS is distributed in the hope that it will be useful, but
+ * GnuTLS is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with GNUTLS; if not, write to the Free Software Foundation,
+ * along with GnuTLS; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* Parts copied from GnuTLS example programs. */
 
 #ifdef HAVE_CONFIG_H
-# include <config.h>
+#include <config.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#if !defined(_WIN32)
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
+#endif
 #include <unistd.h>
 #include <gnutls/gnutls.h>
 #include <gnutls/openpgp.h>
@@ -59,52 +62,80 @@ tls_log_func (int level, const char *str)
 #define MSG "Hello TLS"
 
 static unsigned char cert_txt[] =
-  "-----BEGIN PGP PUBLIC KEY BLOCK-----\n"
-  "Version: GnuPG v1.0.6 (GNU/Linux)\n"
-  "Comment: For info see http://www.gnupg.org\n"
-  "\n"
-  "mQGiBDxnlY0RBACAsWUhi/goBvpvTBgL8fFPwBAuD04VYFEtC7+4pBp6kFsHjUR7\n"
-  "TTUkBsOk2PvMHrDdv0+C4x2CH8YGP1e+O0f2yLWk8Uu+kkF12yiqbbvDEiCdeJT6\n"
-  "c3vIstY8vJ9Jso5g/LB8Xggq88R7jXFS3hH+WC5v/6P6SARfzXl457cVewCgvxSf\n"
-  "Gsm9mFospJ0B3RGyg5MB0d8D/RQQryJCGdR2nLe4VfctPL2QBD/1XhtubqEbetaV\n"
-  "PxssqrJdA+eplBRT7UHokSBahM8gmSmNuSrLDujPfEtaMg6YIkB+Kq0VeJLE0cXT\n"
-  "ZIH29KJlI/qk1xG4K7D6B0cKaHC/L4BIoKcQLJzfTIPw3frS4jVeNaQZNHSVqZ8/\n"
-  "VmOMA/9rkNtccQ4RVd9WTFoHKvT4vfiISEOIzKGmcBY9Hymq7MCci3mNe4CDImkv\n"
-  "ZgnjDlJAM91CX1ODthPLBqvyhnMhhxDnaDl4Nh42uPMSr9JEW2IwoIbFne10ihGT\n"
-  "O4lBS1C28UfSGEMm/8JBMtxAjbYy3BYzUtCMA+bGBG6Voe5i5LQlRHIuIFdobyAo\n"
-  "Tm8gY29tbWVudHMpIDx3aG9Ad2hvaXMub3JnPohdBBMRAgAdBQI8Z5WNBQkDwmcA\n"
-  "BQsHCgMEAxUDAgMWAgECF4AACgkQNRRc6qfZPD+WWACfeJnLyfbpTDB7mDh3aATb\n"
-  "+0PXz28AoKRdApBVM6Bty+vWyXH6HfF6ZTj+\n"
-  "=m8dH\n" "-----END PGP PUBLIC KEY BLOCK-----\n";
+"-----BEGIN PGP PUBLIC KEY BLOCK-----\n"
+"Version: GnuPG v1.4.10 (GNU/Linux)\n"
+"Comment: Test key for GnuTLS\n"
+"\n"
+"mI0ETYD2OQEEAMHmDBtJii82NbWuYcvEWCYnwa7GTcz2PYikYCcq/t5nkyb5Bfmx\n"
+"mh2hpto7Lr5d1L/shvab1gXCcrWEAREgNNk9LiowtLuTHBdeOFlJ1u1P1rvdFVKq\n"
+"2a6ft77Q5VltUDKPgTqz4NWH2KUlLfTvwJDnq2DxYsbwVpBDURuUocXhABEBAAG0\n"
+"CVRlc3QgdXNlcoi4BBMBAgAiBQJNgPY5AhsvBgsJCAcDAgYVCAIJCgsEFgIDAQIe\n"
+"AQIXgAAKCRAMTrFUBnAKMOVDA/9GEw7AokwJSGvHREriXcvMMKp6c6SYqa0TVsTg\n"
+"Gh3ENu/KTfGJIM5p+zR6xy+5u5DfP5qLrRdCnoczncR5w9fn3RsP8ju/Ga5z23Q+\n"
+"6XxRKRkXjE/E0ZFulbuaBom/nhrOmmfqKe7Mor9Y4QwzL2wL3sf6jWLglwdFYS/X\n"
+"W3wqjLkBogRNgPY5EQQApafdUhCAHj8LLXYCqOXRSPZbKzvB55NwWrdvnod0seUW\n"
+"aiTSWBlKnSvIomdcII/E3bjdngK4fTJ+Xr5pEJuzBnW3w787r6jBJSq2Lp0T9SP4\n"
+"CBzd0gXcOQkILvX1VzxAsYVULJA0mhAR3IHFcywjX6ENKuvs7ApniBNoXqi6d3cA\n"
+"oIAzYKrjyZ+guM4IUlRRrB8abx5vBACJPV+d15GYgzt1d8zLvOl/mzs85Twj2SB1\n"
+"ZqzK6H/6QxQkEZpP/UVFpXaUGUly3nGEqg1yw4cgqW4SSxgLFz6B23Si+cTsssE6\n"
+"CYziN1UI6NjxkoG/npMm0wRp7Z+KylEolAdbFBAAprORkt58CrGgpYe8O/35+PWc\n"
+"J9rjhwxxkQP/VCpbZLugkL4XHWGWFGG35S6k9F3xPPTPoX9Zoud+0bOeoOK5RQHo\n"
+"e99sVNN4hxxPTM/rJXfTTZUoB6o84yulTSxb6C9ueHotDV0eB9QX1ov/ltmwy3XS\n"
+"fXEyWtI0CDBuZgEww26Up0pzg4XTBYMkmXrxx3J9ihcCIYyAHoE13EWI5wQYAQIA\n"
+"CQUCTYD2OQIbIgBSCRAMTrFUBnAKMEcgBBkRAgAGBQJNgPY5AAoJEPMP1CPBQ+e6\n"
+"3fQAnR7HWLnQTbxCIhlBTZiuJv2HC6cbAJwJ6VsSU6ADCkMuGT3LLNo+UnckK+4i\n"
+"BACcivWsW40ddtEQ0wno1uP65TmKq3aJrdODXTAnqkmNQKL7X7Fz+nmEWiS+LBH8\n"
+"lRvAaeRPX2LV+DCJDbAPrYd7LkOHyuM0I+ZApto5cjem/EnO7op2QwkCCa6oUp0l\n"
+"YA6i6aGF2KGx7WQwi2URIMPhihpOvAbkjfszYpFL4VP5wQ==\n"
+"=ydIq\n"
+"-----END PGP PUBLIC KEY BLOCK-----\n";
+
 const gnutls_datum_t cert = { cert_txt, sizeof (cert_txt) };
 
 static unsigned char key_txt[] =
-  "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
-  "Version: GnuPG v1.0.6 (GNU/Linux)\n"
-  "Comment: For info see http://www.gnupg.org\n"
-  "\n"
-  "lQG7BDxnlY0RBACAsWUhi/goBvpvTBgL8fFPwBAuD04VYFEtC7+4pBp6kFsHjUR7\n"
-  "TTUkBsOk2PvMHrDdv0+C4x2CH8YGP1e+O0f2yLWk8Uu+kkF12yiqbbvDEiCdeJT6\n"
-  "c3vIstY8vJ9Jso5g/LB8Xggq88R7jXFS3hH+WC5v/6P6SARfzXl457cVewCgvxSf\n"
-  "Gsm9mFospJ0B3RGyg5MB0d8D/RQQryJCGdR2nLe4VfctPL2QBD/1XhtubqEbetaV\n"
-  "PxssqrJdA+eplBRT7UHokSBahM8gmSmNuSrLDujPfEtaMg6YIkB+Kq0VeJLE0cXT\n"
-  "ZIH29KJlI/qk1xG4K7D6B0cKaHC/L4BIoKcQLJzfTIPw3frS4jVeNaQZNHSVqZ8/\n"
-  "VmOMA/9rkNtccQ4RVd9WTFoHKvT4vfiISEOIzKGmcBY9Hymq7MCci3mNe4CDImkv\n"
-  "ZgnjDlJAM91CX1ODthPLBqvyhnMhhxDnaDl4Nh42uPMSr9JEW2IwoIbFne10ihGT\n"
-  "O4lBS1C28UfSGEMm/8JBMtxAjbYy3BYzUtCMA+bGBG6Voe5i5AAAnjMCLPrxGdgE\n"
-  "I0xXdwCQ4Sh2diNECAj9JiM6RFNBX2ZhY3RvcjoAAK9cun7/j4AUMmdvIy5UMJph\n"
-  "A6eq6atP/SYjOkRTQV9mYWN0b3I6AACvVjUuomodmmyCggPHWdeVSzpX3ODEHf0m\n"
-  "IzpEU0FfZmFjdG9yOgAAr2Iv9H2aSH+vJKGYW/BO4ehQwwFck7u0JURyLiBXaG8g\n"
-  "KE5vIGNvbW1lbnRzKSA8d2hvQHdob2lzLm9yZz6IXQQTEQIAHQUCPGeVjQUJA8Jn\n"
-  "AAULBwoDBAMVAwIDFgIBAheAAAoJEDUUXOqn2Tw/llgAnjBPQdWxIqBCQGlcI2K/\n"
-  "gLkZR1ARAJ9kaAeJYERc0bV/vlm0ot7UDdr+bQ==\n"
-  "=4M0W\n" "-----END PGP PRIVATE KEY BLOCK-----\n";
+"-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
+"Version: GnuPG v1.4.10 (GNU/Linux)\n"
+"Comment: Test key for GnuTLS\n"
+"\n"
+"lQHYBE2A9jkBBADB5gwbSYovNjW1rmHLxFgmJ8Guxk3M9j2IpGAnKv7eZ5Mm+QX5\n"
+"sZodoabaOy6+XdS/7Ib2m9YFwnK1hAERIDTZPS4qMLS7kxwXXjhZSdbtT9a73RVS\n"
+"qtmun7e+0OVZbVAyj4E6s+DVh9ilJS3078CQ56tg8WLG8FaQQ1EblKHF4QARAQAB\n"
+"AAP9HJePsXZmqg+UW/Ya9bE+TmIObXdQgajN6hhTFXOBocokKNsPxoIp97Sepg+U\n"
+"FP5BIQv/2t2f8bl6sMmGXsAhCqVzRxGuA+9USx8OfTHSdgIKT5T2VFSGJaU4df3Q\n"
+"rstUY3dcvl6VKpDDZic1T7u2ANzaWM2u+pwooKC4cc/k9AECAMNDvrKF3FC7R9sd\n"
+"TagVrrfde0RZuwhbGW9ghslkY893EelXQL/lbBI20crPdrsdDpMe370KO2bQLqwO\n"
+"HGAxIYUCAP41iC7KReYvysLZ34tM55ZFE7BPsMcXUeu6hkYOMDZYvE+x4KV6Umo+\n"
+"Civd4qD9dESR3WOcI9MwALUdNTxQU60B/21MrWjajY1m1vv7l2slJon5eSrH6BkH\n"
+"Aj173uZca8HbgqSF1xOQW8ZGa6KInN3wHe+vPOXAgzlku/4XHgEYVVGeq7QJVGVz\n"
+"dCB1c2VyiLgEEwECACIFAk2A9jkCGy8GCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheA\n"
+"AAoJEAxOsVQGcAow5UMD/0YTDsCiTAlIa8dESuJdy8wwqnpzpJiprRNWxOAaHcQ2\n"
+"78pN8Ykgzmn7NHrHL7m7kN8/moutF0KehzOdxHnD1+fdGw/yO78ZrnPbdD7pfFEp\n"
+"GReMT8TRkW6Vu5oGib+eGs6aZ+op7syiv1jhDDMvbAvex/qNYuCXB0VhL9dbfCqM\n"
+"nQG7BE2A9jkRBAClp91SEIAePwstdgKo5dFI9lsrO8Hnk3Bat2+eh3Sx5RZqJNJY\n"
+"GUqdK8iiZ1wgj8TduN2eArh9Mn5evmkQm7MGdbfDvzuvqMElKrYunRP1I/gIHN3S\n"
+"Bdw5CQgu9fVXPECxhVQskDSaEBHcgcVzLCNfoQ0q6+zsCmeIE2heqLp3dwCggDNg\n"
+"quPJn6C4zghSVFGsHxpvHm8EAIk9X53XkZiDO3V3zMu86X+bOzzlPCPZIHVmrMro\n"
+"f/pDFCQRmk/9RUWldpQZSXLecYSqDXLDhyCpbhJLGAsXPoHbdKL5xOyywToJjOI3\n"
+"VQjo2PGSgb+ekybTBGntn4rKUSiUB1sUEACms5GS3nwKsaClh7w7/fn49Zwn2uOH\n"
+"DHGRA/9UKltku6CQvhcdYZYUYbflLqT0XfE89M+hf1mi537Rs56g4rlFAeh732xU\n"
+"03iHHE9Mz+sld9NNlSgHqjzjK6VNLFvoL254ei0NXR4H1BfWi/+W2bDLddJ9cTJa\n"
+"0jQIMG5mATDDbpSnSnODhdMFgySZevHHcn2KFwIhjIAegTXcRQAAn2PK9kOqhjOJ\n"
+"KU5iaagnF176FwhdCO2I5wQYAQIACQUCTYD2OQIbIgBSCRAMTrFUBnAKMEcgBBkR\n"
+"AgAGBQJNgPY5AAoJEPMP1CPBQ+e63fQAniK5kU+dwIbkD+OHJHkC73V6v4D8AJ0Z\n"
+"+GBYj4nhKEX21QXfj55F3Zpg1e4iBACcivWsW40ddtEQ0wno1uP65TmKq3aJrdOD\n"
+"XTAnqkmNQKL7X7Fz+nmEWiS+LBH8lRvAaeRPX2LV+DCJDbAPrYd7LkOHyuM0I+ZA\n"
+"pto5cjem/EnO7op2QwkCCa6oUp0lYA6i6aGF2KGx7WQwi2URIMPhihpOvAbkjfsz\n"
+"YpFL4VP5wQ==\n"
+"=zzoN\n"
+"-----END PGP PRIVATE KEY BLOCK-----\n";
+
 const gnutls_datum_t key = { key_txt, sizeof (key_txt) };
+
 
 static void
 client (void)
 {
-  int ret, sd, ii;
+  int ret, sd, ii, j;
   gnutls_session_t session;
   char buffer[MAX_BUF + 1];
   gnutls_certificate_credentials_t xcred;
@@ -112,88 +143,106 @@ client (void)
   gnutls_global_init ();
 
   gnutls_global_set_log_function (tls_log_func);
-  gnutls_global_set_log_level (2);
+  if (debug)
+    gnutls_global_set_log_level (5);
 
   gnutls_certificate_allocate_credentials (&xcred);
 
   /* sets the trusted cas file
    */
-  success ("Setting key files...\n");
+  if (debug)
+    success ("Setting key files...\n");
 
   ret = gnutls_certificate_set_openpgp_key_mem (xcred, &cert, &key,
-						GNUTLS_OPENPGP_FMT_BASE64);
+                                                      GNUTLS_OPENPGP_FMT_BASE64);
   if (ret < 0)
     {
       fail ("Could not set key files...\n");
+      return;
     }
 
-  /* Initialize TLS session
-   */
-  gnutls_init (&session, GNUTLS_CLIENT);
-
-  /* Use default priorities */
-  gnutls_set_default_priority (session);
-
-  /* put the x509 credentials to the current session
-   */
-  gnutls_credentials_set (session, GNUTLS_CRD_CERTIFICATE, xcred);
-
-  /* connect to the peer
-   */
-  success ("Connecting...\n");
-  sd = tcp_connect ();
-
-  gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
-
-  /* Perform the TLS handshake
-   */
-  ret = gnutls_handshake (session);
-
-  if (ret < 0)
+  for (j = 0; j < 2; j++)
     {
-      fail ("client: Handshake failed\n");
-      gnutls_perror (ret);
-      goto end;
+
+
+      /* Initialize TLS session
+       */
+      gnutls_init (&session, GNUTLS_CLIENT);
+
+      /* Use default priorities */
+      gnutls_priority_set_direct (session, "NORMAL:+CTYPE-OPENPGP", NULL);
+
+      /* put the x509 credentials to the current session
+       */
+      gnutls_credentials_set (session, GNUTLS_CRD_CERTIFICATE, xcred);
+
+      /* connect to the peer
+       */
+      if (debug)
+        success ("Connecting...\n");
+      sd = tcp_connect ();
+
+      gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
+
+      /* Perform the TLS handshake
+       */
+      ret = gnutls_handshake (session);
+
+      if (ret < 0)
+        {
+          fail ("client: Handshake %d failed\n", j);
+          gnutls_perror (ret);
+          goto end;
+        }
+      else if (debug)
+        {
+          success ("client: Handshake %d was completed\n", j);
+        }
+
+      if (debug)
+        success ("client: TLS version is: %s\n",
+                 gnutls_protocol_get_name (gnutls_protocol_get_version
+                                           (session)));
+
+      /* see the Getting peer's information example */
+      if (debug)
+        print_info (session);
+
+      gnutls_record_send (session, MSG, strlen (MSG));
+
+      ret = gnutls_record_recv (session, buffer, MAX_BUF);
+      if (ret == 0)
+        {
+          if (debug)
+            success ("client: Peer has closed the TLS connection\n");
+          goto end;
+        }
+      else if (ret < 0)
+        {
+          fail ("client: Error: %s\n", gnutls_strerror (ret));
+          goto end;
+        }
+
+      if (debug)
+        {
+          printf ("- Received %d bytes: ", ret);
+          for (ii = 0; ii < ret; ii++)
+            {
+              fputc (buffer[ii], stdout);
+            }
+          fputs ("\n", stdout);
+        }
+
+      gnutls_bye (session, GNUTLS_SHUT_RDWR);
+
+
+      tcp_close (sd);
+
+      gnutls_deinit (session);
+
     }
-  else
-    {
-      success ("client: Handshake was completed\n");
-    }
-
-  success ("client: TLS version is: %s\n",
-	   gnutls_protocol_get_name (gnutls_protocol_get_version (session)));
-
-  /* see the Getting peer's information example */
-  print_info (session);
-
-  gnutls_record_send (session, MSG, strlen (MSG));
-
-  ret = gnutls_record_recv (session, buffer, MAX_BUF);
-  if (ret == 0)
-    {
-      success ("client: Peer has closed the TLS connection\n");
-      goto end;
-    }
-  else if (ret < 0)
-    {
-      fail ("client: Error: %s\n", gnutls_strerror (ret));
-      goto end;
-    }
-
-  printf ("- Received %d bytes: ", ret);
-  for (ii = 0; ii < ret; ii++)
-    {
-      fputc (buffer[ii], stdout);
-    }
-  fputs ("\n", stdout);
-
-  gnutls_bye (session, GNUTLS_SHUT_RDWR);
 
 end:
-
-  tcp_close (sd);
-
-  gnutls_deinit (session);
 
   gnutls_certificate_free_credentials (xcred);
 
@@ -205,7 +254,7 @@ end:
 
 #define SA struct sockaddr
 #define MAX_BUF 1024
-#define PORT 5556		/* listen to 5556 port */
+#define PORT 5556               /* listen to 5556 port */
 #define DH_BITS 1024
 
 /* These are global */
@@ -221,7 +270,7 @@ initialize_tls_session (void)
   /* avoid calling all the priority functions, since the defaults
    * are adequate.
    */
-  gnutls_set_default_priority (session);
+  gnutls_priority_set_direct (session, "NORMAL:+CTYPE-OPENPGP", NULL);
 
   gnutls_credentials_set (session, GNUTLS_CRD_CERTIFICATE, pgp_cred);
 
@@ -239,7 +288,7 @@ static gnutls_dh_params_t dh_params;
 static int
 generate_dh_params (void)
 {
-  const gnutls_datum_t p3 = { (char*) pkcs3, strlen (pkcs3) };
+  const gnutls_datum_t p3 = { (char *) pkcs3, strlen (pkcs3) };
   /* Generate Diffie-Hellman parameters - for use with DHE
    * kx algorithms. These should be discarded and regenerated
    * once a day, once a week or once a month. Depending on the
@@ -334,6 +383,111 @@ static unsigned char server_key_txt[] =
   "=mZnW\n" "-----END PGP PRIVATE KEY BLOCK-----\n";
 const gnutls_datum_t server_key = { server_key_txt, sizeof (server_key_txt) };
 
+static unsigned char cert2048_txt[] =
+"-----BEGIN PGP PUBLIC KEY BLOCK-----\n"
+"Version: GnuPG v1.4.10 (GNU/Linux)\n"
+"Comment: Test key for GnuTLS\n"
+"\n"
+"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\n"
+"=v3gg\n"
+"-----END PGP PUBLIC KEY BLOCK-----\n";
+
+const gnutls_datum_t cert2048 = { cert2048_txt, sizeof (cert2048_txt) };
+
+static unsigned char key2048_txt[] =
+"-----BEGIN PGP PRIVATE KEY BLOCK-----\n"
+"Version: GnuPG v1.4.10 (GNU/Linux)\n"
+"Comment: Test key for GnuTLS\n"
+"\n"
+"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\n"
+"9UquUquXdK1TY965biHIQ70uaOU4Hw==\n"
+"=Rrkw\n"
+"-----END PGP PRIVATE KEY BLOCK-----\n";
+
+const gnutls_datum_t key2048 = { key2048_txt, sizeof (key2048_txt) };
+
+
 static void
 server_start (void)
 {
@@ -350,9 +504,10 @@ server_start (void)
   memset (&sa_serv, '\0', sizeof (sa_serv));
   sa_serv.sin_family = AF_INET;
   sa_serv.sin_addr.s_addr = INADDR_ANY;
-  sa_serv.sin_port = htons (PORT);	/* Server Port number */
+  sa_serv.sin_port = htons (PORT);      /* Server Port number */
 
-  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval, sizeof (int));
+  setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR, (void *) &optval,
+              sizeof (int));
 
   err = bind (listen_sd, (SA *) & sa_serv, sizeof (sa_serv));
   if (err == -1)
@@ -370,93 +525,119 @@ server_start (void)
       return;
     }
 
-  success ("server: ready. Listening to port '%d'.\n", PORT);
+  if (debug)
+    success ("server: ready. Listening to port '%d'.\n", PORT);
 }
 
 static void
 server (void)
 {
+  int j;
   /* this must be called once in the program
    */
   gnutls_global_init ();
 
   gnutls_global_set_log_function (tls_log_func);
   if (debug)
-    gnutls_global_set_log_level (4711);
+    gnutls_global_set_log_level (5);
 
-  gnutls_certificate_allocate_credentials (&pgp_cred);
-
-  ret = gnutls_certificate_set_openpgp_key_mem2 (pgp_cred, &server_crt,
-						 &server_key, "auto",
-						 GNUTLS_OPENPGP_FMT_BASE64);
-  if (err < 0)
-    {
-      fail ("Could not set server key files...\n");
-    }
-
-  success ("Launched, setting DH parameters...\n");
+  if (debug)
+    success ("Launched, setting DH parameters...\n");
 
   generate_dh_params ();
 
-  gnutls_certificate_set_dh_params (pgp_cred, dh_params);
-
   client_len = sizeof (sa_cli);
 
-  session = initialize_tls_session ();
-
-  sd = accept (listen_sd, (SA *) & sa_cli, &client_len);
-
-  success ("server: connection from %s, port %d\n",
-	   inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
-		      sizeof (topbuf)), ntohs (sa_cli.sin_port));
-
-  gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
-  ret = gnutls_handshake (session);
-  if (ret < 0)
+  for (j = 0; j < 2; j++)
     {
+     if (j==0)
+       {
+         gnutls_certificate_allocate_credentials (&pgp_cred);
+         ret = gnutls_certificate_set_openpgp_key_mem2 (pgp_cred, &server_crt,
+                                                 &server_key, "auto",
+                                                 GNUTLS_OPENPGP_FMT_BASE64);
+      }
+     else
+       {
+         gnutls_certificate_free_credentials (pgp_cred);
+         gnutls_certificate_allocate_credentials (&pgp_cred);
+         ret =
+           gnutls_certificate_set_openpgp_key_mem2 (pgp_cred, &cert2048, &key2048,
+             "auto", GNUTLS_OPENPGP_FMT_BASE64);
+       }
+
+      if (ret < 0)
+        {
+          fail ("Could not set server key files...\n");
+          goto end;
+        }
+
+      gnutls_certificate_set_dh_params (pgp_cred, dh_params);
+
+      session = initialize_tls_session ();
+
+      sd = accept (listen_sd, (SA *) & sa_cli, &client_len);
+
+      if (debug)
+        success ("server: connection from %s, port %d\n",
+                 inet_ntop (AF_INET, &sa_cli.sin_addr, topbuf,
+                            sizeof (topbuf)), ntohs (sa_cli.sin_port));
+
+      gnutls_transport_set_ptr (session, (gnutls_transport_ptr_t) sd);
+      ret = gnutls_handshake (session);
+      if (ret < 0)
+        {
+          close (sd);
+          gnutls_deinit (session);
+          fail ("server: Handshake %d has failed (%s)\n\n",
+                j, gnutls_strerror (ret));
+          goto end;
+        }
+      if (debug)
+        success ("server: Handshake %d was completed\n", j);
+
+      if (debug)
+        success ("server: TLS version is: %s\n",
+                 gnutls_protocol_get_name (gnutls_protocol_get_version
+                                           (session)));
+
+      /* see the Getting peer's information example */
+      if (debug)
+        print_info (session);
+
+      i = 0;
+      for (;;)
+        {
+          memset (buffer, 0, MAX_BUF + 1);
+          ret = gnutls_record_recv (session, buffer, MAX_BUF);
+
+          if (ret == 0)
+            {
+              if (debug)
+                success ("server: Peer has closed the GnuTLS connection\n");
+              break;
+            }
+          else if (ret < 0)
+            {
+              fail ("server: Received corrupted data(%d). Closing...\n", ret);
+              goto end;
+            }
+          else if (ret > 0)
+            {
+              /* echo data back to the client
+               */
+              gnutls_record_send (session, buffer, strlen (buffer));
+            }
+        }
+      /* do not wait for the peer to close the connection.
+       */
+      gnutls_bye (session, GNUTLS_SHUT_WR);
+
       close (sd);
       gnutls_deinit (session);
-      fail ("server: Handshake has failed (%s)\n\n", gnutls_strerror (ret));
-      return;
     }
-  success ("server: Handshake was completed\n");
 
-  success ("server: TLS version is: %s\n",
-	   gnutls_protocol_get_name (gnutls_protocol_get_version (session)));
-
-  /* see the Getting peer's information example */
-  print_info (session);
-
-  i = 0;
-  for (;;)
-    {
-      memset (buffer, 0, MAX_BUF + 1);
-      ret = gnutls_record_recv (session, buffer, MAX_BUF);
-
-      if (ret == 0)
-	{
-	  success ("server: Peer has closed the GNUTLS connection\n");
-	  break;
-	}
-      else if (ret < 0)
-	{
-	  fail ("server: Received corrupted data(%d). Closing...\n", ret);
-	  break;
-	}
-      else if (ret > 0)
-	{
-	  /* echo data back to the client
-	   */
-	  gnutls_record_send (session, buffer, strlen (buffer));
-	}
-    }
-  /* do not wait for the peer to close the connection.
-   */
-  gnutls_bye (session, GNUTLS_SHUT_WR);
-
-  close (sd);
-  gnutls_deinit (session);
-
+end:
   close (listen_sd);
 
   gnutls_certificate_free_credentials (pgp_cred);
@@ -465,7 +646,8 @@ server (void)
 
   gnutls_global_deinit ();
 
-  success ("server: finished\n");
+  if (debug)
+    success ("server: finished\n");
 }
 
 

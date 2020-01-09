@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2008 Free Software Foundation
+ * Copyright (C) 2008, 2010 Free Software Foundation, Inc.
  *
  * Author: Simon Josefsson
  *
- * This file is part of GNUTLS-EXTRA.
+ * This file is part of GnuTLS-EXTRA.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #include <hmac.h>
 
 static int
-md5init (void **ctx)
+md5init (gnutls_mac_algorithm_t mac, void **ctx)
 {
   *ctx = gnutls_malloc (sizeof (struct md5_ctx));
   if (!*ctx)
@@ -78,7 +78,7 @@ struct hmacctx
 };
 
 static int
-hmacmd5init (void **ctx)
+hmacmd5init (gnutls_mac_algorithm_t mac, void **ctx)
 {
   struct hmacctx *p;
 
@@ -133,40 +133,6 @@ hmacmd5hash (void *ctx, const void *text, size_t textsize)
 }
 
 static int
-hmacmd5copy (void **dst_ctx, void *src_ctx)
-{
-  struct hmacctx *p = src_ctx;
-  struct hmacctx *q;
-
-  q = gnutls_malloc (sizeof (struct hmacctx));
-  if (!q)
-    return -1;
-
-  q->data = gnutls_malloc (p->datasize);
-  if (!q->data)
-    {
-      gnutls_free (q);
-      return -1;
-    }
-  memcpy (q->data, p->data, p->datasize);
-  q->datasize = p->datasize;
-
-  q->key = gnutls_malloc (p->keysize);
-  if (!q->key)
-    {
-      gnutls_free (q);
-      gnutls_free (q->data);
-      return -1;
-    }
-  memcpy (q->key, p->key, p->keysize);
-  q->keysize = p->keysize;
-
-  *dst_ctx = q;
-
-  return 0;
-}
-
-static int
 hmacmd5output (void *ctx, void *digest, size_t digestsize)
 {
   struct hmacctx *p = ctx;
@@ -195,22 +161,20 @@ hmacmd5deinit (void *ctx)
   gnutls_free (p);
 }
 
-static gnutls_crypto_single_digest_st dig = {
-  md5init,
-  NULL,
-  md5hash,
-  md5copy,
-  md5output,
-  md5deinit
+static gnutls_crypto_digest_st dig = {
+  .init = md5init,
+  .hash = md5hash,
+  .copy = md5copy,
+  .output = md5output,
+  .deinit = md5deinit
 };
 
-static gnutls_crypto_single_mac_st mac = {
-  hmacmd5init,
-  hmacmd5setkey,
-  hmacmd5hash,
-  hmacmd5copy,
-  hmacmd5output,
-  hmacmd5deinit
+static gnutls_crypto_mac_st mac = {
+  .init = hmacmd5init,
+  .setkey = hmacmd5setkey,
+  .hash = hmacmd5hash,
+  .output = hmacmd5output,
+  .deinit = hmacmd5deinit
 };
 
 /**

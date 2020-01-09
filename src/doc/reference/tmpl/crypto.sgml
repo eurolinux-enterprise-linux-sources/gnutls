@@ -9,14 +9,234 @@ crypto
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### TYPEDEF gnutls_cipher_hd_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gnutls_cipher_init ##### -->
+<para>
+
+</para>
+
+@handle: 
+@cipher: 
+@key: 
+@iv: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_encrypt ##### -->
+<para>
+
+</para>
+
+@handle: 
+@text: 
+@textlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_decrypt ##### -->
+<para>
+
+</para>
+
+@handle: 
+@ciphertext: 
+@ciphertextlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_decrypt2 ##### -->
+<para>
+
+</para>
+
+@handle: 
+@ciphertext: 
+@ciphertextlen: 
+@text: 
+@textlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_encrypt2 ##### -->
+<para>
+
+</para>
+
+@handle: 
+@text: 
+@textlen: 
+@ciphertext: 
+@ciphertextlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_deinit ##### -->
+<para>
+
+</para>
+
+@handle: 
+
+
+<!-- ##### FUNCTION gnutls_cipher_get_block_size ##### -->
+<para>
+
+</para>
+
+@algorithm: 
+@Returns: 
+
+
+<!-- ##### TYPEDEF gnutls_hash_hd_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### TYPEDEF gnutls_hmac_hd_t ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### FUNCTION gnutls_hmac_init ##### -->
+<para>
+
+</para>
+
+@dig: 
+@algorithm: 
+@key: 
+@keylen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hmac ##### -->
+<para>
+
+</para>
+
+@handle: 
+@text: 
+@textlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hmac_output ##### -->
+<para>
+
+</para>
+
+@handle: 
+@digest: 
+
+
+<!-- ##### FUNCTION gnutls_hmac_deinit ##### -->
+<para>
+
+</para>
+
+@handle: 
+@digest: 
+
+
+<!-- ##### FUNCTION gnutls_hmac_get_len ##### -->
+<para>
+
+</para>
+
+@algorithm: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hmac_fast ##### -->
+<para>
+
+</para>
+
+@algorithm: 
+@key: 
+@keylen: 
+@text: 
+@textlen: 
+@digest: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hash_init ##### -->
+<para>
+
+</para>
+
+@dig: 
+@algorithm: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hash ##### -->
+<para>
+
+</para>
+
+@handle: 
+@text: 
+@textlen: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hash_output ##### -->
+<para>
+
+</para>
+
+@handle: 
+@digest: 
+
+
+<!-- ##### FUNCTION gnutls_hash_deinit ##### -->
+<para>
+
+</para>
+
+@handle: 
+@digest: 
+
+
+<!-- ##### FUNCTION gnutls_hash_get_len ##### -->
+<para>
+
+</para>
+
+@algorithm: 
+@Returns: 
+
+
+<!-- ##### FUNCTION gnutls_hash_fast ##### -->
+<para>
+
+</para>
+
+@algorithm: 
+@text: 
+@textlen: 
+@digest: 
+@Returns: 
 
 
 <!-- ##### MACRO GNUTLS_CRYPTO_API_VERSION ##### -->
@@ -26,16 +246,38 @@ crypto
 
 
 
-<!-- ##### FUNCTION init ##### -->
+<!-- ##### MACRO gnutls_crypto_single_cipher_st ##### -->
 <para>
 
 </para>
 
+
+
+<!-- ##### MACRO gnutls_crypto_single_mac_st ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### MACRO gnutls_crypto_single_digest_st ##### -->
+<para>
+
+</para>
+
+
+
+<!-- ##### USER_FUNCTION init ##### -->
+<para>
+
+</para>
+
+@Param1: 
 @ctx: 
 @Returns: 
 
 
-<!-- ##### FUNCTION setkey ##### -->
+<!-- ##### USER_FUNCTION setkey ##### -->
 <para>
 
 </para>
@@ -46,7 +288,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION setiv ##### -->
+<!-- ##### USER_FUNCTION setiv ##### -->
 <para>
 
 </para>
@@ -57,7 +299,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION encrypt ##### -->
+<!-- ##### USER_FUNCTION encrypt ##### -->
 <para>
 
 </para>
@@ -70,7 +312,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION decrypt ##### -->
+<!-- ##### USER_FUNCTION decrypt ##### -->
 <para>
 
 </para>
@@ -83,7 +325,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION deinit ##### -->
+<!-- ##### USER_FUNCTION deinit ##### -->
 <para>
 
 </para>
@@ -91,7 +333,7 @@ crypto
 @ctx: 
 
 
-<!-- ##### FUNCTION hash ##### -->
+<!-- ##### USER_FUNCTION hash ##### -->
 <para>
 
 </para>
@@ -102,17 +344,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION copy ##### -->
-<para>
-
-</para>
-
-@dst_ctx: 
-@src_ctx: 
-@Returns: 
-
-
-<!-- ##### FUNCTION output ##### -->
+<!-- ##### USER_FUNCTION output ##### -->
 <para>
 
 </para>
@@ -123,16 +355,14 @@ crypto
 @Returns: 
 
 
-<!-- ##### TYPEDEF gnutls_crypto_single_digest_st ##### -->
+<!-- ##### USER_FUNCTION copy ##### -->
 <para>
 
 </para>
 
-
-<!-- ##### TYPEDEF gnutls_crypto_digest_st ##### -->
-<para>
-
-</para>
+@dst_ctx: 
+@src_ctx: 
+@Returns: 
 
 
 <!-- ##### ENUM gnutls_rnd_level_t ##### -->
@@ -144,6 +374,17 @@ crypto
 @GNUTLS_RND_RANDOM: 
 @GNUTLS_RND_KEY: 
 
+<!-- ##### FUNCTION gnutls_rnd ##### -->
+<para>
+
+</para>
+
+@level: 
+@data: 
+@len: 
+@Returns: 
+
+
 <!-- ##### ENUM gnutls_pk_flag_t ##### -->
 <para>
 
@@ -151,7 +392,7 @@ crypto
 
 @GNUTLS_PK_FLAG_NONE: 
 
-<!-- ##### FUNCTION rnd ##### -->
+<!-- ##### USER_FUNCTION rnd ##### -->
 <para>
 
 </para>
@@ -178,7 +419,7 @@ crypto
 @GNUTLS_MPI_FORMAT_STD: 
 @GNUTLS_MPI_FORMAT_PGP: 
 
-<!-- ##### FUNCTION bigint_new ##### -->
+<!-- ##### USER_FUNCTION bigint_new ##### -->
 <para>
 
 </para>
@@ -187,7 +428,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_release ##### -->
+<!-- ##### USER_FUNCTION bigint_release ##### -->
 <para>
 
 </para>
@@ -195,7 +436,7 @@ crypto
 @n: 
 
 
-<!-- ##### FUNCTION bigint_cmp ##### -->
+<!-- ##### USER_FUNCTION bigint_cmp ##### -->
 <para>
 
 </para>
@@ -205,7 +446,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_cmp_ui ##### -->
+<!-- ##### USER_FUNCTION bigint_cmp_ui ##### -->
 <para>
 
 </para>
@@ -215,7 +456,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_mod ##### -->
+<!-- ##### USER_FUNCTION bigint_mod ##### -->
 <para>
 
 </para>
@@ -225,7 +466,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_set ##### -->
+<!-- ##### USER_FUNCTION bigint_set ##### -->
 <para>
 
 </para>
@@ -235,7 +476,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_set_ui ##### -->
+<!-- ##### USER_FUNCTION bigint_set_ui ##### -->
 <para>
 
 </para>
@@ -245,16 +486,15 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_get_nbits ##### -->
+<!-- ##### FUNCTION int ##### -->
 <para>
 
 </para>
 
-@a: 
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_powm ##### -->
+<!-- ##### USER_FUNCTION bigint_powm ##### -->
 <para>
 
 </para>
@@ -266,7 +506,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_addm ##### -->
+<!-- ##### USER_FUNCTION bigint_addm ##### -->
 <para>
 
 </para>
@@ -278,7 +518,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_subm ##### -->
+<!-- ##### USER_FUNCTION bigint_subm ##### -->
 <para>
 
 </para>
@@ -290,7 +530,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_mulm ##### -->
+<!-- ##### USER_FUNCTION bigint_mulm ##### -->
 <para>
 
 </para>
@@ -302,7 +542,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_mul ##### -->
+<!-- ##### USER_FUNCTION bigint_mul ##### -->
 <para>
 
 </para>
@@ -313,7 +553,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_add_ui ##### -->
+<!-- ##### USER_FUNCTION bigint_add_ui ##### -->
 <para>
 
 </para>
@@ -324,7 +564,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_sub_ui ##### -->
+<!-- ##### USER_FUNCTION bigint_sub_ui ##### -->
 <para>
 
 </para>
@@ -335,7 +575,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_mul_ui ##### -->
+<!-- ##### USER_FUNCTION bigint_mul_ui ##### -->
 <para>
 
 </para>
@@ -346,7 +586,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_div ##### -->
+<!-- ##### USER_FUNCTION bigint_div ##### -->
 <para>
 
 </para>
@@ -357,7 +597,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_prime_check ##### -->
+<!-- ##### USER_FUNCTION bigint_prime_check ##### -->
 <para>
 
 </para>
@@ -366,7 +606,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_generate_group ##### -->
+<!-- ##### USER_FUNCTION bigint_generate_group ##### -->
 <para>
 
 </para>
@@ -376,7 +616,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_scan ##### -->
+<!-- ##### USER_FUNCTION bigint_scan ##### -->
 <para>
 
 </para>
@@ -387,7 +627,7 @@ crypto
 @Returns: 
 
 
-<!-- ##### FUNCTION bigint_print ##### -->
+<!-- ##### USER_FUNCTION bigint_print ##### -->
 <para>
 
 </para>
@@ -430,7 +670,7 @@ crypto
 @GNUTLS_IMPORT: 
 @GNUTLS_EXPORT: 
 
-<!-- ##### FUNCTION sign ##### -->
+<!-- ##### USER_FUNCTION sign ##### -->
 <para>
 
 </para>
@@ -438,11 +678,11 @@ crypto
 @Param1: 
 @signature: 
 @data: 
-@Param4: 
+@priv: 
 @Returns: 
 
 
-<!-- ##### FUNCTION verify ##### -->
+<!-- ##### USER_FUNCTION verify ##### -->
 <para>
 
 </para>
@@ -450,22 +690,22 @@ crypto
 @Param1: 
 @data: 
 @signature: 
-@Param4: 
+@pub: 
 @Returns: 
 
 
-<!-- ##### FUNCTION generate ##### -->
+<!-- ##### USER_FUNCTION generate ##### -->
 <para>
 
 </para>
 
 @Param1: 
-@level: 
+@nbits: 
 @Param3: 
 @Returns: 
 
 
-<!-- ##### FUNCTION pk_fixup_private_params ##### -->
+<!-- ##### USER_FUNCTION pk_fixup_private_params ##### -->
 <para>
 
 </para>

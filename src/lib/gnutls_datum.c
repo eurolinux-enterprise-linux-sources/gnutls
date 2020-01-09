@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2007, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -68,7 +69,7 @@ _gnutls_write_datum8 (opaque * dest, gnutls_datum_t dat)
 
 int
 _gnutls_set_datum_m (gnutls_datum_t * dat, const void *data,
-		     size_t data_size, gnutls_alloc_function galloc_func)
+                     size_t data_size, gnutls_alloc_function galloc_func)
 {
   if (data_size == 0 || data == NULL)
     {
@@ -89,8 +90,8 @@ _gnutls_set_datum_m (gnutls_datum_t * dat, const void *data,
 
 int
 _gnutls_datum_append_m (gnutls_datum_t * dst, const void *data,
-			size_t data_size,
-			gnutls_realloc_function grealloc_func)
+                        size_t data_size,
+                        gnutls_realloc_function grealloc_func)
 {
 
   dst->data = grealloc_func (dst->data, data_size + dst->size);

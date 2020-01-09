@@ -1,10 +1,10 @@
 dnl Process this file with autoconf to produce a configure script.
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-#    Free Software Foundation, Inc.
+# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
+# 2009, 2010 Free Software Foundation, Inc.
 #
 # Author: Nikos Mavrogiannopoulos, Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,12 +22,13 @@ dnl Process this file with autoconf to produce a configure script.
 # USA
 
 AC_PREREQ(2.61)
-AC_INIT([GnuTLS], [2.8.5], [bug-gnutls@gnu.org])
+AC_INIT([GnuTLS], [2.12.23], [bug-gnutls@gnu.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE([1.10 dist-bzip2 -Wall -Werror -Wno-override])
-AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE([1.10 no-dist-gzip dist-bzip2 -Wall -Werror -Wno-override])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+AC_CONFIG_HEADERS([config.h])
 
 AC_MSG_RESULT([***
 *** Checking for compilation programs...
@@ -61,12 +62,12 @@ if test "$use_cxx" != "no"; then
   AC_LANG_POP(C++)
 fi
 AM_CONDITIONAL(ENABLE_CXX, test "$use_cxx" != "no")
+AM_CONDITIONAL(WANT_TEST_SUITE, [test -f tests/suite/mini-eagain2.c])
 
 LIBGNUTLS_HOOKS
 LIBGNUTLS_EXTRA_HOOKS
 
 AC_HEADER_STDC
-AC_CHECK_FUNCS(fork,,)
 AC_DEFINE([HAVE_STRINGS_H], 1, [Hard-code for src/cfg/.])
 AC_DEFINE([HAVE_FLOAT_H], 1, [Hard-code for src/cfg/.])
 AC_DEFINE([HAVE_LIMITS_H], 1, [Hard-code for src/cfg/.])
@@ -75,9 +76,21 @@ AC_DEFINE([HAVE_CTYPE_H], 1, [Hard-code for src/cfg/.])
 AC_DEFINE([HAVE_ERRNO_H], 1, [Hard-code for src/cfg/.])
 
 # No fork on MinGW, disable some self-tests until we fix them.
+AC_CHECK_FUNCS(fork,,)
 AM_CONDITIONAL(HAVE_FORK, test "$ac_cv_func_fork" != "no")
 
-sj_VALGRIND
+dnl Check for p11-kit
+AC_ARG_WITH(p11-kit,
+	AS_HELP_STRING([--without-p11-kit],
+		[Build without p11-kit and PKCS#11 support]))
+AM_CONDITIONAL(ENABLE_PKCS11, test "$with_p11_kit" != "no")
+if test "$with_p11_kit" != "no"; then
+	PKG_CHECK_MODULES(P11_KIT, [p11-kit-1 >= 0.11])
+	AC_DEFINE(ENABLE_PKCS11, 1, [Build PKCS#11 support])
+	CFLAGS="$CFLAGS $P11_KIT_CFLAGS"
+	LIBS="$LIBS $P11_KIT_LIBS"
+	with_p11_kit=yes
+fi
 
 AC_CHECK_TYPES(uint,,, [
 # include <sys/types.h>
@@ -205,6 +218,7 @@ AC_ARG_ENABLE([gcc-warnings],
 
 if test "$gl_gcc_warnings" = yes; then
   gl_WARN_ADD([-Werror], [WERROR_CFLAGS])
+  gl_WARN_ADD([-Wframe-larger-than=5120], [WSTACK_CFLAGS])
 
   nw="$nw -Wsystem-headers"         # Don't let system headers trigger warnings
   nw="$nw -Wc++-compat"             # We don't care about C++ compilers
@@ -223,9 +237,18 @@ if test "$gl_gcc_warnings" = yes; then
   nw="$nw -Wconversion"             # Too many warnings for now
   nw="$nw -Wsign-conversion"        # Too many warnings for now
   nw="$nw -Wformat-y2k"             # Too many warnings for now
+  nw="$nw -Woverlength-strings"     # We use some in tests/
+  nw="$nw -Wvla"                    # There is no point to avoid C99 variable length arrays
   nw="$nw -Wformat-nonliteral"      # Incompatible with gettext _()
   nw="$nw -Wunsafe-loop-optimizations"
   nw="$nw -Wstrict-overflow"
+  nw="$nw -Wmissing-noreturn"
+  nw="$nw -Winline"                 # Too compiler dependent
+  nw="$nw -Wsuggest-attribute=pure" # Is it worth using attributes?
+  nw="$nw -Wsuggest-attribute=const" # Is it worth using attributes?
+  nw="$nw -Wsuggest-attribute=noreturn" # Is it worth using attributes?
+  nw="$nw -Wstack-protector"        # Some functions cannot be protected
+  nw="$nw -Wredundant-decls"        # Some files cannot be compiled with that (gl_fd_to_handle)
 
   gl_MANYWARN_ALL_GCC([ws])
   gl_MANYWARN_COMPLEMENT(ws, [$ws], [$nw])
@@ -239,14 +262,17 @@ if test "$gl_gcc_warnings" = yes; then
   gl_WARN_ADD([-Wno-unused-parameter]) # Too many warnings for now
   gl_WARN_ADD([-Wno-unused-parameter]) # Too many warnings for now
   gl_WARN_ADD([-Wno-stack-protector])  # Some functions cannot be protected
-  gl_WARN_ADD([-Wno-strict-aliasing])  # Breaks src/*.c, fixed in v2.9.x
+  gl_WARN_ADD([-Wno-int-to-pointer-cast])  # Some files cannot be compiled with that (gl_fd_to_handle)
   gl_WARN_ADD([-fdiagnostics-show-option])
 fi
 
 # Export things for */configure.ac.
 export WERROR_CFLAGS
+export WSTACK_CFLAGS
 export WARN_CFLAGS
 export use_cxx
+
+AC_DEFINE([GNUTLS_COMPAT_H], 1, [Make sure we don't use old features in code.])
 
 AC_CONFIG_SUBDIRS([lib])
 AC_CONFIG_SUBDIRS([libextra])
@@ -277,7 +303,9 @@ AC_CONFIG_FILES([
   src/cfg/platon/str/Makefile
   tests/Makefile
   tests/key-id/Makefile
+  tests/dsa/Makefile
   tests/openpgp-certs/Makefile
+  tests/safe-renegotiation/Makefile
   tests/pathlen/Makefile
   tests/pkcs1-padding/Makefile
   tests/pkcs12-decode/Makefile
@@ -285,7 +313,9 @@ AC_CONFIG_FILES([
   tests/rsa-md5-collision/Makefile
   tests/sha2/Makefile
   tests/userid/Makefile
+  tests/suite/Makefile
 ])
+
 AC_OUTPUT
 
 AC_MSG_NOTICE([summary of build options:
@@ -296,8 +326,11 @@ AC_MSG_NOTICE([summary of build options:
   Compiler:         ${CC}
   Warning flags:    errors: ${WERROR_CFLAGS} warnings: ${WARN_CFLAGS}
   Library types:    Shared=${enable_shared}, Static=${enable_static}
-  Valgrind:         ${VALGRIND}
+  Valgrind:         $opt_valgrind_tests ${VALGRIND}
   Guile wrappers:   $opt_guile_bindings
   C++ library:      $use_cxx
   OpenSSL library:  $enable_openssl
+  /dev/crypto:      $enable_cryptodev
+  Crypto library:   $cryptolib
+  PKCS#11 support:  $with_p11_kit
 ])

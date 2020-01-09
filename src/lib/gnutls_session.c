@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2000, 2003, 2004, 2005, 2007, 2008, 2009 Free Software Foundation
+ * Copyright (C) 2000, 2003, 2004, 2005, 2007, 2008, 2009, 2010 Free
+ * Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -28,26 +29,26 @@
 #include <gnutls_datum.h>
 
 /**
-  * gnutls_session_get_data - Returns all session parameters.
-  * @session: is a #gnutls_session_t structure.
-  * @session_data: is a pointer to space to hold the session.
-  * @session_data_size: is the session_data's size, or it will be set by the function.
-  *
-  * Returns all session parameters, in order to support resuming.  The
-  * client should call this, and keep the returned session, if he
-  * wants to resume that current version later by calling
-  * gnutls_session_set_data() This function must be called after a
-  * successful handshake.
-  *
-  * Resuming sessions is really useful and speedups connections after
-  * a succesful one.
-  *
-  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
-  *   an error code is returned.
-  **/
+ * gnutls_session_get_data:
+ * @session: is a #gnutls_session_t structure.
+ * @session_data: is a pointer to space to hold the session.
+ * @session_data_size: is the session_data's size, or it will be set by the function.
+ *
+ * Returns all session parameters, in order to support resuming.  The
+ * client should call this, and keep the returned session, if he
+ * wants to resume that current version later by calling
+ * gnutls_session_set_data() This function must be called after a
+ * successful handshake.
+ *
+ * Resuming sessions is really useful and speedups connections after
+ * a successful one.
+ *
+ * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
+ *   an error code is returned.
+ **/
 int
 gnutls_session_get_data (gnutls_session_t session,
-			 void *session_data, size_t * session_data_size)
+                         void *session_data, size_t * session_data_size)
 {
 
   gnutls_datum_t psession;
@@ -64,13 +65,14 @@ gnutls_session_get_data (gnutls_session_t session,
       gnutls_assert ();
       return ret;
     }
-  *session_data_size = psession.size;
 
   if (psession.size > *session_data_size)
     {
+      *session_data_size = psession.size;
       ret = GNUTLS_E_SHORT_MEMORY_BUFFER;
       goto error;
     }
+  *session_data_size = psession.size;
 
   if (session_data != NULL)
     memcpy (session_data, psession.data, psession.size);
@@ -83,7 +85,7 @@ error:
 }
 
 /**
- * gnutls_session_get_data2 - Returns all session parameters.
+ * gnutls_session_get_data2:
  * @session: is a #gnutls_session_t structure.
  * @data: is a pointer to a datum that will hold the session.
  *
@@ -95,7 +97,7 @@ error:
  * gnutls_free().
  *
  * Resuming sessions is really useful and speedups connections after
- * a succesful one.
+ * a successful one.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
  *   an error code is returned.
@@ -126,26 +128,26 @@ gnutls_session_get_data2 (gnutls_session_t session, gnutls_datum_t * data)
 
 
 /**
-  * gnutls_session_get_id - Returns session id.
-  * @session: is a #gnutls_session_t structure.
-  * @session_id: is a pointer to space to hold the session id.
-  * @session_id_size: is the session id's size, or it will be set by the function.
-  *
-  * Returns the current session id. This can be used if you want to
-  * check if the next session you tried to resume was actually
-  * resumed.  This is because resumed sessions have the same sessionID
-  * with the original session.
-  *
-  * Session id is some data set by the server, that identify the
-  * current session.  In TLS 1.0 and SSL 3.0 session id is always less
-  * than 32 bytes.
-  *
-  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
-  *   an error code is returned.
-  **/
+ * gnutls_session_get_id:
+ * @session: is a #gnutls_session_t structure.
+ * @session_id: is a pointer to space to hold the session id.
+ * @session_id_size: is the session id's size, or it will be set by the function.
+ *
+ * Returns the current session id. This can be used if you want to
+ * check if the next session you tried to resume was actually
+ * resumed.  This is because resumed sessions have the same sessionID
+ * with the original session.
+ *
+ * Session id is some data set by the server, that identify the
+ * current session.  In TLS 1.0 and SSL 3.0 session id is always less
+ * than 32 bytes.
+ *
+ * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
+ *   an error code is returned.
+ **/
 int
 gnutls_session_get_id (gnutls_session_t session,
-		       void *session_id, size_t * session_id_size)
+                       void *session_id, size_t * session_id_size)
 {
   size_t given_session_id_size = *session_id_size;
 
@@ -163,32 +165,32 @@ gnutls_session_get_id (gnutls_session_t session,
     }
 
   memcpy (session_id, &session->security_parameters.session_id,
-	  *session_id_size);
+          *session_id_size);
 
   return 0;
 }
 
 /**
-  * gnutls_session_set_data - Sets all session parameters
-  * @session: is a #gnutls_session_t structure.
-  * @session_data: is a pointer to space to hold the session.
-  * @session_data_size: is the session's size
-  *
-  * Sets all session parameters, in order to resume a previously
-  * established session.  The session data given must be the one
-  * returned by gnutls_session_get_data().  This function should be
-  * called before gnutls_handshake().
-  *
-  * Keep in mind that session resuming is advisory. The server may
-  * choose not to resume the session, thus a full handshake will be
-  * performed.
-  *
-  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
-  *   an error code is returned.
-  **/
+ * gnutls_session_set_data:
+ * @session: is a #gnutls_session_t structure.
+ * @session_data: is a pointer to space to hold the session.
+ * @session_data_size: is the session's size
+ *
+ * Sets all session parameters, in order to resume a previously
+ * established session.  The session data given must be the one
+ * returned by gnutls_session_get_data().  This function should be
+ * called before gnutls_handshake().
+ *
+ * Keep in mind that session resuming is advisory. The server may
+ * choose not to resume the session, thus a full handshake will be
+ * performed.
+ *
+ * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise
+ *   an error code is returned.
+ **/
 int
 gnutls_session_set_data (gnutls_session_t session,
-			 const void *session_data, size_t session_data_size)
+                         const void *session_data, size_t session_data_size)
 {
   int ret;
   gnutls_datum_t psession;

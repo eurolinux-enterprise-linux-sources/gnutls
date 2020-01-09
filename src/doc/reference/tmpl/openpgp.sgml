@@ -9,14 +9,15 @@ openpgp
 
 </para>
 
-
 <!-- ##### SECTION See_Also ##### -->
 <para>
 
 </para>
 
-
 <!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
 
 
 <!-- ##### ENUM gnutls_openpgp_crt_fmt_t ##### -->
@@ -374,6 +375,15 @@ openpgp
 @Returns: 
 
 
+<!-- ##### FUNCTION gnutls_openpgp_privkey_sec_param ##### -->
+<para>
+
+</para>
+
+@key: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gnutls_openpgp_privkey_import ##### -->
 <para>
 
@@ -384,17 +394,6 @@ openpgp
 @format: 
 @password: 
 @flags: 
-@Returns: 
-
-
-<!-- ##### FUNCTION gnutls_openpgp_privkey_sign_hash ##### -->
-<para>
-
-</para>
-
-@key: 
-@hash: 
-@signature: 
 @Returns: 
 
 

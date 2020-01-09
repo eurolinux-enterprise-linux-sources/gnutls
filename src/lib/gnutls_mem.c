@@ -1,11 +1,12 @@
 /*
- * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008 Free Software Foundation
+ * Copyright (C) 2001, 2002, 2003, 2004, 2005, 2008, 2010 Free Software
+ * Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
- * This file is part of GNUTLS.
+ * This file is part of GnuTLS.
  *
- * The GNUTLS library is free software; you can redistribute it and/or
+ * The GnuTLS is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
  * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
@@ -104,29 +105,30 @@ _gnutls_strdup (const char *str)
  */
 
 /**
-  * gnutls_malloc - Allocates and returns data
-  *
-  * This function will allocate 's' bytes data, and
-  * return a pointer to memory. This function is supposed
-  * to be used by callbacks.
-  *
-  * The allocation function used is the one set by gnutls_global_set_mem_functions().
-  *
-  **/
+ * gnutls_malloc:
+ *
+ * This function will allocate 's' bytes data, and
+ * return a pointer to memory. This function is supposed
+ * to be used by callbacks.
+ *
+ * The allocation function used is the one set by
+ * gnutls_global_set_mem_functions().
+ **/
 void *
 gnutls_malloc (size_t s)
 {
 }
 
 /**
-  * gnutls_free - Returns a free() like function
-  * @d: pointer to memory
-  *
-  * This function will free data pointed by ptr.
-  *
-  * The deallocation function used is the one set by gnutls_global_set_mem_functions().
-  *
-  **/
+ * gnutls_free:
+ * @d: pointer to memory
+ *
+ * This function will free data pointed by ptr.
+ *
+ * The deallocation function used is the one set by
+ * gnutls_global_set_mem_functions().
+ *
+ **/
 void
 gnutls_free (void *ptr)
 {

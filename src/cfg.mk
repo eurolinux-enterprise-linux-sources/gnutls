@@ -1,8 +1,9 @@
-# Copyright (C) 2006, 2007, 2008, 2009 Free Software Foundation
+# Copyright (C) 2006, 2007, 2008, 2009, 2010 Free Software Foundation,
+# Inc.
 #
 # Author: Simon Josefsson
 #
-# This file is part of GNUTLS.
+# This file is part of GnuTLS.
 #
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -20,9 +21,10 @@
 
 WFLAGS ?= --enable-gcc-warnings
 ADDFLAGS ?=
-CFGFLAGS ?= --enable-gtk-doc $(ADDFLAGS) $(WFLAGS)
+CFGFLAGS ?= --enable-gtk-doc --enable-gtk-doc-pdf $(ADDFLAGS) $(WFLAGS)
+PACKAGE ?= gnutls
 
-INDENT_SOURCES = `find . -name \*.c|grep -v -e ^./lgl -e ^./gl -e ^./src/cfg -e -gaa.c -e asn1_tab.c`
+INDENT_SOURCES = `find . -name \*.[ch] -o -name gnutls.h.in | grep -v -e ^./build-aux/ -e ^./lib/minitasn1/ -e ^./lib/build-aux/ -e ^./gl/ -e ^./src/cfg/ -e -gaa.[ch] -e asn1_tab.c -e ^./tests/suite/`
 
 ifeq ($(.DEFAULT_GOAL),abort-due-to-no-makefile)
 .DEFAULT_GOAL := bootstrap
@@ -34,7 +36,10 @@ PO_DOMAIN := libgnutls
 local-checks-to-skip = sc_prohibit_strcmp sc_prohibit_atoi_atof		\
 	sc_error_message_uppercase sc_prohibit_have_config_h		\
 	sc_require_config_h sc_require_config_h_first			\
-	sc_trailing_blank sc_unmarked_diagnostics sc_immutable_NEWS
+	sc_trailing_blank sc_unmarked_diagnostics sc_immutable_NEWS \
+	sc_prohibit_magic_number_exit sc_texinfo_acronym
+VC_LIST_ALWAYS_EXCLUDE_REGEX = \
+	^(((lib/|libextra/)?(gl|build-aux))|tests/suite)/.*
 
 autoreconf:
 	for f in $(PODIR)/*.po.in; do \
@@ -42,6 +47,7 @@ autoreconf:
 	done
 	mv lib/build-aux/config.rpath lib/build-aux/config.rpath-
 	test -f ./configure || autoreconf --install
+	test `hostname` = "gaggia" && cp gl/m4/size_max.m4 m4/ || true
 	mv lib/build-aux/config.rpath- lib/build-aux/config.rpath
 
 update-po: refresh-po
@@ -54,10 +60,12 @@ update-po: refresh-po
 bootstrap: autoreconf
 	./configure $(CFGFLAGS)
 
+#Two runs the first should add the LGPL components and the
+#second the components used by src/ files.
 glimport:
-	gnulib-tool --m4-base gl/m4 --import
-	cd lib && gnulib-tool --m4-base gl/m4 --import
-	cd libextra && gnulib-tool --m4-base gl/m4 --import
+	gnulib-tool --m4-base gl/m4 --add-import
+	cd lib && gnulib-tool --m4-base gl/m4 --add-import
+	cd libextra && gnulib-tool --m4-base gl/m4 --add-import
 
 # Code Coverage
 
@@ -84,7 +92,7 @@ mingw32: autoreconf
 # Release
 
 ChangeLog:
-	git log --pretty --numstat --summary --since="2005 November 07" -- | git2cl > ChangeLog
+	git log --pretty --numstat --summary --since="2008 November 07" -- | git2cl > ChangeLog
 	cat .clcopying >> ChangeLog
 
 tag = $(PACKAGE)_`echo $(VERSION) | sed 's/\./_/g'`
@@ -108,10 +116,15 @@ upload:
 	cp $(distdir).tar.bz2 $(distdir).tar.bz2.sig ../releases/$(PACKAGE)/
 
 web:
-	cd doc && ../build-aux/gendocs.sh --html "--css-include=texinfo.css" \
-		-o ../$(htmldir)/manual/ $(PACKAGE) $(PACKAGE_NAME)
-	cd doc/doxygen && doxygen && cd ../.. && cp -v doc/doxygen/html/* $(htmldir)/doxygen/ && cd doc/doxygen/latex && make refman.pdf && cd ../../../ && cp doc/doxygen/latex/refman.pdf $(htmldir)/doxygen/$(PACKAGE).pdf
+	echo generating documentation for $(PACKAGE)
+	cd doc && $(SHELL) ../build-aux/gendocs.sh \
+		--html "--css-include=texinfo.css" \
+		-o ../$(htmldir)/manual/ $(PACKAGE) "$(PACKAGE_NAME)"
+	#cd doc/doxygen && doxygen && cd ../.. && cp -v doc/doxygen/html/* $(htmldir)/devel/doxygen/ && cd doc/doxygen/latex && make refman.pdf && cd ../../../ && cp doc/doxygen/latex/refman.pdf $(htmldir)/devel/doxygen/$(PACKAGE).pdf
 	cp -v doc/reference/html/*.html doc/reference/html/*.png doc/reference/html/*.devhelp doc/reference/html/*.css $(htmldir)/reference/
+	#cp -v doc/cyclo/cyclo-$(PACKAGE).html $(htmldir)/cyclo/
 
 upload-web:
-	cd $(htmldir) && cvs commit -m "Update." manual/ reference/ doxygen/
+	cd $(htmldir) && \
+		cvs commit -m "Update." manual/ reference/ \
+			doxygen/ devel/ cyclo/

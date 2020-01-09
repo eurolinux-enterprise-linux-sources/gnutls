@@ -75,7 +75,7 @@ an error code is returned.
 
 @subheading gnutls_anon_allocate_client_credentials
 @anchor{gnutls_anon_allocate_client_credentials}
-@deftypefun {int} {gnutls_anon_allocate_client_credentials} (gnutls_anon_client_credentials_t *       @var{sc})
+@deftypefun {int} {gnutls_anon_allocate_client_credentials} (gnutls_anon_client_credentials_t *                                          @var{sc})
 @var{sc}: is a pointer to a @code{gnutls_anon_client_credentials_t} structure.
 
 This structure is complex enough to manipulate directly thus
@@ -86,7 +86,7 @@ this helper function is provided in order to allocate it.
 
 @subheading gnutls_anon_allocate_server_credentials
 @anchor{gnutls_anon_allocate_server_credentials}
-@deftypefun {int} {gnutls_anon_allocate_server_credentials} (gnutls_anon_server_credentials_t *       @var{sc})
+@deftypefun {int} {gnutls_anon_allocate_server_credentials} (gnutls_anon_server_credentials_t *                                          @var{sc})
 @var{sc}: is a pointer to a @code{gnutls_anon_server_credentials_t} structure.
 
 This structure is complex enough to manipulate directly thus this
@@ -243,7 +243,7 @@ This is the creation time for openpgp keys.
 
 @subheading gnutls_certificate_allocate_credentials
 @anchor{gnutls_certificate_allocate_credentials}
-@deftypefun {int} {gnutls_certificate_allocate_credentials} (gnutls_certificate_credentials_t *       @var{res})
+@deftypefun {int} {gnutls_certificate_allocate_credentials} (gnutls_certificate_credentials_t *                                          @var{res})
 @var{res}: is a pointer to a @code{gnutls_certificate_credentials_t} structure.
 
 This structure is complex enough to manipulate directly thus this
@@ -271,14 +271,15 @@ error.
 
 @var{func}: is the callback function
 
-This function sets a callback to be called in order to retrieve the certificate
-to be used in the handshake.
+This function sets a callback to be called in order to retrieve the
+certificate to be used in the handshake.
+
 The callback's function prototype is:
-int (*callback)(gnutls_session_t, const gnutls_datum_t* req_ca_dn, int nreqs, 
+int (*callback)(gnutls_session_t, const gnutls_datum_t* req_ca_dn, int nreqs,
 const gnutls_pk_algorithm_t* pk_algos, int pk_algos_length, gnutls_retr_st* st);
 
-@code{req_ca_cert} is only used in X.509 certificates. 
-Contains a list with the CA names that the server considers trusted. 
+@code{req_ca_cert} is only used in X.509 certificates.
+Contains a list with the CA names that the server considers trusted.
 Normally we should send a certificate that is signed
 by one of these CAs. These names are DER encoded. To get a more
 meaningful value use the function @code{gnutls_x509_rdn_get()}.
@@ -291,10 +292,10 @@ The certificate returned should support the server's given algorithms.
 If the callback function is provided then gnutls will call it, in the
 handshake, after the certificate request message has been received.
 
-The callback function should set the certificate list to be sent, and
-return 0 on success. If no certificate was selected then the number of certificates
-should be set to zero. The value (-1) indicates error and the handshake
-will be terminated.
+The callback function should set the certificate list to be sent,
+and return 0 on success. If no certificate was selected then the
+number of certificates should be set to zero. The value (-1)
+indicates error and the handshake will be terminated.
 @end deftypefun
 
 @subheading gnutls_certificate_expiration_time_peers
@@ -314,12 +315,15 @@ This function will return the peer's certificate expiration time.
 @deftypefun {void} {gnutls_certificate_free_ca_names} (gnutls_certificate_credentials_t @var{sc})
 @var{sc}: is a @code{gnutls_certificate_credentials_t} structure.
 
-This function will delete all the CA name in the
-given credentials. Clients may call this to save some memory
-since in client side the CA names are not used.
+This function will delete all the CA name in the given
+credentials. Clients may call this to save some memory since in
+client side the CA names are not used. Servers might want to use
+this function if a large list of trusted CAs is present and
+sending the names of it would just consume bandwidth without providing 
+information to client.
 
-CA names are used by servers to advertize the CAs they
-support to clients.
+CA names are used by servers to advertize the CAs they support to
+clients.
 @end deftypefun
 
 @subheading gnutls_certificate_free_cas
@@ -327,10 +331,10 @@ support to clients.
 @deftypefun {void} {gnutls_certificate_free_cas} (gnutls_certificate_credentials_t @var{sc})
 @var{sc}: is a @code{gnutls_certificate_credentials_t} structure.
 
-This function will delete all the CAs associated
-with the given credentials. Servers that do not use
-@code{gnutls_certificate_verify_peers2()} may call this to
-save some memory.
+This function will delete all the CAs associated with the given
+credentials. Servers that do not use
+@code{gnutls_certificate_verify_peers2()} may call this to save some
+memory.
 @end deftypefun
 
 @subheading gnutls_certificate_free_credentials
@@ -338,12 +342,12 @@ save some memory.
 @deftypefun {void} {gnutls_certificate_free_credentials} (gnutls_certificate_credentials_t @var{sc})
 @var{sc}: is a @code{gnutls_certificate_credentials_t} structure.
 
-This structure is complex enough to manipulate directly thus
-this helper function is provided in order to free (deallocate) it.
+This structure is complex enough to manipulate directly thus this
+helper function is provided in order to free (deallocate) it.
 
 This function does not free any temporary parameters associated
-with this structure (ie RSA and DH parameters are not freed by
-this function).
+with this structure (ie RSA and DH parameters are not freed by this
+function).
 @end deftypefun
 
 @subheading gnutls_certificate_free_crls
@@ -363,6 +367,23 @@ with the given credentials.
 This function will delete all the keys and the certificates associated
 with the given credentials. This function must not be called when a
 TLS negotiation that uses the credentials is in progress.
+@end deftypefun
+
+@subheading gnutls_certificate_get_issuer
+@anchor{gnutls_certificate_get_issuer}
+@deftypefun {int} {gnutls_certificate_get_issuer} (gnutls_certificate_credentials_t @var{sc}, gnutls_x509_crt_t @var{cert}, gnutls_x509_crt_t* @var{issuer}, unsigned int @var{flags})
+@var{sc}: is a @code{gnutls_certificate_credentials_t} structure.
+
+@var{cert}: is the certificate to find issuer for
+
+@var{issuer}: Will hold the issuer if any. Should be treated as constant.
+
+@var{flags}: Use zero.
+
+This function will return the issuer of a given certificate.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
 @end deftypefun
 
 @subheading gnutls_certificate_get_openpgp_keyring
@@ -394,7 +415,7 @@ was used.
 
 @subheading gnutls_certificate_get_peers
 @anchor{gnutls_certificate_get_peers}
-@deftypefun {const gnutls_datum_t *} {gnutls_certificate_get_peers} (gnutls_session_t          @var{session}, unsigned int * @var{list_size})
+@deftypefun {const gnutls_datum_t *} {gnutls_certificate_get_peers} (gnutls_session_t                               @var{session}, unsigned int * @var{list_size})
 @var{session}: is a gnutls session
 
 @var{list_size}: is the length of the certificate list
@@ -422,8 +443,8 @@ was used.
 
 @var{ncas}: the number of CAs
 
-This function will export all the CAs associated
-with the given credentials. 
+This function will export all the CAs associated with the given
+credentials.
 
 @strong{Since:} 2.4.0
 @end deftypefun
@@ -467,12 +488,11 @@ methods other than certificate with X.509 certificates.
 
 @var{req}: is one of GNUTLS_CERT_REQUEST, GNUTLS_CERT_REQUIRE
 
-This function specifies if we (in case of a server) are going
-to send a certificate request message to the client. If @code{req}
-is GNUTLS_CERT_REQUIRE then the server will return an error if
-the peer does not provide a certificate. If you do not
-call this function then the client will not be asked to
-send a certificate.
+This function specifies if we (in case of a server) are going to
+send a certificate request message to the client. If @code{req} is
+GNUTLS_CERT_REQUIRE then the server will return an error if the
+peer does not provide a certificate. If you do not call this
+function then the client will not be asked to send a certificate.
 @end deftypefun
 
 @subheading gnutls_certificate_server_set_retrieve_function
@@ -482,8 +502,9 @@ send a certificate.
 
 @var{func}: is the callback function
 
-This function sets a callback to be called in order to retrieve the certificate
-to be used in the handshake.
+This function sets a callback to be called in order to retrieve the
+certificate to be used in the handshake.
+
 The callback's function prototype is:
 int (*callback)(gnutls_session_t, gnutls_retr_st* st);
 
@@ -524,9 +545,45 @@ the Diffie-Hellman or RSA parameters for certificate
 authentication.  The callback should return zero on success.
 @end deftypefun
 
+@subheading gnutls_certificate_set_retrieve_function
+@anchor{gnutls_certificate_set_retrieve_function}
+@deftypefun {void} {gnutls_certificate_set_retrieve_function} (gnutls_certificate_credentials_t @var{cred}, gnutls_certificate_retrieve_function * @var{func})
+@var{cred}: is a @code{gnutls_certificate_credentials_t} structure.
+
+@var{func}: is the callback function
+
+This function sets a callback to be called in order to retrieve the
+certificate to be used in the handshake.
+
+The callback's function prototype is:
+int (*callback)(gnutls_session_t, const gnutls_datum_t* req_ca_dn, int nreqs,
+const gnutls_pk_algorithm_t* pk_algos, int pk_algos_length, gnutls_retr2_st* st);
+
+@code{req_ca_cert} is only used in X.509 certificates.
+Contains a list with the CA names that the server considers trusted.
+Normally we should send a certificate that is signed
+by one of these CAs. These names are DER encoded. To get a more
+meaningful value use the function @code{gnutls_x509_rdn_get()}.
+
+@code{pk_algos} contains a list with server's acceptable signature algorithms.
+The certificate returned should support the server's given algorithms.
+
+@code{st} should contain the certificates and private keys.
+
+If the callback function is provided then gnutls will call it, in the
+handshake, after the certificate request message has been received.
+
+In server side pk_algos and req_ca_dn are NULL.
+
+The callback function should set the certificate list to be sent,
+and return 0 on success. If no certificate was selected then the
+number of certificates should be set to zero. The value (-1)
+indicates error and the handshake will be terminated.
+@end deftypefun
+
 @subheading gnutls_certificate_set_rsa_export_params
 @anchor{gnutls_certificate_set_rsa_export_params}
-@deftypefun {void} {gnutls_certificate_set_rsa_export_params} (gnutls_certificate_credentials_t        @var{res}, gnutls_rsa_params_t @var{rsa_params})
+@deftypefun {void} {gnutls_certificate_set_rsa_export_params} (gnutls_certificate_credentials_t                                           @var{res}, gnutls_rsa_params_t @var{rsa_params})
 @var{res}: is a gnutls_certificate_credentials_t structure
 
 @var{rsa_params}: is a structure that holds temporary RSA parameters.
@@ -538,7 +595,7 @@ RSA-EXPORT cipher suites.
 
 @subheading gnutls_certificate_set_verify_flags
 @anchor{gnutls_certificate_set_verify_flags}
-@deftypefun {void} {gnutls_certificate_set_verify_flags} (gnutls_certificate_credentials_t          @var{res}, unsigned int @var{flags})
+@deftypefun {void} {gnutls_certificate_set_verify_flags} (gnutls_certificate_credentials_t                                      @var{res}, unsigned int @var{flags})
 @var{res}: is a gnutls_certificate_credentials_t structure
 
 @var{flags}: are the flags
@@ -546,6 +603,32 @@ RSA-EXPORT cipher suites.
 This function will set the flags to be used at verification of the
 certificates.  Flags must be OR of the
 @code{gnutls_certificate_verify_flags} enumerations.
+@end deftypefun
+
+@subheading gnutls_certificate_set_verify_function
+@anchor{gnutls_certificate_set_verify_function}
+@deftypefun {void} {gnutls_certificate_set_verify_function} (gnutls_certificate_credentials_t @var{cred}, gnutls_certificate_verify_function * @var{func})
+@var{cred}: is a @code{gnutls_certificate_credentials_t} structure.
+
+@var{func}: is the callback function
+
+This function sets a callback to be called when peer's certificate
+has been received in order to verify it on receipt rather than
+doing after the handshake is completed.
+
+The callback's function prototype is:
+int (*callback)(gnutls_session_t);
+
+If the callback function is provided then gnutls will call it, in the
+handshake, just after the certificate message has been received.
+To verify or obtain the certificate the @code{gnutls_certificate_verify_peers2()},
+@code{gnutls_certificate_type_get()}, @code{gnutls_certificate_get_peers()} functions
+can be used.
+
+The callback function should return 0 for the handshake to continue
+or non-zero to terminate.
+
+@strong{Since:} 2.10.0
 @end deftypefun
 
 @subheading gnutls_certificate_set_verify_limits
@@ -633,11 +716,16 @@ the specified private key, in PKCS7 format, or a list of certificates
 
 This function sets a certificate/private key pair in the
 gnutls_certificate_credentials_t structure.  This function may be
-called more than once (in case multiple keys/certificates exist
-for the server).
+called more than once (in case multiple keys/certificates exist for
+the server).  For clients that wants to send more than its own end
+entity certificate (e.g., also an intermediate CA cert) then put
+the certificate chain in @code{certfile}.
 
 Currently only PKCS-1 encoded RSA and DSA private keys are accepted by
 this function.
+
+This function can also accept PKCS @code{11} URLs. In that case it
+will import the private key and certificate indicated by the urls.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -690,8 +778,10 @@ The @code{key} may be @code{NULL} if you are using a sign callback, see
 
 This function sets a certificate/private key pair in the
 gnutls_certificate_credentials_t structure.  This function may be
-called more than once (in case multiple keys/certificates exist
-for the server).
+called more than once (in case multiple keys/certificates exist for
+the server).  For clients that wants to send more than its own end
+entity certificate (e.g., also an intermediate CA cert) then put
+the certificate chain in @code{cert_list}.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 
@@ -737,7 +827,7 @@ all.
 
 @subheading gnutls_certificate_set_x509_simple_pkcs12_mem
 @anchor{gnutls_certificate_set_x509_simple_pkcs12_mem}
-@deftypefun {int} {gnutls_certificate_set_x509_simple_pkcs12_mem} (gnutls_certificate_credentials_t @var{res}, const gnutls_datum * @var{p12blob}, gnutls_x509_crt_fmt_t @var{type}, const char * @var{password})
+@deftypefun {int} {gnutls_certificate_set_x509_simple_pkcs12_mem} (gnutls_certificate_credentials_t @var{res}, const gnutls_datum_t * @var{p12blob}, gnutls_x509_crt_fmt_t @var{type}, const char * @var{password})
 @var{res}: is a @code{gnutls_certificate_credentials_t} structure.
 
 @var{p12blob}: the PKCS@code{12} blob.
@@ -793,6 +883,9 @@ In case of a server the names of the CAs set here will be sent to
 the client if a certificate request is sent. This can be disabled
 using @code{gnutls_certificate_send_x509_rdn_sequence()}.
 
+This function can also accept PKCS @code{11} URLs. In that case it
+will import all certificates that are marked as trusted.
+
 @strong{Returns:} number of certificates processed, or a negative value on
 error.
 @end deftypefun
@@ -807,8 +900,8 @@ error.
 @var{type}: is DER or PEM
 
 This function adds the trusted CAs in order to verify client or
-server certificates. In case of a client this is not required to
-be called if the certificates are not verified using
+server certificates. In case of a client this is not required to be
+called if the certificates are not verified using
 @code{gnutls_certificate_verify_peers2()}.  This function may be called
 multiple times.
 
@@ -900,7 +993,7 @@ integers indicating the available certificate types.
 Sets the priority on the certificate types supported by gnutls.
 Priority is higher for elements specified before others.
 After specifying the types you want, you must append a 0.
-Note that the certificate type priority is set on the client. 
+Note that the certificate type priority is set on the client.
 The server does not use the cert type priority except for disabling
 types that were not specified.
 
@@ -927,11 +1020,6 @@ the verified certificate belongs to the actual peer.
 
 This function uses @code{gnutls_x509_crt_list_verify()} with the CAs in
 the credentials as trusted CAs.
-
-Note that some commonly used X.509 Certificate Authorities are
-still using Version 1 certificates.  If you want to accept them,
-you need to call @code{gnutls_certificate_set_verify_flags()} with, e.g.,
-@code{GNUTLS_VERIFY_ALLOW_X509_V1_CA_CRT} parameter.
 
 @strong{Returns:} a negative error code on error and zero on success.
 @end deftypefun
@@ -968,6 +1056,105 @@ minimum the one given as a string in @code{req_version} and return the
 actual version string of the library; return @code{NULL} if the
 condition is not met.  If @code{NULL} is passed to this function no
 check is done and only the version string is returned.
+@end deftypefun
+
+@subheading gnutls_cipher_decrypt2
+@anchor{gnutls_cipher_decrypt2}
+@deftypefun {int} {gnutls_cipher_decrypt2} (gnutls_cipher_hd_t @var{handle}, const void * @var{ciphertext}, size_t @var{ciphertextlen}, void * @var{text}, size_t @var{textlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{ciphertext}: the data to encrypt
+
+@var{ciphertextlen}: The length of data to encrypt
+
+@var{text}: the decrypted data
+
+@var{textlen}: The available length for decrypted data
+
+This function will decrypt the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_cipher_decrypt
+@anchor{gnutls_cipher_decrypt}
+@deftypefun {int} {gnutls_cipher_decrypt} (gnutls_cipher_hd_t @var{handle}, void * @var{ciphertext}, size_t @var{ciphertextlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{ciphertext}: the data to encrypt
+
+@var{ciphertextlen}: The length of data to encrypt
+
+This function will decrypt the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_cipher_deinit
+@anchor{gnutls_cipher_deinit}
+@deftypefun {void} {gnutls_cipher_deinit} (gnutls_cipher_hd_t @var{handle})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+This function will deinitialize all resources occupied by the given
+encryption context.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_cipher_encrypt2
+@anchor{gnutls_cipher_encrypt2}
+@deftypefun {int} {gnutls_cipher_encrypt2} (gnutls_cipher_hd_t @var{handle}, void * @var{text}, size_t @var{textlen}, void * @var{ciphertext}, size_t @var{ciphertextlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{text}: the data to encrypt
+
+@var{textlen}: The length of data to encrypt
+
+@var{ciphertext}: the encrypted data
+
+@var{ciphertextlen}: The available length for encrypted data
+
+This function will encrypt the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_cipher_encrypt
+@anchor{gnutls_cipher_encrypt}
+@deftypefun {int} {gnutls_cipher_encrypt} (gnutls_cipher_hd_t @var{handle}, void * @var{text}, size_t @var{textlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{text}: the data to encrypt
+
+@var{textlen}: The length of data to encrypt
+
+This function will encrypt the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_cipher_get_block_size
+@anchor{gnutls_cipher_get_block_size}
+@deftypefun {int} {gnutls_cipher_get_block_size} (gnutls_cipher_algorithm_t @var{algorithm})
+@var{algorithm}: is an encryption algorithm
+
+Get block size for encryption algorithm.
+
+@strong{Returns:} block size for encryption algorithm.
+
+@strong{Since:} 2.10.0
 @end deftypefun
 
 @subheading gnutls_cipher_get_id
@@ -1014,6 +1201,27 @@ Get currently used cipher.
 type.
 @end deftypefun
 
+@subheading gnutls_cipher_init
+@anchor{gnutls_cipher_init}
+@deftypefun {int} {gnutls_cipher_init} (gnutls_cipher_hd_t * @var{handle}, gnutls_cipher_algorithm_t @var{cipher}, const gnutls_datum_t * @var{key}, const gnutls_datum_t * @var{iv})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{cipher}: the encryption algorithm to use
+
+@var{key}: The key to be used for encryption
+
+@var{iv}: The IV to use (if not applicable set NULL)
+
+This function will initialize an context that can be used for
+encryption/decryption of data. This will effectively use the
+current crypto backend in use by gnutls or the cryptographic
+accelerator in use.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
 @subheading gnutls_cipher_list
 @anchor{gnutls_cipher_list}
 @deftypefun {const gnutls_cipher_algorithm_t *} {gnutls_cipher_list} ( @var{void})
@@ -1034,12 +1242,11 @@ integers indicating the available ciphers.
 
 @var{list}: is a 0 terminated list of gnutls_cipher_algorithm_t elements.
 
-Sets the priority on the ciphers supported by gnutls.
-Priority is higher for elements specified before others.
-After specifying the ciphers you want, you must append a 0.
-Note that the priority is set on the client. The server does
-not use the algorithm's priority except for disabling
-algorithms that were not specified.
+Sets the priority on the ciphers supported by gnutls.  Priority is
+higher for elements specified before others.  After specifying the
+ciphers you want, you must append a 0.  Note that the priority is
+set on the client. The server does not use the algorithm's
+priority except for disabling algorithms that were not specified.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -1062,7 +1269,7 @@ specified by the given algorithms, or @code{NULL}.
 
 @subheading gnutls_cipher_suite_info
 @anchor{gnutls_cipher_suite_info}
-@deftypefun {const char *} {gnutls_cipher_suite_info} (size_t @var{idx}, char * @var{cs_id}, gnutls_kx_algorithm_t * @var{kx}, gnutls_cipher_algorithm_t * @var{cipher}, gnutls_mac_algorithm_t * @var{mac}, gnutls_protocol_t * @var{version})
+@deftypefun {const char *} {gnutls_cipher_suite_info} (size_t @var{idx}, char * @var{cs_id}, gnutls_kx_algorithm_t * @var{kx}, gnutls_cipher_algorithm_t * @var{cipher}, gnutls_mac_algorithm_t * @var{mac}, gnutls_protocol_t * @var{min_version})
 @var{idx}: index of cipher suite to get information about, starts on 0.
 
 @var{cs_id}: output buffer with room for 2 bytes, indicating cipher suite value
@@ -1072,8 +1279,6 @@ specified by the given algorithms, or @code{NULL}.
 @var{cipher}: output variable indicating cipher, or @code{NULL}.
 
 @var{mac}: output variable indicating MAC algorithm, or @code{NULL}.
-
-@var{version}: output variable indicating TLS protocol version, or @code{NULL}.
 
 Get information about supported cipher suites.  Use the function
 iteratively to get information about all supported cipher suites.
@@ -1137,16 +1342,16 @@ integers indicating the available compression methods.
 
 @var{list}: is a 0 terminated list of gnutls_compression_method_t elements.
 
-Sets the priority on the compression algorithms supported by gnutls.
-Priority is higher for elements specified before others.
+Sets the priority on the compression algorithms supported by
+gnutls.  Priority is higher for elements specified before others.
 After specifying the algorithms you want, you must append a 0.
-Note that the priority is set on the client. The server does
-not use the algorithm's priority except for disabling
-algorithms that were not specified.
+Note that the priority is set on the client. The server does not
+use the algorithm's priority except for disabling algorithms that
+were not specified.
 
 TLS 1.0 does not define any compression algorithms except
-NULL. Other compression algorithms are to be considered
-as gnutls extensions.
+NULL. Other compression algorithms are to be considered as gnutls
+extensions.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -1195,7 +1400,7 @@ otherwise an error code is returned.
 
 @subheading gnutls_crypto_bigint_register2
 @anchor{gnutls_crypto_bigint_register2}
-@deftypefun {int} {gnutls_crypto_bigint_register2} (int @var{priority}, int @var{version}, gnutls_crypto_bigint_st * @var{s})
+@deftypefun {int} {gnutls_crypto_bigint_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_bigint_st * @var{s})
 @var{priority}: is the priority of the interface
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1223,7 +1428,7 @@ macro.
 
 @subheading gnutls_crypto_cipher_register2
 @anchor{gnutls_crypto_cipher_register2}
-@deftypefun {int} {gnutls_crypto_cipher_register2} (int @var{priority}, int @var{version}, gnutls_crypto_cipher_st * @var{s})
+@deftypefun {int} {gnutls_crypto_cipher_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_cipher_st * @var{s})
 @var{priority}: is the priority of the cipher interface
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1248,7 +1453,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_digest_register2
 @anchor{gnutls_crypto_digest_register2}
-@deftypefun {int} {gnutls_crypto_digest_register2} (int @var{priority}, int @var{version}, gnutls_crypto_digest_st * @var{s})
+@deftypefun {int} {gnutls_crypto_digest_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_digest_st * @var{s})
 @var{priority}: is the priority of the digest interface
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1273,7 +1478,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_mac_register2
 @anchor{gnutls_crypto_mac_register2}
-@deftypefun {int} {gnutls_crypto_mac_register2} (int @var{priority}, int @var{version}, gnutls_crypto_mac_st * @var{s})
+@deftypefun {int} {gnutls_crypto_mac_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_mac_st * @var{s})
 @var{priority}: is the priority of the mac interface
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1289,7 +1494,7 @@ by gnutls.
 This function should be called before @code{gnutls_global_init()}.
 
 For simplicity you can use the convenience
-@code{gnutls_crypto_mac_register()} macro.
+@code{gnutls_crypto_digest_register()} macro.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, otherwise an error.
 
@@ -1298,7 +1503,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_pk_register2
 @anchor{gnutls_crypto_pk_register2}
-@deftypefun {int} {gnutls_crypto_pk_register2} (int @var{priority}, int @var{version}, gnutls_crypto_pk_st * @var{s})
+@deftypefun {int} {gnutls_crypto_pk_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_pk_st * @var{s})
 @var{priority}: is the priority of the interface
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1326,7 +1531,7 @@ macro.
 
 @subheading gnutls_crypto_rnd_register2
 @anchor{gnutls_crypto_rnd_register2}
-@deftypefun {int} {gnutls_crypto_rnd_register2} (int @var{priority}, int @var{version}, gnutls_crypto_rnd_st * @var{s})
+@deftypefun {int} {gnutls_crypto_rnd_register2} (int @var{priority}, int @var{version}, const gnutls_crypto_rnd_st * @var{s})
 @var{priority}: is the priority of the generator
 
 @var{version}: should be set to @code{GNUTLS_CRYPTO_API_VERSION}
@@ -1351,7 +1556,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_single_cipher_register2
 @anchor{gnutls_crypto_single_cipher_register2}
-@deftypefun {int} {gnutls_crypto_single_cipher_register2} (gnutls_cipher_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, gnutls_crypto_single_cipher_st * @var{s})
+@deftypefun {int} {gnutls_crypto_single_cipher_register2} (gnutls_cipher_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, const gnutls_crypto_cipher_st * @var{s})
 @var{algorithm}: is the gnutls algorithm identifier
 
 @var{priority}: is the priority of the algorithm
@@ -1378,7 +1583,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_single_digest_register2
 @anchor{gnutls_crypto_single_digest_register2}
-@deftypefun {int} {gnutls_crypto_single_digest_register2} (gnutls_digest_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, gnutls_crypto_single_digest_st * @var{s})
+@deftypefun {int} {gnutls_crypto_single_digest_register2} (gnutls_digest_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, const gnutls_crypto_digest_st * @var{s})
 @var{algorithm}: is the gnutls algorithm identifier
 
 @var{priority}: is the priority of the algorithm
@@ -1405,7 +1610,7 @@ For simplicity you can use the convenience
 
 @subheading gnutls_crypto_single_mac_register2
 @anchor{gnutls_crypto_single_mac_register2}
-@deftypefun {int} {gnutls_crypto_single_mac_register2} (gnutls_mac_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, gnutls_crypto_single_mac_st * @var{s})
+@deftypefun {int} {gnutls_crypto_single_mac_register2} (gnutls_mac_algorithm_t @var{algorithm}, int @var{priority}, int @var{version}, const gnutls_crypto_mac_st * @var{s})
 @var{algorithm}: is the gnutls algorithm identifier
 
 @var{priority}: is the priority of the algorithm
@@ -1501,7 +1706,7 @@ delete functions, as the first argument.
 Sets the function that will be used to remove data from the
 resumed sessions database. This function must return 0 on success.
 
-The first argument to @code{rem_func()} will be null unless
+The first argument to @code{rem_func} will be null unless
 @code{gnutls_db_set_ptr()} has been called.
 @end deftypefun
 
@@ -1520,7 +1725,7 @@ containing null and 0 on failure.
 The datum's data must be allocated using the function
 @code{gnutls_malloc()}.
 
-The first argument to @code{retr_func()} will be null unless
+The first argument to @code{retr_func} will be null unless
 @code{gnutls_db_set_ptr()} has been called.
 @end deftypefun
 
@@ -1558,8 +1763,8 @@ database if the session was terminated abnormally.
 @var{raw_prime}: will hold the prime.
 
 This function will return the group parameters used in the last
-Diffie-Hellman authentication with the peer.  These are the prime
-and the generator used.  This function should be used for both
+Diffie-Hellman key exchange with the peer.  These are the prime and
+the generator used.  This function should be used for both
 anonymous and ephemeral Diffie-Hellman.  The output parameters must
 be freed with @code{gnutls_free()}.
 
@@ -1576,7 +1781,7 @@ Get the Diffie-Hellman public key bit size.  Can be used for both
 anonymous and ephemeral Diffie-Hellman.
 
 @strong{Returns:} the public key bit size used in the last Diffie-Hellman
-authentication with the peer, or a negative value in case of error.
+key exchange with the peer, or a negative value in case of error.
 @end deftypefun
 
 @subheading gnutls_dh_get_prime_bits
@@ -1585,13 +1790,13 @@ authentication with the peer, or a negative value in case of error.
 @var{session}: is a gnutls session
 
 This function will return the bits of the prime used in the last
-Diffie-Hellman authentication with the peer.  Should be used for
-both anonymous and ephemeral Diffie-Hellman.  Note that some
-ciphers, like RSA and DSA without DHE, does not use a
-Diffie-Hellman exchange, and then this function will return 0.
+Diffie-Hellman key exchange with the peer.  Should be used for both
+anonymous and ephemeral Diffie-Hellman.  Note that some ciphers,
+like RSA and DSA without DHE, does not use a Diffie-Hellman key
+exchange, and then this function will return 0.
 
 @strong{Returns:} The Diffie-Hellman bit strength is returned, or 0 if no
-Diffie-Hellman exchange was done, or a negative error code on
+Diffie-Hellman key exchange was done, or a negative error code on
 failure.
 @end deftypefun
 
@@ -1603,9 +1808,9 @@ failure.
 @var{raw_key}: will hold the public key.
 
 This function will return the peer's public key used in the last
-Diffie-Hellman authentication.  This function should be used for
-both anonymous and ephemeral Diffie-Hellman.  The output parameters
-must be freed with @code{gnutls_free()}.
+Diffie-Hellman key exchange.  This function should be used for both
+anonymous and ephemeral Diffie-Hellman.  The output parameters must
+be freed with @code{gnutls_free()}.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -1617,8 +1822,8 @@ an error code is returned.
 @var{session}: is a gnutls session
 
 This function will return the bits used in the last Diffie-Hellman
-authentication with the peer.  Should be used for both anonymous
-and ephemeral Diffie-Hellman.
+key exchange with the peer.  Should be used for both anonymous and
+ephemeral Diffie-Hellman.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -1701,7 +1906,8 @@ the Diffie-Hellman key exchange. The new parameters will be allocated using
 @code{gnutls_malloc()} and will be stored in the appropriate datum.
 This function is normally slow.
 
-Note that the bits value should be one of 768, 1024, 2048, 3072 or 4096.
+Do not set the number of bits directly, use @code{gnutls_sec_param_to_pk_bits()} to
+get bits for @code{GNUTLS_PK_DSA}.
 Also note that the DH parameters are only useful to servers.
 Since clients use the parameters sent by the server, it's of
 no use to call this in client side.
@@ -1830,7 +2036,7 @@ This function is used to register a new TLS extension handler.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 
-@strong{Since:} 2.6.0
+@strong{Deprecated in:} 2.12.0
 @end deftypefun
 
 @subheading gnutls_fingerprint
@@ -1863,7 +2069,8 @@ an error code is returned.
 @deftypefun {void} {gnutls_free} (void * @var{ptr})
 This function will free data pointed by ptr.
 
-The deallocation function used is the one set by @code{gnutls_global_set_mem_functions()}.
+The deallocation function used is the one set by
+@code{gnutls_global_set_mem_functions()}.
 @end deftypefun
 
 @subheading gnutls_global_deinit
@@ -1886,11 +2093,8 @@ gnutls application has a global data which holds common parameters
 shared by gnutls session structures.  You should call
 @code{gnutls_global_deinit()} when gnutls usage is no longer needed
 
-Note that this function will also initialize libgcrypt, if it has
-not been initialized before.  Thus if you want to manually
-initialize libgcrypt you must do it before calling this function.
-This is useful in cases you want to disable libgcrypt's internal
-lockings etc.
+Note that this function will also initialize the underlying crypto
+backend, if it has not been initialized before.  
 
 This function increment a global counter, so that
 @code{gnutls_global_deinit()} only releases resources when it has been
@@ -1956,10 +2160,41 @@ gnutls is going to use. By default the libc's allocation functions
 (@code{malloc()}, @code{free()}), are used by gnutls, to allocate both sensitive
 and not sensitive data.  This function is provided to set the
 memory allocation functions to something other than the defaults
-(ie the gcrypt allocation functions).
 
 This function must be called before @code{gnutls_global_init()} is called.
 This function is not thread safe.
+@end deftypefun
+
+@subheading gnutls_global_set_mutex
+@anchor{gnutls_global_set_mutex}
+@deftypefun {void} {gnutls_global_set_mutex} (mutex_init_func @var{init}, mutex_deinit_func @var{deinit}, mutex_lock_func @var{lock}, mutex_unlock_func @var{unlock})
+@var{init}: mutex initialization function
+
+@var{deinit}: mutex deinitialization function
+
+@var{lock}: mutex locking function
+
+@var{unlock}: mutex unlocking function
+
+With this function you are allowed to override the default mutex
+locks used in some parts of gnutls and dependent libraries. This function
+should be used if you have complete control of your program and libraries.
+Do not call this function from a library. Instead only initialize gnutls and
+the default OS mutex locks will be used.
+
+This function must be called before @code{gnutls_global_init()}.
+@end deftypefun
+
+@subheading gnutls_global_set_time_function
+@anchor{gnutls_global_set_time_function}
+@deftypefun {void} {gnutls_global_set_time_function} (gnutls_time_func @var{time_func})
+@var{time_func}: it's the system time function
+
+This is the function where you can override the default system
+time function.
+
+gnutls_time_func is of the form,
+time_t (*gnutls_time_func)( time*);
 @end deftypefun
 
 @subheading gnutls_handshake_get_last_in
@@ -2013,7 +2248,7 @@ limit Denial of Service attacks.
 
 @subheading gnutls_handshake_set_post_client_hello_function
 @anchor{gnutls_handshake_set_post_client_hello_function}
-@deftypefun {void} {gnutls_handshake_set_post_client_hello_function} (gnutls_session_t @var{session}, gnutls_handshake_post_client_hello_func @var{func})
+@deftypefun {void} {gnutls_handshake_set_post_client_hello_function} (gnutls_session_t @var{session}, gnutls_handshake_post_client_hello_func                                                  @var{func})
 @var{session}: is a @code{gnutls_session_t} structure.
 
 @var{func}: is the function to be called
@@ -2077,9 +2312,102 @@ If this function is called by a server after a rehandshake request
 then @code{GNUTLS_E_GOT_APPLICATION_DATA} or
 @code{GNUTLS_E_WARNING_ALERT_RECEIVED} may be returned.  Note that these
 are non fatal errors, only in the specific case of a rehandshake.
-Their meaning is that the client rejected the rehandshake request.
+Their meaning is that the client rejected the rehandshake request or
+in the case of @code{GNUTLS_E_GOT_APPLICATION_DATA} it might also mean that
+some data were pending.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, otherwise an error.
+@end deftypefun
+
+@subheading gnutls_hash_deinit
+@anchor{gnutls_hash_deinit}
+@deftypefun {void} {gnutls_hash_deinit} (gnutls_hash_hd_t @var{handle}, void * @var{digest})
+@var{handle}: is a @code{gnutls_hash_hd_t} structure.
+
+@var{digest}: is the output value of the hash
+
+This function will deinitialize all resources occupied by
+the given hash context.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hash_fast
+@anchor{gnutls_hash_fast}
+@deftypefun {int} {gnutls_hash_fast} (gnutls_digest_algorithm_t @var{algorithm}, const void * @var{text}, size_t @var{textlen}, void * @var{digest})
+@var{algorithm}: the hash algorithm to use
+
+@var{text}: the data to hash
+
+@var{textlen}: The length of data to hash
+
+@var{digest}: is the output value of the hash
+
+This convenience function will hash the given data and return output
+on a single call.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hash_get_len
+@anchor{gnutls_hash_get_len}
+@deftypefun {int} {gnutls_hash_get_len} (gnutls_digest_algorithm_t @var{algorithm})
+@var{algorithm}: the hash algorithm to use
+
+This function will return the length of the output data
+of the given hash algorithm.
+
+@strong{Returns:} The length or zero on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hash_init
+@anchor{gnutls_hash_init}
+@deftypefun {int} {gnutls_hash_init} (gnutls_hash_hd_t * @var{dig}, gnutls_digest_algorithm_t @var{algorithm})
+@var{dig}: is a @code{gnutls_hash_hd_t} structure.
+
+@var{algorithm}: the hash algorithm to use
+
+This function will initialize an context that can be used to
+produce a Message Digest of data.  This will effectively use the
+current crypto backend in use by gnutls or the cryptographic
+accelerator in use.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hash_output
+@anchor{gnutls_hash_output}
+@deftypefun {void} {gnutls_hash_output} (gnutls_hash_hd_t @var{handle}, void * @var{digest})
+@var{handle}: is a @code{gnutls_hash_hd_t} structure.
+
+@var{digest}: is the output value of the hash
+
+This function will output the current hash value.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hash
+@anchor{gnutls_hash}
+@deftypefun {int} {gnutls_hash} (gnutls_hash_hd_t @var{handle}, const void * @var{text}, size_t @var{textlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{text}: the data to hash
+
+@var{textlen}: The length of data to hash
+
+This function will hash the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
 @end deftypefun
 
 @subheading gnutls_hex2bin
@@ -2110,8 +2438,8 @@ Convert a buffer with hex data to binary data.
 
 @var{result_size}: holds the size of the result
 
-This function will decode the given encoded data, using the hex encoding
-used by PSK password files.
+This function will decode the given encoded data, using the hex
+encoding used by PSK password files.
 
 Note that hex_data should be null terminated.
 
@@ -2133,6 +2461,105 @@ the hex encoding, as used in the PSK password files.
 
 @strong{Returns:} @code{GNUTLS_E_SHORT_MEMORY_BUFFER} if the buffer given is not
 long enough, or 0 on success.
+@end deftypefun
+
+@subheading gnutls_hmac_deinit
+@anchor{gnutls_hmac_deinit}
+@deftypefun {void} {gnutls_hmac_deinit} (gnutls_hmac_hd_t @var{handle}, void * @var{digest})
+@var{handle}: is a @code{gnutls_hmac_hd_t} structure.
+
+@var{digest}: is the output value of the MAC
+
+This function will deinitialize all resources occupied by
+the given hmac context.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hmac_fast
+@anchor{gnutls_hmac_fast}
+@deftypefun {int} {gnutls_hmac_fast} (gnutls_mac_algorithm_t @var{algorithm}, const void * @var{key}, size_t @var{keylen}, const void * @var{text}, size_t @var{textlen}, void * @var{digest})
+@var{algorithm}: the hash algorithm to use
+
+@var{key}: the key to use
+
+@var{keylen}: The length of the key
+
+@var{text}: the data to hash
+
+@var{textlen}: The length of data to hash
+
+@var{digest}: is the output value of the hash
+
+This convenience function will hash the given data and return output
+on a single call.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hmac_get_len
+@anchor{gnutls_hmac_get_len}
+@deftypefun {int} {gnutls_hmac_get_len} (gnutls_mac_algorithm_t @var{algorithm})
+@var{algorithm}: the hmac algorithm to use
+
+This function will return the length of the output data
+of the given hmac algorithm.
+
+@strong{Returns:} The length or zero on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hmac_init
+@anchor{gnutls_hmac_init}
+@deftypefun {int} {gnutls_hmac_init} (gnutls_hmac_hd_t * @var{dig}, gnutls_digest_algorithm_t @var{algorithm}, const void * @var{key}, size_t @var{keylen})
+@var{dig}: is a @code{gnutls_hmac_hd_t} structure.
+
+@var{algorithm}: the HMAC algorithm to use
+
+@var{key}: The key to be used for encryption
+
+@var{keylen}: The length of the key
+
+This function will initialize an context that can be used to
+produce a Message Authentication Code (MAC) of data.  This will
+effectively use the current crypto backend in use by gnutls or the
+cryptographic accelerator in use.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hmac_output
+@anchor{gnutls_hmac_output}
+@deftypefun {void} {gnutls_hmac_output} (gnutls_hmac_hd_t @var{handle}, void * @var{digest})
+@var{handle}: is a @code{gnutls_hmac_hd_t} structure.
+
+@var{digest}: is the output value of the MAC
+
+This function will output the current MAC value.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_hmac
+@anchor{gnutls_hmac}
+@deftypefun {int} {gnutls_hmac} (gnutls_hmac_hd_t @var{handle}, const void * @var{text}, size_t @var{textlen})
+@var{handle}: is a @code{gnutls_cipher_hd_t} structure.
+
+@var{text}: the data to hash
+
+@var{textlen}: The length of data to hash
+
+This function will hash the given data using the algorithm
+specified by the context.
+
+@strong{Returns:} Zero or a negative value on error.
+
+@strong{Since:} 2.10.0
 @end deftypefun
 
 @subheading gnutls_init
@@ -2203,12 +2630,12 @@ indicating the available key exchange algorithms.
 
 @var{list}: is a 0 terminated list of gnutls_kx_algorithm_t elements.
 
-Sets the priority on the key exchange algorithms supported by gnutls.
-Priority is higher for elements specified before others.
+Sets the priority on the key exchange algorithms supported by
+gnutls.  Priority is higher for elements specified before others.
 After specifying the algorithms you want, you must append a 0.
-Note that the priority is set on the client. The server does
-not use the algorithm's priority except for disabling
-algorithms that were not specified.
+Note that the priority is set on the client. The server does not
+use the algorithm's priority except for disabling algorithms that
+were not specified.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -2279,11 +2706,11 @@ integers indicating the available MACs.
 @var{list}: is a 0 terminated list of gnutls_mac_algorithm_t elements.
 
 Sets the priority on the mac algorithms supported by gnutls.
-Priority is higher for elements specified before others.
-After specifying the algorithms you want, you must append a 0.
-Note that the priority is set on the client. The server does
-not use the algorithm's priority except for disabling
-algorithms that were not specified.
+Priority is higher for elements specified before others.  After
+specifying the algorithms you want, you must append a 0.  Note
+that the priority is set on the client. The server does not use
+the algorithm's priority except for disabling algorithms that were
+not specified.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -2296,7 +2723,8 @@ This function will allocate 's' bytes data, and
 return a pointer to memory. This function is supposed
 to be used by callbacks.
 
-The allocation function used is the one set by @code{gnutls_global_set_mem_functions()}.
+The allocation function used is the one set by
+@code{gnutls_global_set_mem_functions()}.
 @end deftypefun
 
 @subheading gnutls_openpgp_send_cert
@@ -2310,47 +2738,6 @@ This function will order gnutls to send the key fingerprint
 instead of the key in the initial handshake procedure. This should
 be used with care and only when there is indication or knowledge
 that the server can obtain the client's key.
-@end deftypefun
-
-@subheading gnutls_oprfi_enable_client
-@anchor{gnutls_oprfi_enable_client}
-@deftypefun {void} {gnutls_oprfi_enable_client} (gnutls_session_t @var{session}, size_t @var{len}, unsigned char * @var{data})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-@var{len}: length of Opaque PRF data to use in client.
-
-@var{data}: Opaque PRF data to use in client.
-
-Request that the client should attempt to negotiate the Opaque PRF
-Input TLS extension, using the given data as the client's Opaque
-PRF input.
-
-The data is copied into the session context after this call, so you
-may de-allocate it immediately after calling this function.
-@end deftypefun
-
-@subheading gnutls_oprfi_enable_server
-@anchor{gnutls_oprfi_enable_server}
-@deftypefun {void} {gnutls_oprfi_enable_server} (gnutls_session_t @var{session}, gnutls_oprfi_callback_func @var{cb}, void * @var{userdata})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-@var{cb}: function pointer to Opaque PRF extension server callback.
-
-@var{userdata}: hook passed to callback function for passing application state.
-
-Request that the server should attempt to accept the Opaque PRF
-Input TLS extension.  If the client requests the extension, the
-provided callback @code{cb} will be invoked.  The callback must have the
-following prototype:
-
-int callback (gnutls_session_t session, void *userdata,
-size_t oprfi_len, const unsigned char *in_oprfi,
-unsigned char *out_oprfi);
-
-The callback can inspect the client-provided data in the input
-parameters, and specify its own opaque prf input data in the output
-variable.  The function must return 0 on success, otherwise the
-handshake will be aborted.
 @end deftypefun
 
 @subheading gnutls_pem_base64_decode_alloc
@@ -2457,6 +2844,20 @@ Convert a @code{gnutls_pk_algorithm_t} value to a string.
 key algorithm, or @code{NULL}.
 @end deftypefun
 
+@subheading gnutls_pk_bits_to_sec_param
+@anchor{gnutls_pk_bits_to_sec_param}
+@deftypefun {gnutls_sec_param_t} {gnutls_pk_bits_to_sec_param} (gnutls_pk_algorithm_t @var{algo}, unsigned int @var{bits})
+@var{algo}: is a public key algorithm
+
+@var{bits}: is the number of bits
+
+This is the inverse of @code{gnutls_sec_param_to_pk_bits()}. Given an algorithm
+and the number of bits, it will return the security parameter. This is
+a rough indication.
+
+@strong{Returns:} The security parameter.
+@end deftypefun
+
 @subheading gnutls_pk_get_id
 @anchor{gnutls_pk_get_id}
 @deftypefun {gnutls_pk_algorithm_t} {gnutls_pk_get_id} (const char * @var{name})
@@ -2495,6 +2896,488 @@ Get a list of supported public key algorithms.
 indicating the available ciphers.
 
 @strong{Since:} 2.6.0
+@end deftypefun
+
+@subheading gnutls_pkcs11_add_provider
+@anchor{gnutls_pkcs11_add_provider}
+@deftypefun {int} {gnutls_pkcs11_add_provider} (const char * @var{name}, const char * @var{params})
+@var{name}: The filename of the module
+
+@var{params}: should be NULL
+
+This function will load and add a PKCS 11 module to the module
+list used in gnutls. After this function is called the module will
+be used for PKCS 11 operations.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_copy_secret_key
+@anchor{gnutls_pkcs11_copy_secret_key}
+@deftypefun {int} {gnutls_pkcs11_copy_secret_key} (const char * @var{token_url}, gnutls_datum_t * @var{key}, const char * @var{label}, unsigned int @var{key_usage}, unsigned int @var{flags})
+@var{token_url}: A PKCS @code{11} URL specifying a token
+
+@var{key}: The raw key
+
+@var{label}: A name to be used for the stored data
+
+@var{key_usage}: One of GNUTLS_KEY_*
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_FLAG_*
+
+This function will copy a raw secret (symmetric) key into a PKCS @code{11} 
+token specified by a URL. The key can be marked as sensitive or not.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_copy_x509_crt
+@anchor{gnutls_pkcs11_copy_x509_crt}
+@deftypefun {int} {gnutls_pkcs11_copy_x509_crt} (const char * @var{token_url}, gnutls_x509_crt_t @var{crt}, const char * @var{label}, unsigned int @var{flags})
+@var{token_url}: A PKCS @code{11} URL specifying a token
+
+@var{crt}: A certificate
+
+@var{label}: A name to be used for the stored data
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_FLAG_*
+
+This function will copy a certificate into a PKCS @code{11} token specified by
+a URL. The certificate can be marked as trusted or not.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_copy_x509_privkey
+@anchor{gnutls_pkcs11_copy_x509_privkey}
+@deftypefun {int} {gnutls_pkcs11_copy_x509_privkey} (const char * @var{token_url}, gnutls_x509_privkey_t @var{key}, const char * @var{label}, unsigned int @var{key_usage}, unsigned int @var{flags})
+@var{token_url}: A PKCS @code{11} URL specifying a token
+
+@var{key}: A private key
+
+@var{label}: A name to be used for the stored data
+
+@var{key_usage}: One of GNUTLS_KEY_*
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will copy a private key into a PKCS @code{11} token specified by
+a URL. It is highly recommended flags to contain @code{GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE}
+unless there is a strong reason not to.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_deinit
+@anchor{gnutls_pkcs11_deinit}
+@deftypefun {void} {gnutls_pkcs11_deinit} ( @var{void})
+
+This function will deinitialize the PKCS 11 subsystem in gnutls.
+@end deftypefun
+
+@subheading gnutls_pkcs11_delete_url
+@anchor{gnutls_pkcs11_delete_url}
+@deftypefun {int} {gnutls_pkcs11_delete_url} (const char * @var{object_url}, unsigned int @var{flags})
+@var{object_url}: The URL of the object to delete.
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will delete objects matching the given URL.
+
+@strong{Returns:} On success, the number of objects deleted is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_init
+@anchor{gnutls_pkcs11_init}
+@deftypefun {int} {gnutls_pkcs11_init} (unsigned int @var{flags}, const char * @var{deprecated_config_file})
+@var{flags}: @code{GNUTLS_PKCS11_FLAG_MANUAL} or @code{GNUTLS_PKCS11_FLAG_AUTO}
+
+@var{deprecated_config_file}: either NULL or the location of a deprecated
+configuration file
+
+This function will initialize the PKCS 11 subsystem in gnutls. It will
+read configuration files if @code{GNUTLS_PKCS11_FLAG_AUTO} is used or allow
+you to independently load PKCS 11 modules using @code{gnutls_pkcs11_add_provider()}
+if @code{GNUTLS_PKCS11_FLAG_MANUAL} is specified.
+
+Using a custom configfile is deprecated and will not be supported in future
+versions of gnutls.
+
+Normally you don't need to call this function since it is being called
+by @code{gnutls_global_init()} using the @code{GNUTLS_PKCS11_FLAG_AUTO}. If you need to
+call this function, you must call it before @code{gnutls_global_init()}.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_deinit
+@anchor{gnutls_pkcs11_obj_deinit}
+@deftypefun {void} {gnutls_pkcs11_obj_deinit} (gnutls_pkcs11_obj_t @var{obj})
+@var{obj}: The structure to be initialized
+
+This function will deinitialize a certificate structure.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_export_url
+@anchor{gnutls_pkcs11_obj_export_url}
+@deftypefun {int} {gnutls_pkcs11_obj_export_url} (gnutls_pkcs11_obj_t @var{obj}, gnutls_pkcs11_url_type_t @var{detailed}, char ** @var{url})
+@var{obj}: Holds the PKCS 11 certificate
+
+@var{detailed}: non zero if a detailed URL is required
+
+@var{url}: will contain an allocated url
+
+This function will export a URL identifying the given certificate.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_export
+@anchor{gnutls_pkcs11_obj_export}
+@deftypefun {int} {gnutls_pkcs11_obj_export} (gnutls_pkcs11_obj_t @var{obj}, void * @var{output_data}, size_t * @var{output_data_size})
+@var{obj}: Holds the object
+
+@var{output_data}: will contain a certificate PEM or DER encoded
+
+@var{output_data_size}: holds the size of output_data (and will be
+replaced by the actual size of parameters)
+
+This function will export the pkcs11 object data. It is normal
+for PKCS @code{11} data to be inaccesible and in that case @code{GNUTLS_E_INVALID_REQUEST}
+will be returned.
+
+If the buffer provided is not long enough to hold the output, then
+*output_data_size is updated and GNUTLS_E_SHORT_MEMORY_BUFFER will
+be returned.
+
+If the structure is PEM encoded, it will have a header
+of "BEGIN CERTIFICATE".
+
+@strong{Return value:} In case of failure a negative value will be
+returned, and 0 on success.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_get_info
+@anchor{gnutls_pkcs11_obj_get_info}
+@deftypefun {int} {gnutls_pkcs11_obj_get_info} (gnutls_pkcs11_obj_t @var{crt}, gnutls_pkcs11_obj_info_t @var{itype}, void * @var{output}, size_t * @var{output_size})
+@var{crt}: should contain a @code{gnutls_pkcs11_obj_t} structure
+
+@var{itype}: Denotes the type of information requested
+
+@var{output}: where output will be stored
+
+@var{output_size}: contains the maximum size of the output and will be overwritten with actual
+
+This function will return information about the PKCS 11 certificatesuch
+as the label, id as well as token information where the key is stored. When
+output is text it returns null terminated string although @code{output_size} contains
+the size of the actual data only.
+
+@strong{Returns:} zero on success or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_get_type
+@anchor{gnutls_pkcs11_obj_get_type}
+@deftypefun {gnutls_pkcs11_obj_type_t} {gnutls_pkcs11_obj_get_type} (gnutls_pkcs11_obj_t @var{obj})
+This function will return the type of the certificate being
+stored in the structure.
+
+@strong{Returns:} The type of the certificate.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_import_url
+@anchor{gnutls_pkcs11_obj_import_url}
+@deftypefun {int} {gnutls_pkcs11_obj_import_url} (gnutls_pkcs11_obj_t @var{cert}, const char * @var{url}, unsigned int @var{flags})
+@var{cert}: The structure to store the parsed certificate
+
+@var{url}: a PKCS 11 url identifying the key
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will "import" a PKCS 11 URL identifying a certificate
+key to the @code{gnutls_pkcs11_obj_t} structure. This does not involve any
+parsing (such as X.509 or OpenPGP) since the @code{gnutls_pkcs11_obj_t} is
+format agnostic. Only data are transferred.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_init
+@anchor{gnutls_pkcs11_obj_init}
+@deftypefun {int} {gnutls_pkcs11_obj_init} (gnutls_pkcs11_obj_t * @var{obj})
+@var{obj}: The structure to be initialized
+
+This function will initialize a pkcs11 certificate structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_obj_list_import_url
+@anchor{gnutls_pkcs11_obj_list_import_url}
+@deftypefun {int} {gnutls_pkcs11_obj_list_import_url} (gnutls_pkcs11_obj_t * @var{p_list}, unsigned int * @var{n_list}, const char * @var{url}, gnutls_pkcs11_obj_attr_t @var{attrs}, unsigned int @var{flags})
+@var{p_list}: An uninitialized object list (may be NULL)
+
+@var{n_list}: initially should hold the maximum size of the list. Will contain the actual size.
+
+@var{url}: A PKCS 11 url identifying a set of objects
+
+@var{attrs}: Attributes of type @code{gnutls_pkcs11_obj_attr_t} that can be used to limit output
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will initialize and set values to an object list
+by using all objects identified by a PKCS 11 URL.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_deinit
+@anchor{gnutls_pkcs11_privkey_deinit}
+@deftypefun {void} {gnutls_pkcs11_privkey_deinit} (gnutls_pkcs11_privkey_t @var{key})
+@var{key}: The structure to be initialized
+
+This function will deinitialize a private key structure.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_export_url
+@anchor{gnutls_pkcs11_privkey_export_url}
+@deftypefun {int} {gnutls_pkcs11_privkey_export_url} (gnutls_pkcs11_privkey_t @var{key}, gnutls_pkcs11_url_type_t @var{detailed}, char ** @var{url})
+@var{key}: Holds the PKCS 11 key
+
+@var{detailed}: non zero if a detailed URL is required
+
+@var{url}: will contain an allocated url
+
+This function will export a URL identifying the given key.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_get_info
+@anchor{gnutls_pkcs11_privkey_get_info}
+@deftypefun {int} {gnutls_pkcs11_privkey_get_info} (gnutls_pkcs11_privkey_t @var{pkey}, gnutls_pkcs11_obj_info_t @var{itype}, void * @var{output}, size_t * @var{output_size})
+@var{pkey}: should contain a @code{gnutls_pkcs11_privkey_t} structure
+
+@var{itype}: Denotes the type of information requested
+
+@var{output}: where output will be stored
+
+@var{output_size}: contains the maximum size of the output and will be overwritten with actual
+
+This function will return information about the PKCS 11 private key such
+as the label, id as well as token information where the key is stored. When
+output is text it returns null terminated string although @code{output_size} contains
+the size of the actual data only.
+
+@strong{Returns:} zero on success or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_get_pk_algorithm
+@anchor{gnutls_pkcs11_privkey_get_pk_algorithm}
+@deftypefun {int} {gnutls_pkcs11_privkey_get_pk_algorithm} (gnutls_pkcs11_privkey_t @var{key}, unsigned int * @var{bits})
+@var{key}: should contain a @code{gnutls_pkcs11_privkey_t} structure
+
+This function will return the public key algorithm of a private
+key.
+
+@strong{Returns:} a member of the @code{gnutls_pk_algorithm_t} enumeration on
+success, or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_import_url
+@anchor{gnutls_pkcs11_privkey_import_url}
+@deftypefun {int} {gnutls_pkcs11_privkey_import_url} (gnutls_pkcs11_privkey_t @var{pkey}, const char * @var{url}, unsigned int @var{flags})
+@var{pkey}: The structure to store the parsed key
+
+@var{url}: a PKCS 11 url identifying the key
+
+@var{flags}: sequence of GNUTLS_PKCS_PRIVKEY_*
+
+This function will "import" a PKCS 11 URL identifying a private
+key to the @code{gnutls_pkcs11_privkey_t} structure. In reality since
+in most cases keys cannot be exported, the private key structure
+is being associated with the available operations on the token.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_privkey_init
+@anchor{gnutls_pkcs11_privkey_init}
+@deftypefun {int} {gnutls_pkcs11_privkey_init} (gnutls_pkcs11_privkey_t * @var{key})
+@var{key}: The structure to be initialized
+
+This function will initialize an private key structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_reinit
+@anchor{gnutls_pkcs11_reinit}
+@deftypefun {int} {gnutls_pkcs11_reinit} ( @var{void})
+
+This function will reinitialize the PKCS 11 subsystem in gnutls. 
+This is required by PKCS 11 when an application uses @code{fork()}. The
+reinitialization function must be called on the child.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise a
+negative error value.
+
+@strong{Since:} 3.0.0
+@end deftypefun
+
+@subheading gnutls_pkcs11_set_pin_function
+@anchor{gnutls_pkcs11_set_pin_function}
+@deftypefun {void} {gnutls_pkcs11_set_pin_function} (gnutls_pkcs11_pin_callback_t @var{fn}, void * @var{userdata})
+@var{fn}: The PIN callback
+
+@var{userdata}: data to be supplied to callback
+
+This function will set a callback function to be used when a PIN
+is required for PKCS 11 operations.
+
+Callback for PKCS@code{11} PIN entry.  The callback provides the PIN code
+to unlock the token with label 'token_label', specified by the URL 
+'token_url'.
+
+The PIN code, as a NUL-terminated ASCII string, should be copied
+into the 'pin' buffer (of maximum size pin_max), and
+return 0 to indicate success. Alternatively, the callback may
+return a negative gnutls error code to indicate failure and cancel
+PIN entry (in which case, the contents of the 'pin' parameter are ignored).
+
+When a PIN is required, the callback will be invoked repeatedly
+(and indefinitely) until either the returned PIN code is correct,
+the callback returns failure, or the token refuses login (e.g. when
+the token is locked due to too many incorrect PINs!).  For the
+first such invocation, the 'attempt' counter will have value zero;
+it will increase by one for each subsequent attempt.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_set_token_function
+@anchor{gnutls_pkcs11_set_token_function}
+@deftypefun {void} {gnutls_pkcs11_set_token_function} (gnutls_pkcs11_token_callback_t @var{fn}, void * @var{userdata})
+@var{fn}: The token callback
+
+@var{userdata}: data to be supplied to callback
+
+This function will set a callback function to be used when a token
+needs to be inserted to continue PKCS 11 operations.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_get_flags
+@anchor{gnutls_pkcs11_token_get_flags}
+@deftypefun {int} {gnutls_pkcs11_token_get_flags} (const char * @var{url}, unsigned int * @var{flags})
+@var{url}: should contain a PKCS 11 URL
+
+@var{flags}: The output flags (GNUTLS_PKCS11_TOKEN_*)
+
+This function will return information about the PKCS 11 token flags.
+
+@strong{Returns:} zero on success or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_get_info
+@anchor{gnutls_pkcs11_token_get_info}
+@deftypefun {int} {gnutls_pkcs11_token_get_info} (const char * @var{url}, gnutls_pkcs11_token_info_t @var{ttype}, void * @var{output}, size_t * @var{output_size})
+@var{url}: should contain a PKCS 11 URL
+
+@var{ttype}: Denotes the type of information requested
+
+@var{output}: where output will be stored
+
+@var{output_size}: contains the maximum size of the output and will be overwritten with actual
+
+This function will return information about the PKCS 11 token such
+as the label, id as well as token information where the key is stored.
+
+@strong{Returns:} zero on success or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_get_mechanism
+@anchor{gnutls_pkcs11_token_get_mechanism}
+@deftypefun {int} {gnutls_pkcs11_token_get_mechanism} (const char * @var{url}, int @var{idx}, unsigned long * @var{mechanism})
+@var{url}: should contain a PKCS 11 URL
+
+@var{idx}: The index of the mechanism
+
+@var{mechanism}: The PKCS @code{11} mechanism ID
+
+This function will return the names of the supported mechanisms
+by the token. It should be called with an increasing index until
+it return GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE.
+
+@strong{Returns:} zero on success or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_get_url
+@anchor{gnutls_pkcs11_token_get_url}
+@deftypefun {int} {gnutls_pkcs11_token_get_url} (unsigned int @var{seq}, gnutls_pkcs11_url_type_t @var{detailed}, char ** @var{url})
+@var{seq}: sequence number starting from 0
+
+@var{detailed}: non zero if a detailed URL is required
+
+@var{url}: will contain an allocated url
+
+This function will return the URL for each token available
+in system. The url has to be released using @code{gnutls_free()}
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, @code{GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE}
+if the sequence number exceeds the available tokens, otherwise a negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_init
+@anchor{gnutls_pkcs11_token_init}
+@deftypefun {int} {gnutls_pkcs11_token_init} (const char * @var{token_url}, const char * @var{so_pin}, const char * @var{label})
+@var{token_url}: A PKCS @code{11} URL specifying a token
+
+@var{so_pin}: Security Officer's PIN
+
+@var{label}: A name to be used for the token
+
+This function will initialize (format) a token. If the token is
+at a factory defaults state the security officer's PIN given will be
+set to be the default. Otherwise it should match the officer's PIN.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pkcs11_token_set_pin
+@anchor{gnutls_pkcs11_token_set_pin}
+@deftypefun {int} {gnutls_pkcs11_token_set_pin} (const char * @var{token_url}, const char * @var{oldpin}, const char * @var{newpin}, unsigned int @var{flags})
+@var{token_url}: A PKCS @code{11} URL specifying a token
+
+@var{oldpin}: old user's PIN
+
+@var{newpin}: new user's PIN
+
+@var{flags}: one of gnutls_pkcs11_pin_flag_t
+
+This function will modify or set a user's PIN for the given token. 
+If it is called to set a user pin for first time the oldpin must
+be NULL.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
 @end deftypefun
 
 @subheading gnutls_prf_raw
@@ -2590,28 +3473,10 @@ Deinitializes the priority cache.
 @var{err_pos}: In case of an error this will have the position in the string the error occured
 
 Sets priorities for the ciphers, key exchange methods, macs and
-compression methods. This is to avoid using the
-gnutls_*@code{_priority()} functions.
+compression methods.
 
-The @code{priorities} option allows you to specify a semi-colon
+The @code{priorities} option allows you to specify a colon
 separated list of the cipher priorities to enable.
-
-Unless the first keyword is "NONE" the defaults (in preference
-order) are for TLS protocols TLS1.1, TLS1.0, SSL3.0; for
-compression NULL; for certificate types X.509, OpenPGP.
-
-For key exchange algorithms when in NORMAL or SECURE levels the
-perfect forward secrecy algorithms take precendence of the other
-protocols.  In all cases all the supported key exchange algorithms
-are enabled (except for the RSA-EXPORT which is only enabled in
-EXPORT level).
-
-Note that although one can select very long key sizes (such as 256 bits)
-for symmetric algorithms, to actually increase security the public key
-algorithms have to use longer key sizes as well.
-
-For all the current available algorithms and protocols use
-"gnutls-cli -l" to get a listing.
 
 @strong{Common keywords:} Some keywords are defined to provide quick access
 to common preferences.
@@ -2640,27 +3505,20 @@ compression methods.
 
 "+" appended with an algorithm will add this algorithm.
 
-"%COMPAT" will enable compatibility features for a server.
+Check the GnuTLS manual section "Priority strings" for detailed
+information.
 
-"%SSL3_RECORD_VERSION" will use SSL3.0 record version in client hello.
+@strong{Examples:} 
+"NONE:+VERS-TLS-ALL:+MAC-ALL:+RSA:+AES-128-CBC:+SIGN-ALL:+COMP-NULL"
 
-"%VERIFY_ALLOW_SIGN_RSA_MD5" will allow RSA-MD5 signatures in
-certificate chains.
+"NORMAL:-ARCFOUR-128" means normal ciphers except for ARCFOUR-128.
 
-"%VERIFY_ALLOW_X509_V1_CA_CRT" will allow V1 CAs in chains.
+"SECURE:-VERS-SSL3.0:+COMP-DEFLATE" means that only secure ciphers are
+enabled, SSL3.0 is disabled, and libz compression enabled.
 
-@strong{Namespace concern:} To avoid collisions in order to specify a compression algorithm in
-this string you have to prefix it with "COMP-", protocol versions
-with "VERS-" and certificate types with "CTYPE-". All other
-algorithms don't need a prefix.
+"NONE:+VERS-TLS-ALL:+AES-128-CBC:+RSA:+SHA1:+COMP-NULL:+SIGN-RSA-SHA1", 
 
-@strong{Examples:} "NORMAL:!AES-128-CBC" means normal ciphers except for AES-128.
-
-"EXPORT:!VERS-TLS1.0:+COMP-DEFLATE" means that export ciphers are
-enabled, TLS 1.0 is disabled, and libz compression enabled.
-
-"NONE:+VERS-TLS1.0:+AES-128-CBC:+RSA:+SHA1:+COMP-NULL", "NORMAL",
-"%COMPAT".
+"NORMAL:@code{COMPAT}" is the most compatible mode.
 
 @strong{Returns:} On syntax error @code{GNUTLS_E_INVALID_REQUEST} is returned,
 @code{GNUTLS_E_SUCCESS} on success, or an error code.
@@ -2697,6 +3555,179 @@ macs and compression methods.
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
 
+@subheading gnutls_privkey_decrypt_data
+@anchor{gnutls_privkey_decrypt_data}
+@deftypefun {int} {gnutls_privkey_decrypt_data} (gnutls_privkey_t @var{key}, unsigned int @var{flags}, const gnutls_datum_t * @var{ciphertext}, gnutls_datum_t * @var{plaintext})
+@var{key}: Holds the key
+
+@var{flags}: zero for now
+
+@var{ciphertext}: holds the data to be decrypted
+
+@var{plaintext}: will contain the decrypted data, allocated with @code{gnutls_malloc()}
+
+This function will decrypt the given data using the algorithm
+supported by the private key.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_privkey_deinit
+@anchor{gnutls_privkey_deinit}
+@deftypefun {void} {gnutls_privkey_deinit} (gnutls_privkey_t @var{key})
+@var{key}: The structure to be deinitialized
+
+This function will deinitialize a private key structure.
+@end deftypefun
+
+@subheading gnutls_privkey_get_pk_algorithm
+@anchor{gnutls_privkey_get_pk_algorithm}
+@deftypefun {int} {gnutls_privkey_get_pk_algorithm} (gnutls_privkey_t @var{key}, unsigned int * @var{bits})
+@var{key}: should contain a @code{gnutls_privkey_t} structure
+
+@var{bits}: If set will return the number of bits of the parameters (may be NULL)
+
+This function will return the public key algorithm of a private
+key and if possible will return a number of bits that indicates
+the security parameter of the key.
+
+@strong{Returns:} a member of the @code{gnutls_pk_algorithm_t} enumeration on
+success, or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_privkey_get_type
+@anchor{gnutls_privkey_get_type}
+@deftypefun {gnutls_privkey_type_t} {gnutls_privkey_get_type} (gnutls_privkey_t @var{key})
+@var{key}: should contain a @code{gnutls_privkey_t} structure
+
+This function will return the type of the private key. This is
+actually the type of the subsystem used to set this private key.
+
+@strong{Returns:} a member of the @code{gnutls_privkey_type_t} enumeration on
+success, or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_privkey_import_openpgp
+@anchor{gnutls_privkey_import_openpgp}
+@deftypefun {int} {gnutls_privkey_import_openpgp} (gnutls_privkey_t @var{pkey}, gnutls_openpgp_privkey_t @var{key}, unsigned int @var{flags})
+@var{pkey}: The private key
+
+@var{key}: The private key to be imported
+
+@var{flags}: should be zero
+
+This function will import the given private key to the abstract
+@code{gnutls_privkey_t} structure.
+
+The @code{gnutls_openpgp_privkey_t} object must not be deallocated
+during the lifetime of this structure. The subkey set as
+preferred will be used, or the master key otherwise.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_privkey_import_pkcs11
+@anchor{gnutls_privkey_import_pkcs11}
+@deftypefun {int} {gnutls_privkey_import_pkcs11} (gnutls_privkey_t @var{pkey}, gnutls_pkcs11_privkey_t @var{key}, unsigned int @var{flags})
+@var{pkey}: The private key
+
+@var{key}: The private key to be imported
+
+@var{flags}: should be zero
+
+This function will import the given private key to the abstract
+@code{gnutls_privkey_t} structure.
+
+The @code{gnutls_pkcs11_privkey_t} object must not be deallocated
+during the lifetime of this structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_privkey_import_x509
+@anchor{gnutls_privkey_import_x509}
+@deftypefun {int} {gnutls_privkey_import_x509} (gnutls_privkey_t @var{pkey}, gnutls_x509_privkey_t @var{key}, unsigned int @var{flags})
+@var{pkey}: The private key
+
+@var{key}: The private key to be imported
+
+@var{flags}: should be zero
+
+This function will import the given private key to the abstract
+@code{gnutls_privkey_t} structure.
+
+The @code{gnutls_x509_privkey_t} object must not be deallocated
+during the lifetime of this structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_privkey_init
+@anchor{gnutls_privkey_init}
+@deftypefun {int} {gnutls_privkey_init} (gnutls_privkey_t * @var{key})
+@var{key}: The structure to be initialized
+
+This function will initialize an private key structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_privkey_sign_data
+@anchor{gnutls_privkey_sign_data}
+@deftypefun {int} {gnutls_privkey_sign_data} (gnutls_privkey_t @var{signer}, gnutls_digest_algorithm_t @var{hash}, unsigned int @var{flags}, const gnutls_datum_t * @var{data}, gnutls_datum_t * @var{signature})
+@var{signer}: Holds the key
+
+@var{hash}: should be a digest algorithm
+
+@var{flags}: should be 0 for now
+
+@var{data}: holds the data to be signed
+
+@var{signature}: will contain the signature allocate with @code{gnutls_malloc()}
+
+This function will sign the given data using a signature algorithm
+supported by the private key. Signature algorithms are always used
+together with a hash functions.  Different hash functions may be
+used for the RSA algorithm, but only SHA-1 for the DSA keys.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+
+@strong{Since:} 2.12.0
+@end deftypefun
+
+@subheading gnutls_privkey_sign_hash
+@anchor{gnutls_privkey_sign_hash}
+@deftypefun {int} {gnutls_privkey_sign_hash} (gnutls_privkey_t @var{signer}, gnutls_digest_algorithm_t @var{hash_algo}, unsigned int @var{flags}, const gnutls_datum_t * @var{hash_data}, gnutls_datum_t * @var{signature})
+@var{signer}: Holds the signer's key
+
+@var{hash_algo}: The hash algorithm used
+
+@var{flags}: zero for now
+
+@var{hash_data}: holds the data to be signed
+
+@var{signature}: will contain newly allocated signature
+
+This function will sign the given hashed data using a signature algorithm
+supported by the private key. Signature algorithms are always used
+together with a hash functions.  Different hash functions may be
+used for the RSA algorithm, but only SHA-XXX for the DSA keys.
+
+Use @code{gnutls_x509_crt_get_preferred_hash_algorithm()} to determine
+the hash algorithm.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+
+@strong{Since:} 2.12.0
+@end deftypefun
+
 @subheading gnutls_protocol_get_id
 @anchor{gnutls_protocol_get_id}
 @deftypefun {gnutls_protocol_t} {gnutls_protocol_get_id} (const char * @var{name})
@@ -2718,6 +3749,7 @@ Convert a @code{gnutls_protocol_t} value to a string.
 @strong{Returns:} a string that contains the name of the specified TLS
 version (e.g., "TLS1.0"), or @code{NULL}.
 @end deftypefun
+
 @subheading gnutls_protocol_get_version
 @anchor{gnutls_protocol_get_version}
 @deftypefun {gnutls_protocol_t} {gnutls_protocol_get_version} (gnutls_session_t @var{session})
@@ -2823,6 +3855,10 @@ the Netconf protocol.
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 
 @strong{Since:} 2.4.0
+
+@strong{Deprecated:} The need for this interface was dropped from the
+standard on publication as a RFC.  The function works now but will
+return a hard failure in a future release.
 @end deftypefun
 
 @subheading gnutls_psk_server_get_username
@@ -2838,7 +3874,7 @@ case of a server.
 
 @subheading gnutls_psk_set_client_credentials_function
 @anchor{gnutls_psk_set_client_credentials_function}
-@deftypefun {void} {gnutls_psk_set_client_credentials_function} (gnutls_psk_client_credentials_t          @var{cred}, gnutls_psk_client_credentials_function          * @var{func})
+@deftypefun {void} {gnutls_psk_set_client_credentials_function} (gnutls_psk_client_credentials_t                                             @var{cred}, gnutls_psk_client_credentials_function                                             * @var{func})
 @var{cred}: is a @code{gnutls_psk_server_credentials_t} structure.
 
 @var{func}: is the callback function
@@ -2870,10 +3906,10 @@ The callback function should return 0 on success.
 
 This function sets the username and password, in a
 gnutls_psk_client_credentials_t structure.  Those will be used in
-PSK authentication. @code{username} should be an ASCII string or UTF-8
-strings prepared using the "SASLprep" profile of "stringprep".
-The key can be either in raw byte format or in Hex (not with the
-'0x' prefix).
+PSK authentication.  @code{username} should be an ASCII string or UTF-8
+strings prepared using the "SASLprep" profile of "stringprep".  The
+key can be either in raw byte format or in Hex format (without the
+0x prefix).
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an error code.
 @end deftypefun
@@ -2886,13 +3922,13 @@ The key can be either in raw byte format or in Hex (not with the
 @var{func}: is the function to be called
 
 This function will set a callback in order for the server to get
-the Diffie-Hellman or RSA parameters for psk authentication.  The
+the Diffie-Hellman or RSA parameters for PSK authentication.  The
 callback should return zero on success.
 @end deftypefun
 
 @subheading gnutls_psk_set_server_credentials_file
 @anchor{gnutls_psk_set_server_credentials_file}
-@deftypefun {int} {gnutls_psk_set_server_credentials_file} (gnutls_psk_server_credentials_t      @var{res}, const char * @var{password_file})
+@deftypefun {int} {gnutls_psk_set_server_credentials_file} (gnutls_psk_server_credentials_t                                         @var{res}, const char * @var{password_file})
 @var{res}: is a @code{gnutls_psk_server_credentials_t} structure.
 
 @var{password_file}: is the PSK password file (passwd.psk)
@@ -2906,7 +3942,7 @@ holds usernames and keys and will be used for PSK authentication.
 
 @subheading gnutls_psk_set_server_credentials_function
 @anchor{gnutls_psk_set_server_credentials_function}
-@deftypefun {void} {gnutls_psk_set_server_credentials_function} (gnutls_psk_server_credentials_t          @var{cred}, gnutls_psk_server_credentials_function          * @var{func})
+@deftypefun {void} {gnutls_psk_set_server_credentials_function} (gnutls_psk_server_credentials_t                                             @var{cred}, gnutls_psk_server_credentials_function                                             * @var{func})
 @var{cred}: is a @code{gnutls_psk_server_credentials_t} structure.
 
 @var{func}: is the callback function
@@ -2968,6 +4004,367 @@ the Diffie-Hellman parameters for PSK authentication.  The callback
 should return zero on success.
 @end deftypefun
 
+@subheading gnutls_pubkey_deinit
+@anchor{gnutls_pubkey_deinit}
+@deftypefun {void} {gnutls_pubkey_deinit} (gnutls_pubkey_t @var{key})
+@var{key}: The structure to be deinitialized
+
+This function will deinitialize a public key structure.
+@end deftypefun
+
+@subheading gnutls_pubkey_export
+@anchor{gnutls_pubkey_export}
+@deftypefun {int} {gnutls_pubkey_export} (gnutls_pubkey_t @var{key}, gnutls_x509_crt_fmt_t @var{format}, void * @var{output_data}, size_t * @var{output_data_size})
+@var{key}: Holds the certificate
+
+@var{format}: the format of output params. One of PEM or DER.
+
+@var{output_data}: will contain a certificate PEM or DER encoded
+
+@var{output_data_size}: holds the size of output_data (and will be
+replaced by the actual size of parameters)
+
+This function will export the certificate to DER or PEM format.
+
+If the buffer provided is not long enough to hold the output, then
+*output_data_size is updated and GNUTLS_E_SHORT_MEMORY_BUFFER will
+be returned.
+
+If the structure is PEM encoded, it will have a header
+of "BEGIN CERTIFICATE".
+
+@strong{Return value:} In case of failure a negative value will be
+returned, and 0 on success.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_key_id
+@anchor{gnutls_pubkey_get_key_id}
+@deftypefun {int} {gnutls_pubkey_get_key_id} (gnutls_pubkey_t @var{key}, unsigned int @var{flags}, unsigned char * @var{output_data}, size_t * @var{output_data_size})
+@var{key}: Holds the public key
+
+@var{flags}: should be 0 for now
+
+@var{output_data}: will contain the key ID
+
+@var{output_data_size}: holds the size of output_data (and will be
+replaced by the actual size of parameters)
+
+This function will return a unique ID the depends on the public
+key parameters. This ID can be used in checking whether a
+certificate corresponds to the given public key.
+
+If the buffer provided is not long enough to hold the output, then
+*output_data_size is updated and GNUTLS_E_SHORT_MEMORY_BUFFER will
+be returned.  The output will normally be a SHA-1 hash output,
+which is 20 bytes.
+
+@strong{Return value:} In case of failure a negative value will be
+returned, and 0 on success.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_key_usage
+@anchor{gnutls_pubkey_get_key_usage}
+@deftypefun {int} {gnutls_pubkey_get_key_usage} (gnutls_pubkey_t @var{key}, unsigned int * @var{usage})
+@var{key}: should contain a @code{gnutls_pubkey_t} structure
+
+@var{usage}: If set will return the number of bits of the parameters (may be NULL)
+
+This function will return the key usage of the public key.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_pk_algorithm
+@anchor{gnutls_pubkey_get_pk_algorithm}
+@deftypefun {int} {gnutls_pubkey_get_pk_algorithm} (gnutls_pubkey_t @var{key}, unsigned int * @var{bits})
+@var{key}: should contain a @code{gnutls_pubkey_t} structure
+
+@var{bits}: If set will return the number of bits of the parameters (may be NULL)
+
+This function will return the public key algorithm of a public
+key and if possible will return a number of bits that indicates
+the security parameter of the key.
+
+@strong{Returns:} a member of the @code{gnutls_pk_algorithm_t} enumeration on
+success, or a negative value on error.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_pk_dsa_raw
+@anchor{gnutls_pubkey_get_pk_dsa_raw}
+@deftypefun {int} {gnutls_pubkey_get_pk_dsa_raw} (gnutls_pubkey_t @var{key}, gnutls_datum_t * @var{p}, gnutls_datum_t * @var{q}, gnutls_datum_t * @var{g}, gnutls_datum_t * @var{y})
+@var{key}: Holds the public key
+
+@var{p}: will hold the p
+
+@var{q}: will hold the q
+
+@var{g}: will hold the g
+
+@var{y}: will hold the y
+
+This function will export the DSA public key's parameters found in
+the given certificate.  The new parameters will be allocated using
+@code{gnutls_malloc()} and will be stored in the appropriate datum.
+
+@strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, otherwise an error.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_pk_rsa_raw
+@anchor{gnutls_pubkey_get_pk_rsa_raw}
+@deftypefun {int} {gnutls_pubkey_get_pk_rsa_raw} (gnutls_pubkey_t @var{key}, gnutls_datum_t * @var{m}, gnutls_datum_t * @var{e})
+@var{key}: Holds the certificate
+
+@var{m}: will hold the modulus
+
+@var{e}: will hold the public exponent
+
+This function will export the RSA public key's parameters found in
+the given structure.  The new parameters will be allocated using
+@code{gnutls_malloc()} and will be stored in the appropriate datum.
+
+@strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, otherwise an error.
+@end deftypefun
+
+@subheading gnutls_pubkey_get_preferred_hash_algorithm
+@anchor{gnutls_pubkey_get_preferred_hash_algorithm}
+@deftypefun {int} {gnutls_pubkey_get_preferred_hash_algorithm} (gnutls_pubkey_t @var{key}, gnutls_digest_algorithm_t *                                             @var{hash}, unsigned int * @var{mand})
+@var{key}: Holds the certificate
+
+@var{hash}: The result of the call with the hash algorithm used for signature
+
+@var{mand}: If non zero it means that the algorithm MUST use this hash. May be NULL.
+
+This function will read the certifcate and return the appropriate digest
+algorithm to use for signing with this certificate. Some certificates (i.e.
+DSA might not be able to sign without the preferred algorithm).
+
+@strong{Returns:} the 0 if the hash algorithm is found. A negative value is
+returned on error.
+
+@strong{Since:} 2.11.0
+@end deftypefun
+
+@subheading gnutls_pubkey_get_verify_algorithm
+@anchor{gnutls_pubkey_get_verify_algorithm}
+@deftypefun {int} {gnutls_pubkey_get_verify_algorithm} (gnutls_pubkey_t @var{key}, const gnutls_datum_t * @var{signature}, gnutls_digest_algorithm_t * @var{hash})
+@var{key}: Holds the certificate
+
+@var{signature}: contains the signature
+
+@var{hash}: The result of the call with the hash algorithm used for signature
+
+This function will read the certifcate and the signed data to
+determine the hash algorithm used to generate the signature.
+
+@strong{Returns:} the 0 if the hash algorithm is found. A negative value is
+returned on error.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_dsa_raw
+@anchor{gnutls_pubkey_import_dsa_raw}
+@deftypefun {int} {gnutls_pubkey_import_dsa_raw} (gnutls_pubkey_t @var{key}, const gnutls_datum_t * @var{p}, const gnutls_datum_t * @var{q}, const gnutls_datum_t * @var{g}, const gnutls_datum_t * @var{y})
+@var{key}: The structure to store the parsed key
+
+@var{p}: holds the p
+
+@var{q}: holds the q
+
+@var{g}: holds the g
+
+@var{y}: holds the y
+
+This function will convert the given DSA raw parameters to the
+native @code{gnutls_pubkey_t} format.  The output will be stored
+in @code{key}.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_openpgp
+@anchor{gnutls_pubkey_import_openpgp}
+@deftypefun {int} {gnutls_pubkey_import_openpgp} (gnutls_pubkey_t @var{key}, gnutls_openpgp_crt_t @var{crt}, unsigned int @var{flags})
+@var{key}: The public key
+
+@var{crt}: The certificate to be imported
+
+@var{flags}: should be zero
+
+This function will import the given public key to the abstract
+@code{gnutls_pubkey_t} structure. The subkey set as preferred will be
+imported or the master key otherwise.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_pkcs11_url
+@anchor{gnutls_pubkey_import_pkcs11_url}
+@deftypefun {int} {gnutls_pubkey_import_pkcs11_url} (gnutls_pubkey_t @var{key}, const char * @var{url}, unsigned int @var{flags})
+@var{key}: A key of type @code{gnutls_pubkey_t}
+
+@var{url}: A PKCS 11 url
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will import a PKCS 11 certificate to a @code{gnutls_pubkey_t}
+structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_pkcs11
+@anchor{gnutls_pubkey_import_pkcs11}
+@deftypefun {int} {gnutls_pubkey_import_pkcs11} (gnutls_pubkey_t @var{key}, gnutls_pkcs11_obj_t @var{obj}, unsigned int @var{flags})
+@var{key}: The public key
+
+@var{obj}: The parameters to be imported
+
+@var{flags}: should be zero
+
+This function will import the given public key to the abstract
+@code{gnutls_pubkey_t} structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_privkey
+@anchor{gnutls_pubkey_import_privkey}
+@deftypefun {int} {gnutls_pubkey_import_privkey} (gnutls_pubkey_t @var{key}, gnutls_privkey_t @var{pkey}, unsigned int @var{usage}, unsigned int @var{flags})
+@var{key}: The public key
+
+@var{pkey}: The private key
+
+@var{usage}: GNUTLS_KEY_* key usage flags.
+
+@var{flags}: should be zero
+
+This function will import the given public key to the abstract
+@code{gnutls_pubkey_t} structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+
+@strong{Since:} 2.12.0
+@end deftypefun
+
+@subheading gnutls_pubkey_import_rsa_raw
+@anchor{gnutls_pubkey_import_rsa_raw}
+@deftypefun {int} {gnutls_pubkey_import_rsa_raw} (gnutls_pubkey_t @var{key}, const gnutls_datum_t * @var{m}, const gnutls_datum_t * @var{e})
+@var{key}: Is a structure will hold the parameters
+
+@var{m}: holds the modulus
+
+@var{e}: holds the public exponent
+
+This function will replace the parameters in the given structure.
+The new parameters should be stored in the appropriate
+gnutls_datum.
+
+@strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an negative error code.
+@end deftypefun
+
+@subheading gnutls_pubkey_import_x509
+@anchor{gnutls_pubkey_import_x509}
+@deftypefun {int} {gnutls_pubkey_import_x509} (gnutls_pubkey_t @var{key}, gnutls_x509_crt_t @var{crt}, unsigned int @var{flags})
+@var{key}: The public key
+
+@var{crt}: The certificate to be imported
+
+@var{flags}: should be zero
+
+This function will import the given public key to the abstract
+@code{gnutls_pubkey_t} structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_import
+@anchor{gnutls_pubkey_import}
+@deftypefun {int} {gnutls_pubkey_import} (gnutls_pubkey_t @var{key}, const gnutls_datum_t * @var{data}, gnutls_x509_crt_fmt_t @var{format})
+@var{key}: The structure to store the parsed public key. 
+
+@var{data}: The DER or PEM encoded certificate. 
+
+@var{format}: One of DER or PEM 
+
+This function will convert the given DER or PEM encoded Public key 
+to the native gnutls_pubkey_t format.The output will be stored * in @ key. 
+If the Certificate is PEM encoded it should have a header of "PUBLIC KEY". 
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_init
+@anchor{gnutls_pubkey_init}
+@deftypefun {int} {gnutls_pubkey_init} (gnutls_pubkey_t * @var{key})
+@var{key}: The structure to be initialized
+
+This function will initialize an public key structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_set_key_usage
+@anchor{gnutls_pubkey_set_key_usage}
+@deftypefun {int} {gnutls_pubkey_set_key_usage} (gnutls_pubkey_t @var{key}, unsigned int @var{usage})
+@var{key}: a certificate of type @code{gnutls_x509_crt_t}
+
+@var{usage}: an ORed sequence of the GNUTLS_KEY_* elements.
+
+This function will set the key usage flags of the public key. This
+is only useful if the key is to be exported to a certificate or
+certificate request.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_pubkey_verify_data
+@anchor{gnutls_pubkey_verify_data}
+@deftypefun {int} {gnutls_pubkey_verify_data} (gnutls_pubkey_t @var{pubkey}, unsigned int @var{flags}, const gnutls_datum_t * @var{data}, const gnutls_datum_t * @var{signature})
+@var{pubkey}: Holds the public key
+
+@var{flags}: should be 0 for now
+
+@var{data}: holds the data to be signed
+
+@var{signature}: contains the signature
+
+This function will verify the given signed data, using the
+parameters from the certificate.
+
+@strong{Returns:} In case of a verification failure
+@code{GNUTLS_E_PK_SIG_VERIFY_FAILED} is returned, and a positive code
+on success.
+
+@strong{Since:} 2.12.0
+@end deftypefun
+
+@subheading gnutls_pubkey_verify_hash
+@anchor{gnutls_pubkey_verify_hash}
+@deftypefun {int} {gnutls_pubkey_verify_hash} (gnutls_pubkey_t @var{key}, unsigned int @var{flags}, const gnutls_datum_t * @var{hash}, const gnutls_datum_t * @var{signature})
+@var{key}: Holds the certificate
+
+@var{flags}: should be 0 for now
+
+@var{hash}: holds the hash digest to be verified
+
+@var{signature}: contains the signature
+
+This function will verify the given signed digest, using the
+parameters from the certificate.
+
+@strong{Returns:} In case of a verification failure @code{GNUTLS_E_PK_SIG_VERIFY_FAILED} 
+is returned, and a positive code on success.
+@end deftypefun
+
 @subheading gnutls_record_check_pending
 @anchor{gnutls_record_check_pending}
 @deftypefun {size_t} {gnutls_record_check_pending} (gnutls_session_t @var{session})
@@ -2975,10 +4372,6 @@ should return zero on success.
 
 This function checks if there are any data to receive in the gnutls
 buffers.
-
-Notice that you may also use @code{select()} to check for data in a TCP
-connection, instead of this function.  GnuTLS leaves some data in
-the tcp buffer in order for select to work.
 
 @strong{Returns:} the size of that data or 0.
 @end deftypefun
@@ -2988,8 +4381,8 @@ the tcp buffer in order for select to work.
 @deftypefun {void} {gnutls_record_disable_padding} (gnutls_session_t @var{session})
 @var{session}: is a @code{gnutls_session_t} structure.
 
-Used to disabled padding in TLS 1.0 and above.  Normally you do
-not need to use this function, but there are buggy clients that
+Used to disabled padding in TLS 1.0 and above.  Normally you do not
+need to use this function, but there are buggy clients that
 complain if a server pads the encrypted data.  This of course will
 disable protection against statistical attacks on the data.
 
@@ -3089,8 +4482,8 @@ size. cf. @code{gnutls_record_get_direction()}.
 
 @strong{Returns:} the number of bytes sent, or a negative error code.  The
 number of bytes sent might be less than @code{sizeofdata}.  The maximum
-number of bytes this function can send in a single call depends on
-the negotiated maximum record size.
+number of bytes this function can send in a single call depends
+on the negotiated maximum record size.
 @end deftypefun
 
 @subheading gnutls_record_set_max_size
@@ -3131,6 +4524,13 @@ If this function succeeds (returns 0), you must call the
 @code{gnutls_handshake()} function in order to negotiate the new
 parameters.
 
+Since TLS is full duplex some application data might have been
+sent during peer's processing of this message. In that case
+one should call @code{gnutls_record_recv()} until GNUTLS_E_REHANDSHAKE
+is returned to clear any pending data. Care must be taken if
+rehandshake is mandatory to terminate if it does not start after
+some threshold.
+
 If the client does not wish to renegotiate parameters he will
 should with an alert message, thus the return code will be
 @code{GNUTLS_E_WARNING_ALERT_RECEIVED} and the alert will be
@@ -3138,6 +4538,21 @@ should with an alert message, thus the return code will be
 this message.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, otherwise an error.
+@end deftypefun
+
+@subheading gnutls_rnd
+@anchor{gnutls_rnd}
+@deftypefun {int} {gnutls_rnd} (gnutls_rnd_level_t @var{level}, void * @var{data}, size_t @var{len})
+@var{level}: a security level
+
+@var{data}: place to store random bytes
+
+@var{len}: The requested size
+
+This function will generate random data and store it
+to output buffer.
+
+@strong{Returns:} Zero or a negative value on error.
 @end deftypefun
 
 @subheading gnutls_rsa_export_get_modulus_bits
@@ -3307,6 +4722,47 @@ This function will initialize the temporary RSA parameters structure.
 @strong{Returns:} @code{GNUTLS_E_SUCCESS} on success, or an negative error code.
 @end deftypefun
 
+@subheading gnutls_safe_renegotiation_status
+@anchor{gnutls_safe_renegotiation_status}
+@deftypefun {int} {gnutls_safe_renegotiation_status} (gnutls_session_t @var{session})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+Can be used to check whether safe renegotiation is being used
+in the current session.
+
+@strong{Returns:} 0 when safe renegotiation is not used and non zero when
+safe renegotiation is used.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_sec_param_get_name
+@anchor{gnutls_sec_param_get_name}
+@deftypefun {const char *} {gnutls_sec_param_get_name} (gnutls_sec_param_t @var{param})
+@var{param}: is a security parameter
+
+Convert a @code{gnutls_sec_param_t} value to a string.
+
+@strong{Returns:} a pointer to a string that contains the name of the
+specified public key algorithm, or @code{NULL}.
+@end deftypefun
+
+@subheading gnutls_sec_param_to_pk_bits
+@anchor{gnutls_sec_param_to_pk_bits}
+@deftypefun {unsigned int} {gnutls_sec_param_to_pk_bits} (gnutls_pk_algorithm_t @var{algo}, gnutls_sec_param_t @var{param})
+@var{algo}: is a public key algorithm
+
+@var{param}: is a security parameter
+
+When generating private and public key pairs a difficult question
+is which size of "bits" the modulus will be in RSA and the group size
+in DSA. The easy answer is 1024, which is also wrong. This function
+will convert a human understandable security parameter to an
+appropriate size for the specific algorithm.
+
+@strong{Returns:} The number of bits, or zero.
+@end deftypefun
+
 @subheading gnutls_server_name_get
 @anchor{gnutls_server_name_get}
 @deftypefun {int} {gnutls_server_name_get} (gnutls_session_t @var{session}, void * @var{data}, size_t * @var{data_length}, unsigned int * @var{type}, unsigned int @var{indx})
@@ -3357,13 +4813,33 @@ TLS extension mechanism) the server of the name they connected to.
 This should be used by clients that connect to servers that do
 virtual hosting.
 
-The value of @code{name} depends on the @code{ind} type. In case of
-GNUTLS_NAME_DNS, an ASCII or UTF-8 null terminated string, without
-the trailing dot, is expected.  IPv4 or IPv6 addresses are not
-permitted.
+The value of @code{name} depends on the @code{type} type.  In case of
+@code{GNUTLS_NAME_DNS}, an ASCII zero-terminated domain name string,
+without the trailing dot, is expected.  IPv4 or IPv6 addresses are
+not permitted.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (zero) is returned,
 otherwise an error code is returned.
+@end deftypefun
+
+@subheading gnutls_session_channel_binding
+@anchor{gnutls_session_channel_binding}
+@deftypefun {int} {gnutls_session_channel_binding} (gnutls_session_t @var{session}, gnutls_channel_binding_t @var{cbtype}, gnutls_datum_t * @var{cb})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+@var{cbtype}: an @code{gnutls_channel_binding_t} enumeration type
+
+@var{cb}: output buffer array with data
+
+Extract given channel binding data of the @code{cbtype} (e.g.,
+@code{GNUTLS_CB_TLS_UNIQUE}) type.
+
+@strong{Returns:} @code{GNUTLS_E_SUCCESS} on success,
+@code{GNUTLS_E_UNIMPLEMENTED_FEATURE} if the @code{cbtype} is unsupported,
+@code{GNUTLS_E_CHANNEL_BINDING_NOT_AVAILABLE} if the data is not
+currently available, or an error code.
+
+@strong{Since:} 2.12.0
 @end deftypefun
 
 @subheading gnutls_session_enable_compatibility_mode
@@ -3378,21 +4854,6 @@ clients. It is equivalent to calling:
 
 Normally only servers that require maximum compatibility with
 everything out there, need to call this function.
-@end deftypefun
-
-@subheading gnutls_session_get_client_random
-@anchor{gnutls_session_get_client_random}
-@deftypefun {const void *} {gnutls_session_get_client_random} (gnutls_session_t @var{session})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-Return a pointer to the 32-byte client random field used in the
-session.  The pointer must not be modified or deallocated.
-
-If a client random value has not yet been established, the output
-will be garbage; in particular, a @code{NULL} return value should not be
-expected.
-
-@strong{Returns:} pointer to client random data.
 @end deftypefun
 
 @subheading gnutls_session_get_data2
@@ -3410,7 +4871,7 @@ successful handshake.  The returned datum must be freed with
 @code{gnutls_free()}.
 
 Resuming sessions is really useful and speedups connections after
-a succesful one.
+a successful one.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -3432,7 +4893,7 @@ wants to resume that current version later by calling
 successful handshake.
 
 Resuming sessions is really useful and speedups connections after
-a succesful one.
+a successful one.
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
 an error code is returned.
@@ -3460,24 +4921,6 @@ than 32 bytes.
 an error code is returned.
 @end deftypefun
 
-@subheading gnutls_session_get_master_secret
-@anchor{gnutls_session_get_master_secret}
-@deftypefun {const void *} {gnutls_session_get_master_secret} (gnutls_session_t @var{session})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-Return a pointer to the 48-byte master secret in the session.  The
-pointer must not be modified or deallocated.
-
-If a master secret value has not yet been established, the output
-will be garbage; in particular, a @code{NULL} return value should not be
-expected.
-
-Consider using @code{gnutls_prf()} rather than extracting the master
-secret and use it to derive further data.
-
-@strong{Returns:} pointer to master secret data.
-@end deftypefun
-
 @subheading gnutls_session_get_ptr
 @anchor{gnutls_session_get_ptr}
 @deftypefun {void *} {gnutls_session_get_ptr} (gnutls_session_t @var{session})
@@ -3488,21 +4931,6 @@ pointer set with @code{gnutls_session_set_ptr()}.
 
 @strong{Returns:} the user given pointer from the session structure, or
 @code{NULL} if it was never set.
-@end deftypefun
-
-@subheading gnutls_session_get_server_random
-@anchor{gnutls_session_get_server_random}
-@deftypefun {const void *} {gnutls_session_get_server_random} (gnutls_session_t @var{session})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-Return a pointer to the 32-byte server random field used in the
-session.  The pointer must not be modified or deallocated.
-
-If a server random value has not yet been established, the output
-will be garbage; in particular, a @code{NULL} return value should not be
-expected.
-
-@strong{Returns:} pointer to server random data.
 @end deftypefun
 
 @subheading gnutls_session_is_resumed
@@ -3538,33 +4966,6 @@ performed.
 an error code is returned.
 @end deftypefun
 
-@subheading gnutls_session_set_finished_function
-@anchor{gnutls_session_set_finished_function}
-@deftypefun {void} {gnutls_session_set_finished_function} (gnutls_session_t @var{session}, gnutls_finished_callback_func @var{func})
-@var{session}: is a @code{gnutls_session_t} structure.
-
-@var{func}: a @code{gnutls_finished_callback_func} callback.
-
-Register a callback function for the session that will be called
-when a TLS Finished message has been generated.  The function is
-typically used to copy away the TLS finished message for later use
-as a channel binding or similar purpose.
-
-@strong{The callback should follow this prototype:} 
-void callback (gnutls_session_t @code{session}, const void *@code{finished}, size_t @code{len});
-
-The @code{finished} parameter will contain the binary TLS finished
-message, and @code{len} will contains its length.  For SSLv3 connections,
-the @code{len} parameter will be 36 and for TLS connections it will be
-12.
-
-It is recommended that the function returns quickly in order to not
-delay the handshake.  Use the function to store a copy of the TLS
-finished message for later use.
-
-@strong{Since:} 2.6.0
-@end deftypefun
-
 @subheading gnutls_session_set_ptr
 @anchor{gnutls_session_set_ptr}
 @deftypefun {void} {gnutls_session_set_ptr} (gnutls_session_t @var{session}, void * @var{ptr})
@@ -3575,6 +4976,52 @@ finished message for later use.
 This function will set (associate) the user given pointer @code{ptr} to
 the session structure.  This is pointer can be accessed with
 @code{gnutls_session_get_ptr()}.
+@end deftypefun
+
+@subheading gnutls_session_ticket_enable_client
+@anchor{gnutls_session_ticket_enable_client}
+@deftypefun {int} {gnutls_session_ticket_enable_client} (gnutls_session_t @var{session})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+Request that the client should attempt session resumption using
+SessionTicket.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, or an
+error code.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_session_ticket_enable_server
+@anchor{gnutls_session_ticket_enable_server}
+@deftypefun {int} {gnutls_session_ticket_enable_server} (gnutls_session_t @var{session}, const gnutls_datum_t * @var{key})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+@var{key}: key to encrypt session parameters.
+
+Request that the server should attempt session resumption using
+SessionTicket.  @code{key} must be initialized with
+@code{gnutls_session_ticket_key_generate()}.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, or an
+error code.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
+@subheading gnutls_session_ticket_key_generate
+@anchor{gnutls_session_ticket_key_generate}
+@deftypefun {int} {gnutls_session_ticket_key_generate} (gnutls_datum_t * @var{key})
+@var{key}: is a pointer to a @code{gnutls_datum_t} which will contain a newly
+created key.
+
+Generate a random key to encrypt security parameters within
+SessionTicket.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, or an
+error code.
+
+@strong{Since:} 2.10.0
 @end deftypefun
 
 @subheading gnutls_set_default_export_priority
@@ -3628,6 +5075,31 @@ Convert a @code{gnutls_sign_algorithm_t} value to a string.
 algorithm, or @code{NULL}.
 @end deftypefun
 
+@subheading gnutls_sign_algorithm_get_requested
+@anchor{gnutls_sign_algorithm_get_requested}
+@deftypefun {int} {gnutls_sign_algorithm_get_requested} (gnutls_session_t @var{session}, size_t @var{indx}, gnutls_sign_algorithm_t * @var{algo})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+@var{indx}: is an index of the signature algorithm to return
+
+@var{algo}: the returned certificate type will be stored there
+
+Returns the signature algorithm specified by index that was
+requested by the peer. If the specified index has no data available
+this function returns @code{GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE}.  If
+the negotiated TLS version does not support signature algorithms
+then @code{GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE} will be returned even
+for the first index.  The first index is 0.
+
+This function is useful in the certificate callback functions
+to assist in selecting the correct certificate.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} (0) is returned, otherwise
+an error code is returned.
+
+@strong{Since:} 2.10.0
+@end deftypefun
+
 @subheading gnutls_sign_callback_get
 @anchor{gnutls_sign_callback_get}
 @deftypefun {gnutls_sign_func} {gnutls_sign_callback_get} (gnutls_session_t @var{session}, void ** @var{userdata})
@@ -3639,6 +5111,8 @@ Retrieve the callback function, and its userdata pointer.
 
 @strong{Returns:} The function pointer set by @code{gnutls_sign_callback_set()}, or
 if not set, @code{NULL}.
+
+@strong{Deprecated:} Use the PKCS 11 interfaces instead.
 @end deftypefun
 
 @subheading gnutls_sign_callback_set
@@ -3662,6 +5136,8 @@ gnutls_datum_t * signature);
 The @code{userdata} parameter is passed to the @code{sign_func} verbatim, and
 can be used to store application-specific data needed in the
 callback function.  See also @code{gnutls_sign_callback_get()}.
+
+@strong{Deprecated:} Use the PKCS 11 interfaces instead.
 @end deftypefun
 
 @subheading gnutls_sign_get_id
@@ -3753,7 +5229,7 @@ do not use it for non-SRP purposes.
 This function will decode the given encoded data, using the base64
 encoding found in libsrp.
 
-Note that b64_data should be null terminated.
+Note that @code{b64_data} should be null terminated.
 
 Warning!  This base64 encoding is not the "standard" encoding, so
 do not use it for non-SRP purposes.
@@ -3781,7 +5257,6 @@ do not use it for non-SRP purposes.
 
 @strong{Returns:} 0 on success, or an error code.
 @end deftypefun
-
 @subheading gnutls_srp_base64_encode
 @anchor{gnutls_srp_base64_encode}
 @deftypefun {int} {gnutls_srp_base64_encode} (const gnutls_datum_t * @var{data}, char * @var{result}, size_t * @var{result_size})
@@ -3835,15 +5310,14 @@ server.  Returns NULL in case of an error.
 
 @subheading gnutls_srp_set_client_credentials_function
 @anchor{gnutls_srp_set_client_credentials_function}
-@deftypefun {void} {gnutls_srp_set_client_credentials_function} (gnutls_srp_client_credentials_t          @var{cred}, gnutls_srp_client_credentials_function          * @var{func})
+@deftypefun {void} {gnutls_srp_set_client_credentials_function} (gnutls_srp_client_credentials_t                                             @var{cred}, gnutls_srp_client_credentials_function                                             * @var{func})
 @var{cred}: is a @code{gnutls_srp_server_credentials_t} structure.
 
 @var{func}: is the callback function
 
-This function can be used to set a callback to retrieve the username and
-password for client SRP authentication.
-
-The callback's function form is:
+This function can be used to set a callback to retrieve the
+username and password for client SRP authentication.  The
+callback's function form is:
 
 int (*callback)(gnutls_session_t, char** username, char**password);
 
@@ -3921,20 +5395,21 @@ error code.
 
 @subheading gnutls_srp_set_server_credentials_function
 @anchor{gnutls_srp_set_server_credentials_function}
-@deftypefun {void} {gnutls_srp_set_server_credentials_function} (gnutls_srp_server_credentials_t          @var{cred}, gnutls_srp_server_credentials_function          * @var{func})
+@deftypefun {void} {gnutls_srp_set_server_credentials_function} (gnutls_srp_server_credentials_t                                             @var{cred}, gnutls_srp_server_credentials_function                                             * @var{func})
 @var{cred}: is a @code{gnutls_srp_server_credentials_t} structure.
 
 @var{func}: is the callback function
 
-This function can be used to set a callback to retrieve the user's SRP credentials.
-The callback's function form is:
+This function can be used to set a callback to retrieve the user's
+SRP credentials.  The callback's function form is:
+
 int (*callback)(gnutls_session_t, const char* username,
 gnutls_datum_t* salt, gnutls_datum_t *verifier, gnutls_datum_t* g,
 gnutls_datum_t* n);
 
-@code{username} contains the actual username. 
+@code{username} contains the actual username.
 The @code{salt}, @code{verifier}, @code{generator} and @code{prime} must be filled
-in using the @code{gnutls_malloc()}. For convenience @code{prime} and @code{generator} 
+in using the @code{gnutls_malloc()}. For convenience @code{prime} and @code{generator}
 may also be one of the static parameters defined in extra.h.
 
 In case the callback returned a negative number then gnutls will
@@ -3998,13 +5473,25 @@ code.
 @deftypefun {const char *} {gnutls_strerror} (int @var{error})
 @var{error}: is a GnuTLS error code, a negative value
 
-This function is similar to @code{strerror()}.  Differences: it accepts an
-error number returned by a gnutls function; In case of an unknown
-error a descriptive string is sent instead of NULL.
+This function is similar to strerror.  The difference is that it
+accepts an error number returned by a gnutls function; In case of
+an unknown error a descriptive string is sent instead of @code{NULL}.
 
 Error codes are always a negative value.
 
 @strong{Returns:} A string explaining the GnuTLS error message.
+@end deftypefun
+
+@subheading gnutls_supplemental_get_name
+@anchor{gnutls_supplemental_get_name}
+@deftypefun {const char *} {gnutls_supplemental_get_name} (gnutls_supplemental_data_format_type_t @var{type})
+@var{type}: is a supplemental data format type
+
+Convert a @code{gnutls_supplemental_data_format_type_t} value to a
+string.
+
+@strong{Returns:} a string that contains the name of the specified
+supplemental data format type, or @code{NULL} for unknown types.
 @end deftypefun
 
 @subheading gnutls_transport_get_ptr2
@@ -4031,6 +5518,21 @@ PUSH and PULL).  This must have been set using
 @code{gnutls_transport_set_ptr()}.
 
 @strong{Returns:} first argument of the transport function.
+@end deftypefun
+
+@subheading gnutls_transport_set_errno_function
+@anchor{gnutls_transport_set_errno_function}
+@deftypefun {void} {gnutls_transport_set_errno_function} (gnutls_session_t @var{session}, gnutls_errno_func @var{errno_func})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+@var{errno_func}: a callback function similar to @code{write()}
+
+This is the function where you set a function to retrieve errno
+after a failed push or pull operation.
+
+errno_func is of the form,
+int (*gnutls_errno_func)(gnutls_transport_ptr_t);
+and should return the errno.
 @end deftypefun
 
 @subheading gnutls_transport_set_errno
@@ -4102,10 +5604,10 @@ to zero.
 
 @var{send_ptr}: is the value for the push function
 
-Used to set the first argument of the transport function (like
-PUSH and PULL). In berkeley style sockets this function will set
-the connection handle.  With this function you can use two
-different pointers for receiving and sending.
+Used to set the first argument of the transport function (like PUSH
+and PULL). In berkeley style sockets this function will set the
+connection handle.  With this function you can use two different
+pointers for receiving and sending.
 @end deftypefun
 
 @subheading gnutls_transport_set_ptr
@@ -4115,15 +5617,15 @@ different pointers for receiving and sending.
 
 @var{ptr}: is the value.
 
-Used to set the first argument of the transport function (like
-PUSH and PULL).  In berkeley style sockets this function will set
-the connection handle.
+Used to set the first argument of the transport function (like PUSH
+and PULL).  In berkeley style sockets this function will set the
+connection handle.
 @end deftypefun
 
 @subheading gnutls_transport_set_pull_function
 @anchor{gnutls_transport_set_pull_function}
 @deftypefun {void} {gnutls_transport_set_pull_function} (gnutls_session_t @var{session}, gnutls_pull_func @var{pull_func})
-@var{session}: gnutls session
+@var{session}: is a @code{gnutls_session_t} structure.
 
 @var{pull_func}: a callback function similar to @code{read()}
 
@@ -4138,7 +5640,7 @@ ssize_t (*gnutls_pull_func)(gnutls_transport_ptr_t, void*, size_t);
 @subheading gnutls_transport_set_push_function
 @anchor{gnutls_transport_set_push_function}
 @deftypefun {void} {gnutls_transport_set_push_function} (gnutls_session_t @var{session}, gnutls_push_func @var{push_func})
-@var{session}: gnutls session
+@var{session}: is a @code{gnutls_session_t} structure.
 
 @var{push_func}: a callback function similar to @code{write()}
 
@@ -4150,4 +5652,98 @@ function for gnutls to be able to send data.
 
 PUSH_FUNC is of the form,
 ssize_t (*gnutls_push_func)(gnutls_transport_ptr_t, const void*, size_t);
+@end deftypefun
+
+@subheading gnutls_transport_set_vec_push_function
+@anchor{gnutls_transport_set_vec_push_function}
+@deftypefun {void} {gnutls_transport_set_vec_push_function} (gnutls_session_t @var{session}, gnutls_vec_push_func @var{vec_func})
+@var{session}: is a @code{gnutls_session_t} structure.
+
+@var{vec_func}: a callback function similar to @code{writev()}
+
+This is the function where you set a push function for gnutls to
+use in order to send data.  If you are going to use berkeley style
+sockets, you do not need to use this function since the default
+(send(2)) will probably be ok.  Otherwise you should specify this
+function for gnutls to be able to send data.
+
+PUSH_FUNC is of the form,
+ssize_t (*gnutls_push_func)(gnutls_transport_ptr_t, const void*, size_t);
+@end deftypefun
+
+@subheading gnutls_x509_crq_set_pubkey
+@anchor{gnutls_x509_crq_set_pubkey}
+@deftypefun {int} {gnutls_x509_crq_set_pubkey} (gnutls_x509_crq_t @var{crq}, gnutls_pubkey_t @var{key})
+@var{crq}: should contain a @code{gnutls_x509_crq_t} structure
+
+@var{key}: holds a public key
+
+This function will set the public parameters from the given public
+key to the request.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_x509_crt_import_pkcs11_url
+@anchor{gnutls_x509_crt_import_pkcs11_url}
+@deftypefun {int} {gnutls_x509_crt_import_pkcs11_url} (gnutls_x509_crt_t @var{crt}, const char * @var{url}, unsigned int @var{flags})
+@var{crt}: A certificate of type @code{gnutls_x509_crt_t}
+
+@var{url}: A PKCS 11 url
+
+@var{flags}: One of GNUTLS_PKCS11_OBJ_* flags
+
+This function will import a PKCS 11 certificate directly from a token
+without involving the @code{gnutls_pkcs11_obj_t} structure. This function will
+fail if the certificate stored is not of X.509 type.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_x509_crt_import_pkcs11
+@anchor{gnutls_x509_crt_import_pkcs11}
+@deftypefun {int} {gnutls_x509_crt_import_pkcs11} (gnutls_x509_crt_t @var{crt}, gnutls_pkcs11_obj_t @var{pkcs11_crt})
+@var{crt}: A certificate of type @code{gnutls_x509_crt_t}
+
+@var{pkcs11_crt}: A PKCS 11 object that contains a certificate
+
+This function will import a PKCS 11 certificate to a @code{gnutls_x509_crt_t}
+structure.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_x509_crt_list_import_pkcs11
+@anchor{gnutls_x509_crt_list_import_pkcs11}
+@deftypefun {int} {gnutls_x509_crt_list_import_pkcs11} (gnutls_x509_crt_t * @var{certs}, unsigned int @var{cert_max}, gnutls_pkcs11_obj_t * const @var{objs}, unsigned int @var{flags})
+@var{certs}: A list of certificates of type @code{gnutls_x509_crt_t}
+
+@var{cert_max}: The maximum size of the list
+
+@var{objs}: A list of PKCS 11 objects
+
+@var{flags}: 0 for now
+
+This function will import a PKCS 11 certificate list to a list of 
+@code{gnutls_x509_crt_t} structure. These must not be initialized.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
+@end deftypefun
+
+@subheading gnutls_x509_crt_set_pubkey
+@anchor{gnutls_x509_crt_set_pubkey}
+@deftypefun {int} {gnutls_x509_crt_set_pubkey} (gnutls_x509_crt_t @var{crt}, gnutls_pubkey_t @var{key})
+@var{crt}: should contain a @code{gnutls_x509_crt_t} structure
+
+@var{key}: holds a public key
+
+This function will set the public parameters from the given public
+key to the request.
+
+@strong{Returns:} On success, @code{GNUTLS_E_SUCCESS} is returned, otherwise a
+negative error value.
 @end deftypefun

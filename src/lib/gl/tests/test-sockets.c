@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008, 2009 Free Software Foundation
+ * Copyright (C) 2008-2012 Free Software Foundation, Inc.
  * Written by Simon Josefsson.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 #include "sockets.h"
 
 int
-main (int argc, char *argv[])
+main (void)
 {
   int err;
 

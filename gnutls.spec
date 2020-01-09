@@ -1,7 +1,7 @@
 Summary: A TLS protocol implementation
 Name: gnutls
-Version: 2.8.5
-Release: 19%{?dist}
+Version: 2.12.23
+Release: 21%{?dist}
 # The libgnutls library is LGPLv2+, utilities and remaining libraries are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
@@ -9,29 +9,65 @@ BuildRequires: libgcrypt-devel >= 1.2.2, gettext
 BuildRequires: zlib-devel, readline-devel, libtasn1-devel
 BuildRequires: lzo-devel, libtool, automake, autoconf
 BuildRequires: guile-devel, texinfo
+#BuildRequires: p11-kit-devel
 URL: http://www.gnutls.org/
+Source0: %{name}-%{version}-hobbled.tar.gz
 #Source0: ftp://ftp.gnutls.org/pub/gnutls/%{name}-%{version}.tar.gz
 #Source1: ftp://ftp.gnutls.org/pub/gnutls/%{name}-%{version}.tar.gz.sig
 # XXX patent tainted SRP code removed.
-Source0: %{name}-%{version}-nosrp.tar.bz2
 Source1: libgnutls-config
-Patch1: gnutls-2.8.5-rpath.patch
-Patch3: gnutls-2.8.5-safe-renegotiation.patch
-Patch4: gnutls-2.8.5-cve-2011-4128.patch
-Patch5: gnutls-2.8.5-cve-2012-1573.patch
-Patch6: gnutls-2.8.5-tls12-compat.patch
-Patch7: gnutls-2.8.5-docfix.patch
-Patch8: gnutls-2.8.5-pkcs8-fallback.patch
-Patch9: gnutls-2.8.5-aliasing.patch
-Patch10: gnutls-2.8.5-cve-2013-1619.patch
-Patch11: gnutls-2.8.5-cve-2014-0092.patch
-Patch12: gnutls-2.8.5-server-hello-fix.patch
-Patch13: gnutls-2.8.5-integer-padding.patch
-Patch14: gnutls-2.8.5-bz1159778.patch
-Patch15: gnutls-2.8.5-mpi-print-init.patch
-Patch16: gnutls-2.8.5-cve-2015-0282.patch
-Patch17: gnutls-2.8.5-cve-2015-0294.patch
-Patch18: gnutls-2.8.5-md5-downgrade.patch
+Patch1:  gnutls-2.12.23-doc-srp.patch
+# Disable DSA2. There is no interoperation between implementations (#1321112)
+Patch2:  gnutls-2.12.23-no-dsa2.patch
+Patch3:  gnutls-2.12.23-cve-2014-0092.patch
+Patch4:  gnutls-2.12.23-cve-2015-0282.patch
+Patch5:  gnutls-2.12.23-cve-2015-0294.patch
+Patch6:  gnutls-2.12.23-server-hello-fix.patch
+Patch7:  gnutls-2.12.23-md5-downgrade.patch
+Patch8:  gnutls-2.12.23-mpi-print-init.patch
+# be ABI compatible with 2.8.x; ie, use the same lowat value by default
+Patch9:  gnutls-2.12.23-default-lowat.patch
+Patch10: gnutls-2.12.23-cve-2013-1619-amend.patch
+Patch11: gnutls-2.12.23-other-safe-backports.patch
+# we have a much older libtasn1 in rhel6; do not use new features
+Patch12: gnutls-2.12.23-no-read-node-value.patch
+# several new implementations break if they encounter an SSL 3.0
+# record version.
+Patch13: gnutls-2.12.23-no-ssl3-record.patch
+# adapted from the equivalent upstream patch for nettle
+Patch14: gnutls-2.12.23-strict-pkcs1.patch
+# Keep the same C++ ABI, as we had in 2.8.5
+Patch15: gnutls-2.12.23-cxx-abi.patch
+Patch16: gnutls-2.12.23-serv-sni-hostname.patch
+# TLS 1.2 is very strict on the allowed algorithms, (they must match
+# the signalgo extension), however we only support SHA1 and SHA256 for
+# hashes, and if we are very strict we cannot connect to servers with
+# other certificates.
+Patch17: gnutls-2.12.23-remove-cert-sig-algo-check.patch
+# gnutls-cli and gnutls-serv used different options in 2.8.x version;
+# backport these to achieve compatibility.
+Patch18: gnutls-2.12.23-cli-restore-old-options.patch
+Patch19: gnutls-2.12.23-strict-dh.patch
+Patch20: gnutls-2.12.23-no-export.patch
+Patch21: gnutls-2.12.23-strict-kx-parse.patch
+Patch22: gnutls-2.12.23-prime-check.patch
+Patch23: gnutls-2.12.23-no-pthread-link.patch
+Patch24: gnutls-2.12.23-dhe-psk-fix.patch
+Patch25: gnutls-2.12.23-cli-debug.patch
+Patch26: gnutls-2.12.23-flex-prio.patch
+Patch27: gnutls-2.12.23-large-hello.patch
+Patch28: gnutls-2.12.23-legacy-settings.patch
+Patch29: gnutls-2.12.23-sig-algo-fix.patch
+Patch30: gnutls-2.12.23-typo-fix.patch
+Patch31: gnutls-2.12.23-strict-alerts.patch
+Patch32: gnutls-2.12.23-server-name.patch
+Patch33: gnutls-2.12.23-strict-sigalgo-check.patch
+Patch34: gnutls-2.12.23-serv-unrec-name.patch
+Patch35: gnutls-2.12.23-rsa-sha-compat.patch
+Patch36: gnutls-2.12.23-strict-sigalgo-check2.patch
+# fix for CVE-2017-5337, CVE-2017-5336 and CVE-2017-5335
+Patch37: gnutls-2.12.23-cve-2017-5337.patch
+Patch38: gnutls-2.12.23-deprecate-register.patch
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: libgcrypt >= 1.2.2
@@ -84,36 +120,62 @@ This package contains Guile bindings for the library.
 
 %prep
 %setup -q
-%patch1 -p1 -b .rpath
-%patch3 -p1 -b .reneg
-%patch4 -p1 -b .data-size
-%patch5 -p1 -b .packet
-%patch6 -p1 -b .tls12
-%patch7 -p1 -b .docfix
-%patch8 -p1 -b .pkcs8
-%patch9 -p1 -b .aliasing
-%patch10 -p1 -b .lucky13
-%patch11 -p1 -b .cert-check
-%patch12 -p1 -b .server-hello
-%patch13 -p1 -b .integer-pad
-%patch14 -p1 -b .bz1159778
-%patch15 -p1 -b .mpi-init
-%patch16 -p1 -b .pkcs1
-%patch17 -p1 -b .algo-check
-%patch18 -p1 -b .md5-downgrade
+%patch1 -p1 -b .doc-srp
+%patch2 -p1 -b .no-dsa2
+%patch3 -p1 -b .cve-2014-0092
+%patch4 -p1 -b .cve-2015-0282
+%patch5 -p1 -b .cve-2015-0294
+%patch6 -p1 -b .server-hello
+%patch7 -p1 -b .md5-downgrade
+%patch8 -p1 -b .mpi-print-init
+%patch9 -p1 -b .default-lowat
+%patch10 -p1 -b .cve-2013-1619
+%patch11 -p1 -b .safe-backports
+%patch12 -p1 -b .no-read-node-value
+%patch13 -p1 -b .no-ssl3-record
+%patch14 -p1 -b .strict-pkcs1
+%patch15 -p1 -b .cxx
+%patch16 -p1 -b .sni-hostname
+%patch17 -p1 -b .remove-cert-sig-algo-check
+%patch18 -p1 -b .restore-old-options
+%patch19 -p1 -b .strict-dh
+%patch20 -p1 -b .no-export
+%patch21 -p1 -b .strict-key-exchange
+%patch22 -p1 -b .prime-check
+%patch23 -p1 -b .no-pthread-link
+%patch24 -p1 -b .dhe-psk-fix
+%patch25 -p1 -b .cli-debug
+%patch26 -p1 -b .flex-prio
+%patch27 -p1 -b .large-hello
+%patch28 -p1 -b .legacy-settings
+%patch29 -p1 -b .sig-algo-fix
+%patch30 -p1 -b .typo-fix
+%patch31 -p1 -b .alerts
+%patch32 -p1 -b .server-name
+%patch33 -p1 -b .sigalgo-check
+%patch34 -p1 -b .unrec-name
+%patch35 -p1 -b .rsa-sha
+%patch36 -p1 -b .sigalgo-check2
+%patch37 -p1 -b .cve-2017-5337
+%patch38 -p1 -b .deprecate-register
+chmod +x tests/dsa/testdsa1024 tests/check-env
+chmod +x tests/openpgp-certs/openpgp-cert-parser
 
 for i in auth_srp_rsa.c auth_srp_sb64.c auth_srp_passwd.c auth_srp.c gnutls_srp.c ext_srp.c; do
     touch lib/$i
 done
 
-chmod a+x tests/safe-renegotiation/testsrn
-
 %build
+autoreconf -ifv
 %configure --with-libtasn1-prefix=%{_prefix} \
            --with-included-libcfg \
            --disable-static \
+	   --disable-rpath \
            --disable-openssl-compatibility \
-           --disable-srp-authentication
+           --disable-srp-authentication \
+	   --without-p11-kit \
+	   --with-libgcrypt
+
 make
 cp lib/COPYING COPYING.LIB
 
@@ -168,11 +230,13 @@ fi
 %{_libdir}/pkgconfig/*.pc
 %{_mandir}/man3/*
 %{_infodir}/gnutls*
+%{_infodir}/pkcs11*
 
 %files utils
 %defattr(-,root,root,-)
 %{_bindir}/certtool
 %{_bindir}/psktool
+#%{_bindir}/p11tool
 %{_bindir}/gnutls*
 %{_mandir}/man1/*
 %doc doc/certtool.cfg
@@ -184,6 +248,21 @@ fi
 %{_datadir}/guile/site/gnutls.scm
 
 %changelog
+* Mon Feb 13 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.12.23-21
+- Upgraded to 2.12.23 to incorporate multiple TLS 1.2 fixes
+  (#1326389, #1326073, #1323215, #1320982, #1328205, #1321112)
+- Modified gnutls-serv to accept --sni-hostname (#1333521)
+- Modified gnutls-serv to always reply with an alert message (#1327656)
+- Removed support for DSA2 as it causes interoperability issues (#1321112)
+- Allow sending and receiving certificates which were not in the
+  signature algorithms extension (#1328205)
+- Removed support for EXPORT ciphersuites (#1337460)
+- Raised the minimum acceptable DH size to 1024 (#1335924)
+- Restricted the number of alert that can be received during handshake (#1388730)
+- Added fixes for OpenPGP parsing issues (CVE-2017-5337, CVE-2017-5336, CVE-2017-5335)
+- The exposed (but internal) crypto back-end registration API is deprecated and no
+  longer functional. The ABI is kept compatible (#1415682)
+
 * Wed Dec  9 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.8.5-19
 - Prevent downgrade attack to RSA-MD5 in TLS 1.2 server key exchange (#1289885)
 
