@@ -1,7 +1,7 @@
 Summary: A TLS protocol implementation
 Name: gnutls
 Version: 2.8.5
-Release: 18%{?dist}
+Release: 19%{?dist}
 # The libgnutls library is LGPLv2+, utilities and remaining libraries are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
@@ -31,6 +31,7 @@ Patch14: gnutls-2.8.5-bz1159778.patch
 Patch15: gnutls-2.8.5-mpi-print-init.patch
 Patch16: gnutls-2.8.5-cve-2015-0282.patch
 Patch17: gnutls-2.8.5-cve-2015-0294.patch
+Patch18: gnutls-2.8.5-md5-downgrade.patch
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: libgcrypt >= 1.2.2
@@ -99,6 +100,7 @@ This package contains Guile bindings for the library.
 %patch15 -p1 -b .mpi-init
 %patch16 -p1 -b .pkcs1
 %patch17 -p1 -b .algo-check
+%patch18 -p1 -b .md5-downgrade
 
 for i in auth_srp_rsa.c auth_srp_sb64.c auth_srp_passwd.c auth_srp.c gnutls_srp.c ext_srp.c; do
     touch lib/$i
@@ -182,6 +184,9 @@ fi
 %{_datadir}/guile/site/gnutls.scm
 
 %changelog
+* Wed Dec  9 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.8.5-19
+- Prevent downgrade attack to RSA-MD5 in TLS 1.2 server key exchange (#1289885)
+
 * Tue Mar  3 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.8.5-18
 - fix CVE-2015-0282 (#1198159)
 - fix CVE-2015-0294 (#1198159)
