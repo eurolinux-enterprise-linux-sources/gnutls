@@ -1,7 +1,7 @@
 Summary: A TLS protocol implementation
 Name: gnutls
 Version: 2.12.23
-Release: 21%{?dist}
+Release: 22%{?dist}
 # The libgnutls library is LGPLv2+, utilities and remaining libraries are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
@@ -68,6 +68,7 @@ Patch36: gnutls-2.12.23-strict-sigalgo-check2.patch
 # fix for CVE-2017-5337, CVE-2017-5336 and CVE-2017-5335
 Patch37: gnutls-2.12.23-cve-2017-5337.patch
 Patch38: gnutls-2.12.23-deprecate-register.patch
+Patch39: gnutls-2.12.23-fix-custom-sign.patch
 
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: libgcrypt >= 1.2.2
@@ -158,6 +159,7 @@ This package contains Guile bindings for the library.
 %patch36 -p1 -b .sigalgo-check2
 %patch37 -p1 -b .cve-2017-5337
 %patch38 -p1 -b .deprecate-register
+%patch39 -p1 -b .fix-custom-sign
 chmod +x tests/dsa/testdsa1024 tests/check-env
 chmod +x tests/openpgp-certs/openpgp-cert-parser
 
@@ -248,6 +250,9 @@ fi
 %{_datadir}/guile/site/gnutls.scm
 
 %changelog
+* Fri Apr 21 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.12.23-22
+- Fix for the (deprecated) signing callback to operate under TLS 1.2 (#1442824)
+
 * Mon Feb 13 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 2.12.23-21
 - Upgraded to 2.12.23 to incorporate multiple TLS 1.2 fixes
   (#1326389, #1326073, #1323215, #1320982, #1328205, #1321112)
