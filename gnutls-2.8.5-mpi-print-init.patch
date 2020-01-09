@@ -1,0 +1,11 @@
+--- gnutls-2.8.5/lib/mpi-libgcrypt.c	2009-06-02 20:59:32.000000000 +0200
++++ gnutls-2.8.5.new/lib/mpi-libgcrypt.c	2015-01-29 15:48:29.010731494 +0100
+@@ -72,6 +72,8 @@
+ 
+   if (nbytes == NULL || a == NULL)
+     return GNUTLS_E_INVALID_REQUEST;
++  if (buffer == NULL && nbytes)
++    *nbytes = 0;
+ 
+   ret = gcry_mpi_print (format, buffer, *nbytes, nbytes, a);
+   if (!ret)
