@@ -1,0 +1,121 @@
+diff -up gnutls-2.8.5/doc/manpages/gnutls-cli-debug.1.docfix gnutls-2.8.5/doc/manpages/gnutls-cli-debug.1
+--- gnutls-2.8.5/doc/manpages/gnutls-cli-debug.1.docfix	2009-06-02 20:59:32.000000000 +0200
++++ gnutls-2.8.5/doc/manpages/gnutls-cli-debug.1	2012-10-10 08:49:11.014899077 +0200
+@@ -17,8 +17,10 @@ Enable debugging.
+ The port to connect to.
+ .IP "\-h, \-\-help"
+ Prints a short reminder of the command line options.
+-.IP "\-v, \-\-verbose"
++.IP "\-V, \-\-verbose"
+ Even more verbose output.
++.IP "\-v, \-\-version"
++Prints the program's version number.
+ .SH "SEE ALSO"
+ .BR gnutls\-cli (1),
+ .BR gnutls\-serv (1)
+diff -up gnutls-2.8.5/doc/manpages/gnutls_priority_init.3.docfix gnutls-2.8.5/doc/manpages/gnutls_priority_init.3
+--- gnutls-2.8.5/doc/manpages/gnutls_priority_init.3.docfix	2012-10-10 08:44:13.000000000 +0200
++++ gnutls-2.8.5/doc/manpages/gnutls_priority_init.3	2012-10-10 08:47:27.799701195 +0200
+@@ -67,20 +67,26 @@ compression methods.
+ 
+ "%COMPAT" will enable compatibility features for a server.
+ 
+-"%UNSAFE_RENEGOTIATION" will allow unsafe renegotiation (this is now
+-the default for clients, but will change once more servers support the safe renegotiation
+-TLS fix).
+-
+-"%SAFE_RENEGOTIATION" will allow safe renegotiation only (this is the
+-default for servers \- that will reject clients trying to perform an
+-unsafe renegotiation).
+-
+-"%INITIAL_SAFE_RENEGOTIATION" will force initial safe negotiation even if 
+-renegotiation wasn't requested. Only valid for server side and implies
+-"%SAFE_RENEGOTIATION".
+-
+-"%DISABLE_SAFE_RENEGOTIATION" will disable safe renegotiation completely. Do not use
+-unless you know what you are doing. Testing purposes only.
++"%DISABLE_SAFE_RENEGOTIATION" will disable safe renegotiation
++completely.  Do not use unless you know what you are doing.
++Testing purposes only.
++
++"%UNSAFE_RENEGOTIATION" will allow handshakes and rehandshakes
++without the safe renegotiation extension.  Note that for clients
++this mode is insecure (you may be under attack), and for servers it
++will allow insecure clients to connect (which could be fooled by an
++attacker).  Do not use unless you know what you are doing and want
++maximum compatibility.
++
++"%PARTIAL_RENEGOTIATION" will allow initial handshakes to proceed,
++but not rehandshakes.  This leaves the client vulnerable to attack,
++and servers will be compatible with non\-upgraded clients for
++initial handshakes.  This is currently the default for clients and
++servers, for compatibility reasons.
++
++"%SAFE_RENEGOTIATION" will enforce safe renegotiation.  Clients and
++servers will refuse to talk to an insecure peer.  Currently this
++causes operability problems, but is required for full protection.
+ 
+ "%SSL3_RECORD_VERSION" will use SSL3.0 record version in client hello.
+ 
+diff -up gnutls-2.8.5/doc/manpages/gnutls-serv.1.docfix gnutls-2.8.5/doc/manpages/gnutls-serv.1
+--- gnutls-2.8.5/doc/manpages/gnutls-serv.1.docfix	2012-10-10 08:44:13.000000000 +0200
++++ gnutls-2.8.5/doc/manpages/gnutls-serv.1	2012-10-10 08:46:43.130749953 +0200
+@@ -69,11 +69,11 @@ compression methods.
+ .IP 
+ Special keywords:
+ .IP
+-'!' or '-' appended with an algorithm will remove this algorithm.
++"!" or "-" appended with an algorithm will remove this algorithm.
+ .IP
+-'+' appended with an algorithm will add this algorithm.
++"+" appended with an algorithm will add this algorithm.
+ .IP
+-'%COMPAT' will enable compatibility features for a server.
++"%COMPAT" will enable compatibility features for a server.
+ .IP
+ "%UNSAFE_RENEGOTIATION" Permits (re-)handshakes even unsafe ones.
+ .IP
+diff -up gnutls-2.8.5/lib/gnutls_priority.c.docfix gnutls-2.8.5/lib/gnutls_priority.c
+--- gnutls-2.8.5/lib/gnutls_priority.c.docfix	2012-10-10 08:44:14.000000000 +0200
++++ gnutls-2.8.5/lib/gnutls_priority.c	2012-10-10 08:45:43.101471659 +0200
+@@ -514,20 +514,26 @@ gnutls_priority_set (gnutls_session_t se
+  *
+  * "%COMPAT" will enable compatibility features for a server.
+  *
+- * "%DISABLE_SAFE_RENEGOTIATION" will disable safe renegotiation completely. Do not use
+- * unless you know what you are doing. Testing purposes only.
+- *
+- * "%UNSAFE_RENEGOTIATION" will allow unsafe renegotiation (this is now
+- * the default for clients, but will change once more servers support the safe renegotiation
+- * TLS fix).
+- *
+- * "%PARTIAL_SAFE_RENEGOTIATION" In server side it will enable safe renegotiation
+- * and will protect all clients from known attacks, but will not prevent insecure clients
+- * from connecting. In client side it will disallow from renegotiating with an insecure server
+- * but will not prevent connecting to one (this leaves the client vulnerable to attacks).
+- *
+- * "%SAFE_RENEGOTIATION" will enforce safe renegotiation. Clients and Servers will refuse
+- * to talk to an insecure peer.
++ * "%DISABLE_SAFE_RENEGOTIATION" will disable safe renegotiation
++ * completely.  Do not use unless you know what you are doing.
++ * Testing purposes only.
++ *
++ * "%UNSAFE_RENEGOTIATION" will allow handshakes and rehandshakes
++ * without the safe renegotiation extension.  Note that for clients
++ * this mode is insecure (you may be under attack), and for servers it
++ * will allow insecure clients to connect (which could be fooled by an
++ * attacker).  Do not use unless you know what you are doing and want
++ * maximum compatibility.
++ *
++ * "%PARTIAL_RENEGOTIATION" will allow initial handshakes to proceed,
++ * but not rehandshakes.  This leaves the client vulnerable to attack,
++ * and servers will be compatible with non-upgraded clients for
++ * initial handshakes.  This is currently the default for clients and
++ * servers, for compatibility reasons.
++ *
++ * "%SAFE_RENEGOTIATION" will enforce safe renegotiation.  Clients and
++ * servers will refuse to talk to an insecure peer.  Currently this
++ * causes operability problems, but is required for full protection.
+  *
+  * "%SSL3_RECORD_VERSION" will use SSL3.0 record version in client hello.
+  *
