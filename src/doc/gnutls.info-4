@@ -1,6 +1,6 @@
-This is gnutls.info, produced by makeinfo version 6.3 from gnutls.texi.
+This is gnutls.info, produced by makeinfo version 5.2 from gnutls.texi.
 
-This manual is last updated 23 March 2015 for version 3.3.29 of GnuTLS.
+This manual is last updated 29 July 2014 for version 3.3.8 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -1550,7 +1550,7 @@ gnutls_openpgp_keyring_deinit
 
  -- Function: void gnutls_openpgp_keyring_deinit
           (gnutls_openpgp_keyring_t KEYRING)
-     KEYRING: A pointer to the type to be initialized
+     KEYRING: The structure to be initialized
 
      This function will deinitialize a keyring structure.
 
@@ -1564,7 +1564,7 @@ gnutls_openpgp_keyring_get_crt
 
      IDX: the index of the certificate to export
 
-     CERT: An uninitialized 'gnutls_openpgp_crt_t' type
+     CERT: An uninitialized 'gnutls_openpgp_crt_t' structure
 
      This function will extract an OpenPGP certificate from the given
      keyring.  If the index given is out of range
@@ -1609,7 +1609,7 @@ gnutls_openpgp_keyring_init
 
  -- Function: int gnutls_openpgp_keyring_init (gnutls_openpgp_keyring_t
           * KEYRING)
-     KEYRING: A pointer to the type to be initialized
+     KEYRING: The structure to be initialized
 
      This function will initialize an keyring structure.
 
@@ -2492,9 +2492,9 @@ gnutls_pkcs12_simple_parse
           gnutls_x509_crt_t ** CHAIN, unsigned int * CHAIN_LEN,
           gnutls_x509_crt_t ** EXTRA_CERTS, unsigned int *
           EXTRA_CERTS_LEN, gnutls_x509_crl_t * CRL, unsigned int FLAGS)
-     P12: should contain a gnutls_pkcs12_t structure
+     P12: the PKCS12 blob.
 
-     PASSWORD: optional password used to decrypt the structure, bags and
+     PASSWORD: optional password used to decrypt PKCS12 blob, bags and
      keys.
 
      KEY: a structure to store the parsed private key.
@@ -2505,7 +2505,7 @@ gnutls_pkcs12_simple_parse
      'NULL' )
 
      EXTRA_CERTS: optional pointer to receive an array of additional
-     certificates found in the PKCS12 structure (may be 'NULL' ).
+     certificates found in the PKCS12 blob (may be 'NULL' ).
 
      EXTRA_CERTS_LEN: will be updated with the number of additional
      certs (may be 'NULL' ).
@@ -2515,9 +2515,9 @@ gnutls_pkcs12_simple_parse
 
      FLAGS: should be zero or one of GNUTLS_PKCS12_SP_*
 
-     This function parses a PKCS12 structure in 'pkcs12' and extracts
-     the private key, the corresponding certificate chain, any
-     additional certificates and a CRL.
+     This function parses a PKCS12 blob in 'p12blob' and extracts the
+     private key, the corresponding certificate chain, any additional
+     certificates and a CRL.
 
      The 'extra_certs' and 'extra_certs_len' parameters are optional and
      both may be set to 'NULL' .  If either is non-'NULL' , then both
@@ -2528,10 +2528,10 @@ gnutls_pkcs12_simple_parse
      only with password based security and the same password for all
      operations.
 
-     Note that a PKCS12 structure may contain many keys and/or
-     certificates, and there is no way to identify which key/certificate
-     pair you want.  For this reason this function is useful for PKCS12
-     files that contain only one key/certificate pair and/or one CRL.
+     Note that a PKCS12 file may contain many keys and/or certificates,
+     and there is no way to identify which key/certificate pair you
+     want.  For this reason this function is useful for PKCS12 files
+     that contain only one key/certificate pair and/or one CRL.
 
      If the provided structure has encrypted fields but no password is
      provided then this function returns 'GNUTLS_E_DECRYPTION_FAILED' .
@@ -2541,9 +2541,6 @@ gnutls_pkcs12_simple_parse
      however, the flag 'GNUTLS_PKCS12_SP_INCLUDE_SELF_SIGNED' is
      specified then self signed certificates will be included in the
      chain.
-
-     Prior to using this function the PKCS '12' structure integrity must
-     be verified using 'gnutls_pkcs12_verify_mac()' .
 
      *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
      otherwise a negative error value.
@@ -2628,9 +2625,9 @@ gnutls_pkcs11_copy_x509_crt
           gnutls_x509_crt_t CRT, const char * LABEL, unsigned int FLAGS)
      TOKEN_URL: A PKCS '11' URL specifying a token
 
-     CRT: The certificate to copy
+     CRT: A certificate
 
-     LABEL: The name to be used for the stored data
+     LABEL: A name to be used for the stored data
 
      FLAGS: One of GNUTLS_PKCS11_OBJ_FLAG_*
 
@@ -2642,32 +2639,6 @@ gnutls_pkcs11_copy_x509_crt
      otherwise a negative error value.
 
      *Since:* 2.12.0
-
-gnutls_pkcs11_copy_x509_crt2
-----------------------------
-
- -- Function: int gnutls_pkcs11_copy_x509_crt2 (const char * TOKEN_URL,
-          gnutls_x509_crt_t CRT, const char * LABEL, const
-          gnutls_datum_t * CID, unsigned int FLAGS)
-     TOKEN_URL: A PKCS '11' URL specifying a token
-
-     CRT: The certificate to copy
-
-     LABEL: The name to be used for the stored data
-
-     CID: The CKA_ID to set for the object -if NULL, the ID will be
-     derived from the public key
-
-     FLAGS: One of GNUTLS_PKCS11_OBJ_FLAG_*
-
-     This function will copy a certificate into a PKCS '11' token
-     specified by a URL. The certificate can be marked as trusted or
-     not.
-
-     *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
-     otherwise a negative error value.
-
-     *Since:* 3.3.26
 
 gnutls_pkcs11_copy_x509_privkey
 -------------------------------
@@ -2694,36 +2665,6 @@ gnutls_pkcs11_copy_x509_privkey
      otherwise a negative error value.
 
      *Since:* 2.12.0
-
-gnutls_pkcs11_copy_x509_privkey2
---------------------------------
-
- -- Function: int gnutls_pkcs11_copy_x509_privkey2 (const char *
-          TOKEN_URL, gnutls_x509_privkey_t KEY, const char * LABEL,
-          const gnutls_datum_t * CID, unsigned int KEY_USAGE, unsigned
-          int FLAGS)
-     TOKEN_URL: A PKCS '11' URL specifying a token
-
-     KEY: A private key
-
-     LABEL: A name to be used for the stored data
-
-     CID: The CKA_ID to set for the object -if NULL, the ID will be
-     derived from the public key
-
-     KEY_USAGE: One of GNUTLS_KEY_*
-
-     FLAGS: One of GNUTLS_PKCS11_OBJ_* flags
-
-     This function will copy a private key into a PKCS '11' token
-     specified by a URL. It is highly recommended flags to contain
-     'GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE' unless there is a strong
-     reason not to.
-
-     *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
-     otherwise a negative error value.
-
-     *Since:* 3.3.26
 
 gnutls_pkcs11_crt_is_known
 --------------------------
@@ -2967,11 +2908,11 @@ gnutls_pkcs11_obj_get_exts
  -- Function: int gnutls_pkcs11_obj_get_exts (gnutls_pkcs11_obj_t OBJ,
           gnutls_x509_ext_st ** EXTS, unsigned int * EXTS_SIZE, unsigned
           int FLAGS)
-     OBJ: should contain a 'gnutls_pkcs11_obj_t' type
+     OBJ: should contain a 'gnutls_pkcs11_obj_t' structure
 
-     EXTS: a pointer to a 'gnutls_x509_ext_st' pointer
+     EXTS: an allocated list of pointers to 'gnutls_x509_ext_st'
 
-     EXTS_SIZE: will be updated with the number of 'exts'
+     EXTS_SIZE: the number of 'exts'
 
      FLAGS: Or sequence of 'GNUTLS_PKCS11_OBJ_' * flags
 
@@ -2979,10 +2920,6 @@ gnutls_pkcs11_obj_get_exts
      that associate to the provided object (which should be a
      certificate).  The extensions are the attached p11-kit trust module
      extensions.
-
-     Each element of 'exts' must be deinitialized using
-     'gnutls_x509_ext_deinit()' while 'exts' should be deallocated using
-     'gnutls_free()' .
 
      *Returns:* 'GNUTLS_E_SUCCESS' (0) on success or a negative error
      code on error.
@@ -3138,31 +3075,6 @@ gnutls_pkcs11_obj_list_import_url2
 
      *Since:* 3.1.0
 
-gnutls_pkcs11_obj_set_info
---------------------------
-
- -- Function: int gnutls_pkcs11_obj_set_info (gnutls_pkcs11_obj_t OBJ,
-          gnutls_pkcs11_obj_info_t ITYPE, const void * DATA, size_t
-          DATA_SIZE, unsigned FLAGS)
-     OBJ: should contain a 'gnutls_pkcs11_obj_t' structure
-
-     ITYPE: Denotes the type of information to be set
-
-     DATA: the data to set
-
-     DATA_SIZE: the size of data
-
-     FLAGS: Or sequence of GNUTLS_PKCS11_OBJ_* flags
-
-     This function will set attributes on the provided object.
-     Available options for 'itype' are 'GNUTLS_PKCS11_OBJ_LABEL' ,
-     'GNUTLS_PKCS11_OBJ_ID_HEX' , and 'GNUTLS_PKCS11_OBJ_ID' .
-
-     *Returns:* 'GNUTLS_E_SUCCESS' (0) on success or a negative error
-     code on error.
-
-     *Since:* 3.3.26
-
 gnutls_pkcs11_obj_set_pin_function
 ----------------------------------
 
@@ -3272,7 +3184,7 @@ gnutls_pkcs11_privkey_generate2
 
      LABEL: a label
 
-     FMT: the format of output params.  PEM or DER
+     FMT: the format of output params.  PEM or DER.
 
      PUBKEY: will hold the public key (may be 'NULL' )
 
@@ -3292,44 +3204,6 @@ gnutls_pkcs11_privkey_generate2
      otherwise a negative error value.
 
      *Since:* 3.1.5
-
-gnutls_pkcs11_privkey_generate3
--------------------------------
-
- -- Function: int gnutls_pkcs11_privkey_generate3 (const char * URL,
-          gnutls_pk_algorithm_t PK, unsigned int BITS, const char *
-          LABEL, const gnutls_datum_t * CID, gnutls_x509_crt_fmt_t FMT,
-          gnutls_datum_t * PUBKEY, unsigned int FLAGS)
-     URL: a token URL
-
-     PK: the public key algorithm
-
-     BITS: the security bits
-
-     LABEL: a label
-
-     CID: The CKA_ID to use for the new object
-
-     FMT: the format of output params.  PEM or DER
-
-     PUBKEY: will hold the public key (may be 'NULL' )
-
-     FLAGS: zero or an OR'ed sequence of 'GNUTLS_PKCS11_OBJ_FLAGs'
-
-     This function will generate a private key in the specified by the
-     'url' token.  The private key will be generate within the token and
-     will not be exportable.  This function will store the DER-encoded
-     public key in the SubjectPublicKeyInfo format in 'pubkey' .  The
-     'pubkey' should be deinitialized using 'gnutls_free()' .
-
-     Note that when generating an elliptic curve key, the curve can be
-     substituted in the place of the bits parameter using the
-     'GNUTLS_CURVE_TO_BITS()' macro.
-
-     *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
-     otherwise a negative error value.
-
-     *Since:* 3.3.26
 
 gnutls_pkcs11_privkey_get_info
 ------------------------------

@@ -42,7 +42,9 @@ EXTRA_DIST = args-std.def
 AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(srcdir)/gl				\
+	-I$(srcdir)/../gl			\
 	-I$(builddir)/gl			\
+	-I$(builddir)/../gl			\
 	-I$(builddir)/../lib/includes		\
 	-I$(srcdir)/../lib/includes		\
 	-I$(srcdir)/../libdane/includes		\
@@ -61,9 +63,7 @@ bin_PROGRAMS += gnutls-cli
 endif
 endif
 
-if ENABLE_DANE
 bin_PROGRAMS += danetool
-endif
 
 if ENABLE_TROUSERS
 bin_PROGRAMS += tpmtool
@@ -203,65 +203,33 @@ libcmd_tpmtool_la_LIBADD += $(LTLIBREADLINE) $(INET_PTON_LIB) $(LIB_CLOCK_GETTIM
 
 endif # ENABLE_TROUSERS
 
-danetool-args.h: danetool-args.stamp
-danetool-args.c: danetool-args.stamp
-danetool-args.stamp: $(srcdir)/danetool-args.def $(srcdir)/args-std.def
+danetool-args.h: danetool-args.c
+danetool-args.c: $(srcdir)/danetool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-ocsptool-args.h: ocsptool-args.stamp
-ocsptool-args.c: ocsptool-args.stamp
-ocsptool-args.stamp: $(srcdir)/ocsptool-args.def $(srcdir)/args-std.def
+ocsptool-args.h: ocsptool-args.c
+ocsptool-args.c: $(srcdir)/ocsptool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-tpmtool-args.h: tpmtool-args.stamp
-tpmtool-args.c: tpmtool-args.stamp
-tpmtool-args.stamp: $(srcdir)/tpmtool-args.def $(srcdir)/args-std.def
+tpmtool-args.h: tpmtool-args.c
+tpmtool-args.c: $(srcdir)/tpmtool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-p11tool-args.h: p11tool-args.stamp
-p11tool-args.c: p11tool-args.stamp
-p11tool-args.stamp: $(srcdir)/p11tool-args.def $(srcdir)/args-std.def
+p11tool-args.h: p11tool-args.c
+p11tool-args.c: $(srcdir)/p11tool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-psktool-args.h: psktool-args.stamp
-psktool-args.c: psktool-args.stamp
-psktool-args.stamp: $(srcdir)/psktool-args.def $(srcdir)/args-std.def
+psktool-args.h: psktool-args.c
+psktool-args.c: $(srcdir)/psktool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-cli-debug-args.h: cli-debug-args.stamp
-cli-debug-args.c: cli-debug-args.stamp
-cli-debug-args.stamp: $(srcdir)/cli-debug-args.def $(srcdir)/args-std.def
+cli-debug-args.h: cli-debug-args.c
+cli-debug-args.c: $(srcdir)/cli-debug-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-cli-args.h: cli-args.stamp
-cli-args.c: cli-args.stamp
-cli-args.stamp: $(srcdir)/cli-args.def $(srcdir)/args-std.def
+cli-args.h: cli-args.c
+cli-args.c cli-args.h: $(srcdir)/cli-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-serv-args.h: serv-args.stamp
-serv-args.c: serv-args.stamp
-serv-args.stamp: $(srcdir)/serv-args.def $(srcdir)/args-std.def
+serv-args.h: serv-args.c
+serv-args.c: $(srcdir)/serv-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-srptool-args.h: srptool-args.stamp
-srptool-args.c: srptool-args.stamp
-srptool-args.stamp: $(srcdir)/srptool-args.def $(srcdir)/args-std.def
+srptool-args.h: srptool-args.c
+srptool-args.c: $(srcdir)/srptool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-certtool-args.h: certtool-args.stamp
-certtool-args.c: certtool-args.stamp
-certtool-args.stamp: $(srcdir)/certtool-args.def $(srcdir)/args-std.def
+certtool-args.h: certtool-args.c
+certtool-args.c: $(srcdir)/certtool-args.def $(srcdir)/args-std.def
 	-$(AUTOGEN) $<
-	touch $@
-
-clean-local:
-	rm -f *.stamp

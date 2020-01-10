@@ -37,7 +37,7 @@
 #include <ocsptool-common.h>
 
 #define MAX_BUF 4*1024
-#define HEADER_PATTERN "POST /%s HTTP/1.0\r\n" \
+#define HEADER_PATTERN "POST /%s HTTP/1.1\r\n" \
   "Host: %s\r\n" \
   "Accept: */*\r\n" \
   "Content-Type: application/ocsp-request\r\n" \
@@ -147,7 +147,6 @@ int send_ocsp_request(const char *server,
 	unsigned char *p;
 	const char *hostname;
 	const char *path = "";
-	unsigned i;
 	unsigned int headers_size = 0, port;
 	socket_st hd;
 
@@ -157,28 +156,20 @@ int send_ocsp_request(const char *server,
 		/* try to read URL from issuer certificate */
 		gnutls_datum_t data;
 
-		i = 0;
-		do {
-			ret = gnutls_x509_crt_get_authority_info_access(cert, i++,
-									GNUTLS_IA_OCSP_URI,
-									&data,
-									NULL);
-		} while(ret == GNUTLS_E_UNKNOWN_ALGORITHM);
+		ret = gnutls_x509_crt_get_authority_info_access(cert, 0,
+								GNUTLS_IA_OCSP_URI,
+								&data,
+								NULL);
 
-		if (ret < 0) {
-			i = 0;
-			do {
-				ret =
-				    gnutls_x509_crt_get_authority_info_access
-				    (issuer, i++, GNUTLS_IA_OCSP_URI, &data, NULL);
-			} while(ret == GNUTLS_E_UNKNOWN_ALGORITHM);
-		}
-
+		if (ret < 0)
+			ret =
+			    gnutls_x509_crt_get_authority_info_access
+			    (issuer, 0, GNUTLS_IA_OCSP_URI, &data, NULL);
 		if (ret < 0) {
 			fprintf(stderr,
-				"*** Cannot find OCSP server URI in certificate: %s\n",
+				"Cannot find URL from issuer: %s\n",
 				gnutls_strerror(ret));
-			return ret;
+			return -1;
 		}
 
 		url = malloc(data.size + 1);
@@ -314,7 +305,7 @@ void print_ocsp_verify_res(unsigned int output)
 int
 check_ocsp_response(gnutls_x509_crt_t cert,
 		    gnutls_x509_crt_t issuer, gnutls_datum_t * data,
-		    gnutls_datum_t * nonce, int verbose)
+		    gnutls_datum_t * nonce)
 {
 	gnutls_ocsp_resp_t resp;
 	int ret;
@@ -409,8 +400,7 @@ check_ocsp_response(gnutls_x509_crt_t cert,
 
 		ret = gnutls_ocsp_resp_get_nonce(resp, NULL, &rnonce);
 		if (ret == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE) {
-			if (verbose)
-				fprintf(stderr, "*** The OCSP reply did not include the requested nonce.\n");
+			fprintf(stderr, "*** The OCSP reply did not include the requested nonce.\n");
 			goto finish_ok;
 		}
 

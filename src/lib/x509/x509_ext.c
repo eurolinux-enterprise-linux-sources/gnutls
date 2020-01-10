@@ -184,7 +184,7 @@ int gnutls_subject_alt_names_set(gnutls_subject_alt_names_t sans,
 	gnutls_datum_t copy;
 	char *ooc;
 
-	ret = _gnutls_set_strdatum(&copy, san->data, san->size);
+	ret = _gnutls_set_datum(&copy, san->data, san->size);
 	if (ret < 0)
 		return gnutls_assert_val(ret);
 
@@ -236,7 +236,7 @@ int gnutls_x509_ext_import_subject_alt_names(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -382,7 +382,7 @@ int gnutls_x509_ext_import_name_constraints(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -587,7 +587,7 @@ int gnutls_x509_ext_import_subject_key_id(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -766,7 +766,7 @@ int gnutls_x509_aki_set_cert_issuer(gnutls_x509_aki_t aki,
 
 	aki->cert_issuer.names[aki->cert_issuer.size].type = san_type;
 
-	ret = _gnutls_set_strdatum(&t_san, san->data, san->size);
+	ret = _gnutls_set_datum(&t_san, san->data, san->size);
 	if (ret < 0)
 		return gnutls_assert_val(ret);
 
@@ -875,7 +875,7 @@ int gnutls_x509_ext_import_authority_key_id(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(ret);
 	}
 
-	ret = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	ret = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(ret);
@@ -1075,7 +1075,7 @@ int gnutls_x509_ext_import_key_usage(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		asn1_delete_structure(&c2);
@@ -1175,7 +1175,7 @@ int gnutls_x509_ext_import_private_key_usage_period(const gnutls_datum_t * ext,
 		goto cleanup;
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -1281,7 +1281,7 @@ int gnutls_x509_ext_import_basic_constraints(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		result = _gnutls_asn2err(result);
@@ -1414,8 +1414,7 @@ int gnutls_x509_ext_import_proxy(const gnutls_datum_t * ext, int *pathlen,
 {
 	ASN1_TYPE c2 = ASN1_TYPE_EMPTY;
 	int result;
-	gnutls_datum_t value1 = { NULL, 0 };
-	gnutls_datum_t value2 = { NULL, 0 };
+	gnutls_datum_t value = { NULL, 0 };
 
 	if ((result = asn1_create_element
 	     (_gnutls_get_pkix(), "PKIX1.ProxyCertInfo",
@@ -1424,7 +1423,7 @@ int gnutls_x509_ext_import_proxy(const gnutls_datum_t * ext, int *pathlen,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		result = _gnutls_asn2err(result);
@@ -1445,18 +1444,20 @@ int gnutls_x509_ext_import_proxy(const gnutls_datum_t * ext, int *pathlen,
 	}
 
 	result = _gnutls_x509_read_value(c2, "proxyPolicy.policyLanguage",
-					 &value1);
+					 &value);
 	if (result < 0) {
 		gnutls_assert();
 		goto cleanup;
 	}
 
 	if (policyLanguage) {
-		*policyLanguage = (char *)value1.data;
-		value1.data = NULL;
+		*policyLanguage = (char *)value.data;
+	} else {
+		gnutls_free(value.data);
+		value.data = NULL;
 	}
 
-	result = _gnutls_x509_read_value(c2, "proxyPolicy.policy", &value2);
+	result = _gnutls_x509_read_value(c2, "proxyPolicy.policy", &value);
 	if (result == GNUTLS_E_ASN1_ELEMENT_NOT_FOUND) {
 		if (policy)
 			*policy = NULL;
@@ -1467,17 +1468,16 @@ int gnutls_x509_ext_import_proxy(const gnutls_datum_t * ext, int *pathlen,
 		goto cleanup;
 	} else {
 		if (policy) {
-			*policy = (char *)value2.data;
-			value2.data = NULL;
+			*policy = (char *)value.data;
+			value.data = NULL;
 		}
 		if (sizeof_policy)
-			*sizeof_policy = value2.size;
+			*sizeof_policy = value.size;
 	}
 
 	result = 0;
  cleanup:
-	gnutls_free(value1.data);
-	gnutls_free(value2.data);
+	gnutls_free(value.data);
 	asn1_delete_structure(&c2);
 
 	return result;
@@ -1580,7 +1580,7 @@ static int decode_user_notice(const void *data, size_t size,
 		goto cleanup;
 	}
 
-	ret = _asn1_strict_der_decode(&c2, data, size, NULL);
+	ret = asn1_der_decoding(&c2, data, size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = GNUTLS_E_PARSING_ERROR;
@@ -1796,7 +1796,7 @@ int gnutls_x509_ext_import_policies(const gnutls_datum_t * ext,
 		goto cleanup;
 	}
 
-	ret = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	ret = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(ret);
@@ -1853,7 +1853,7 @@ int gnutls_x509_ext_import_policies(const gnutls_datum_t * ext,
 
 				ret =
 				    _gnutls_x509_read_string(c2, tmpstr, &td,
-							     ASN1_ETYPE_IA5_STRING, 0);
+							     ASN1_ETYPE_IA5_STRING);
 				if (ret < 0) {
 					gnutls_assert();
 					goto full_cleanup;
@@ -2287,7 +2287,7 @@ int gnutls_x509_ext_import_crl_dist_points(const gnutls_datum_t * ext,
 	int len, ret;
 	uint8_t reasons[2];
 	unsigned i, type, rflags, j;
-	gnutls_datum_t san = {NULL, 0};
+	gnutls_datum_t san;
 
 	result = asn1_create_element
 	    (_gnutls_get_pkix(), "PKIX1.CRLDistributionPoints", &c2);
@@ -2296,7 +2296,7 @@ int gnutls_x509_ext_import_crl_dist_points(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
@@ -2310,6 +2310,9 @@ int gnutls_x509_ext_import_crl_dist_points(const gnutls_datum_t * ext,
 
 	i = 0;
 	do {
+		san.data = NULL;
+		san.size = 0;
+
 		snprintf(name, sizeof(name), "?%u.reasons", (unsigned)i + 1);
 
 		len = sizeof(reasons);
@@ -2334,9 +2337,6 @@ int gnutls_x509_ext_import_crl_dist_points(const gnutls_datum_t * ext,
 
 		j = 0;
 		do {
-			san.data = NULL;
-			san.size = 0;
-
 			ret =
 			    _gnutls_parse_general_name2(c2, name, j, &san,
 							&type, 0);
@@ -2351,7 +2351,6 @@ int gnutls_x509_ext_import_crl_dist_points(const gnutls_datum_t * ext,
 			ret = crl_dist_points_set(cdp, type, &san, rflags);
 			if (ret < 0)
 				break;
-			san.data = NULL; /* it is now in cdp */
 
 			j++;
 		} while (ret >= 0);
@@ -2710,7 +2709,7 @@ int gnutls_x509_ext_import_aia(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(ret);
 	}
 
-	ret = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	ret = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(ret);
@@ -2933,7 +2932,7 @@ int gnutls_x509_ext_import_key_purposes(const gnutls_datum_t * ext,
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, ext->data, ext->size, NULL);
+	result = asn1_der_decoding(&c2, ext->data, ext->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -3069,7 +3068,7 @@ int _gnutls_x509_decode_ext(const gnutls_datum_t *der, gnutls_x509_ext_st *out)
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&c2, der->data, der->size, NULL);
+	result = asn1_der_decoding(&c2, der->data, der->size, NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
 		ret = _gnutls_asn2err(result);
@@ -3155,7 +3154,7 @@ int gnutls_x509_othername_to_virtual(const char *oid,
 		case GNUTLS_SAN_OTHERNAME_XMPP:
 			ret = _gnutls_x509_decode_string
 				    (ASN1_ETYPE_UTF8_STRING, othername->data,
-				     othername->size, virt, 0);
+				     othername->size, virt);
 			if (ret < 0) {
 				gnutls_assert();
 				return ret;

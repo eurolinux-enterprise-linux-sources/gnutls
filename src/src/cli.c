@@ -1,7 +1,6 @@
 /*
- * Copyright (C) 2000-2016 Free Software Foundation, Inc.
- * Copyright (C) 2013-2016 Nikos Mavrogiannopoulos
- * Copyright (C) 2015-2016 Red Hat, Inc.
+ * Copyright (C) 2000-2014 Free Software Foundation, Inc.
+ * Copyright (C) 2013-2014 Nikos Mavrogiannopoulos
  *
  * This file is part of GnuTLS.
  *
@@ -104,10 +103,6 @@ static gnutls_srp_client_credentials_t srp_cred;
 static gnutls_psk_client_credentials_t psk_cred;
 static gnutls_anon_client_credentials_t anon_cred;
 static gnutls_certificate_credentials_t xcred;
-
-/* The number of seconds we wait for a reply from peer prior to
- * closing the connection. */
-#define TERM_TIMEOUT 8000
 
 /* end of global stuff */
 
@@ -410,15 +405,13 @@ static int cert_verify_callback(gnutls_session_t session)
 				return -1;
 		} else if (ENABLED_OPT(OCSP) && gnutls_ocsp_status_request_is_checked(session, 0) == 0) {	/* off-line verification succeeded. Try OCSP */
 			rc = cert_verify_ocsp(session);
-			if (rc == -1) {
+			if (rc == 0) {
 				printf
-				    ("*** Verifying (with OCSP) server certificate chain failed...\n");
+				    ("*** Verifying (with OCSP) server certificate failed...\n");
 				if (!insecure && !ssh)
 					return -1;
-			} else if (rc == 0)
-				printf("*** OCSP: nothing to check.\n");
-			else
-				printf("*** OCSP: verified %d certificate(s).\n", rc);
+			} else if (rc == -1)
+				printf("*** OCSP response ignored...\n");
 		}
 	}
 
@@ -694,23 +687,19 @@ static gnutls_session_t init_tls_session(const char *hostname)
 					GNUTLS_HB_PEER_ALLOWED_TO_SEND);
 
 #ifdef ENABLE_DTLS_SRTP
-        if (HAVE_OPT(SRTP_PROFILES)) {
-                ret =
-                    gnutls_srtp_set_profile_direct(session,
-                                                   OPT_ARG(SRTP_PROFILES),
-                                                   &err);
-                if (ret == GNUTLS_E_INVALID_REQUEST)
-                        fprintf(stderr, "Syntax error at: %s\n", err);
-                else if (ret != 0)
-                        fprintf(stderr, "Error in profiles: %s\n",
-                                gnutls_strerror(ret));
-                else fprintf(stderr,"DTLS profile set to %s\n",
-                             OPT_ARG(SRTP_PROFILES));
-
-                if (ret != 0) exit(1);
-        }
+	if (HAVE_OPT(SRTP_PROFILES)) {
+		ret =
+		    gnutls_srtp_set_profile_direct(session,
+						   OPT_ARG(SRTP_PROFILES),
+						   &err);
+		if (ret == GNUTLS_E_INVALID_REQUEST)
+			fprintf(stderr, "Syntax error at: %s\n", err);
+		else
+			fprintf(stderr, "Error in profiles: %s\n",
+				gnutls_strerror(ret));
+		exit(1);
+	}
 #endif
-
 
 	return session;
 }
@@ -793,7 +782,7 @@ static int check_net_or_keyboard_input(socket_st * hd)
 #endif
 
 		tv.tv_sec = 0;
-		tv.tv_usec = 500 * 1000;
+		tv.tv_usec = 50 * 1000;
 
 		if (hd->secure == 1)
 			if (gnutls_record_check_pending(hd->session))
@@ -862,9 +851,6 @@ static int try_resume(socket_st * hd)
 	printf
 	    ("\n\n- Connecting again- trying to resume previous session\n");
 	socket_open(hd, hostname, service, udp, CONNECT_MSG);
-
-	if (HAVE_OPT(STARTTLS_PROTO))
-	        socket_starttls(hd, OPT_ARG(STARTTLS_PROTO));
 
 	hd->session = init_tls_session(hostname);
 	gnutls_session_set_data(hd->session, session_data,
@@ -1054,26 +1040,6 @@ int do_inline_command_processing(char *buffer_ptr, size_t curr_bytes,
 	}
 }
 
-static void flush_socket(socket_st *hd, unsigned ms)
-{
-	int ret, ii;
-	char buffer[MAX_BUF + 1];
-
-	memset(buffer, 0, MAX_BUF + 1);
-	ret = socket_recv_timeout(hd, buffer, MAX_BUF, ms);
-	if (ret == 0)
-		return;
-	else if (ret > 0) {
-		if (verbose != 0)
-			printf("- Received[%d]: ", ret);
-
-		for (ii = 0; ii < ret; ii++) {
-			fputc(buffer[ii], stdout);
-		}
-		fflush(stdout);
-	}
-}
-
 int main(int argc, char **argv)
 {
 	int ret;
@@ -1084,7 +1050,6 @@ int main(int argc, char **argv)
 	ssize_t bytes, keyboard_bytes;
 	char *keyboard_buffer_ptr;
 	inline_cmds_st inline_cmds;
-	unsigned last_op_is_write = 0;
 #ifndef _WIN32
 	struct sigaction new_action;
 #endif
@@ -1110,9 +1075,6 @@ int main(int argc, char **argv)
 
 	socket_open(&hd, hostname, service, udp, CONNECT_MSG);
 	hd.verbose = verbose;
-
-	if (HAVE_OPT(STARTTLS_PROTO))
-	        socket_starttls(&hd, OPT_ARG(STARTTLS_PROTO));
 
 	hd.session = init_tls_session(hostname);
 	if (starttls)
@@ -1185,7 +1147,6 @@ int main(int argc, char **argv)
 
 		if (inp == IN_NET) {
 			memset(buffer, 0, MAX_BUF + 1);
-			last_op_is_write = 0;
 			ret = socket_recv(&hd, buffer, MAX_BUF);
 
 			if (ret == 0) {
@@ -1231,8 +1192,6 @@ int main(int argc, char **argv)
 						break;
 					}
 				} else {
-					if (last_op_is_write)
-						flush_socket(&hd, TERM_TIMEOUT);
 					user_term = 1;
 					break;
 				}
@@ -1272,7 +1231,6 @@ int main(int argc, char **argv)
 				}
 			}
 
-			last_op_is_write = 1;
 			if (ranges
 			    && gnutls_record_can_use_length_hiding(hd.
 								   session))
@@ -1741,93 +1699,80 @@ static void init_global_tls_stuff(void)
 }
 
 /* OCSP check for the peer's certificate. Should be called 
- * only after the certificate list verification is complete.
+ * only after the certificate list verication is complete.
  * Returns:
- * -1: certificate chain could not be checked fully
- * >=0: number of certificates verified ok
+ * 0: certificate is revoked
+ * 1: certificate is ok
+ * -1: dunno
  */
 static int cert_verify_ocsp(gnutls_session_t session)
 {
-	gnutls_x509_crt_t cert, issuer;
+	gnutls_x509_crt_t crt, issuer;
 	const gnutls_datum_t *cert_list;
-	unsigned int cert_list_size = 0, ok = 0;
-	unsigned failed = 0;
-	int deinit_issuer = 0, deinit_cert = 0;
+	unsigned int cert_list_size = 0;
+	int deinit_issuer = 0;
 	gnutls_datum_t resp;
 	unsigned char noncebuf[23];
 	gnutls_datum_t nonce = { noncebuf, sizeof(noncebuf) };
 	int ret;
-	unsigned it;
 
 	cert_list = gnutls_certificate_get_peers(session, &cert_list_size);
 	if (cert_list_size == 0) {
 		fprintf(stderr, "No certificates found!\n");
-		return 0;
+		return -1;
 	}
 
-	for (it = 0; it < cert_list_size; it++) {
-		gnutls_x509_crt_init(&cert);
-		if (deinit_cert)
-			gnutls_x509_crt_deinit(cert);
-		gnutls_x509_crt_init(&cert);
-		deinit_cert = 1;
-		ret = gnutls_x509_crt_import(cert, &cert_list[it], GNUTLS_X509_FMT_DER);
-		if (ret < 0) {
-			fprintf(stderr, "Decoding error: %s\n", gnutls_strerror(ret));
-			goto cleanup;
-		}
-
-		if (deinit_issuer) {
-			gnutls_x509_crt_deinit(issuer);
-			deinit_issuer = 0;
-		}
-
-		ret = gnutls_certificate_get_issuer(xcred, cert, &issuer, 0);
-		if (ret < 0 && cert_list_size - it > 1) {
-			gnutls_x509_crt_init(&issuer);
-			deinit_issuer = 1;
-			ret = gnutls_x509_crt_import(issuer, &cert_list[it + 1], GNUTLS_X509_FMT_DER);
-			if (ret < 0) {
-				fprintf(stderr, "Decoding error: %s\n", gnutls_strerror(ret));
-				goto cleanup;
-			}
-		} else if (ret < 0) {
-			fprintf(stderr, "Cannot find issuer\n");
-			goto cleanup;
-		}
-
-		ret = gnutls_rnd(GNUTLS_RND_NONCE, nonce.data, nonce.size);
-		if (ret < 0) {
-			fprintf(stderr, "gnutls_rnd: %s", gnutls_strerror(ret));
-			goto cleanup;
-		}
-
-		ret = send_ocsp_request(NULL, cert, issuer, &resp, &nonce);
-		if (ret == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE) {
-			continue;
-		}
-		if (ret < 0) {
-			fprintf(stderr, "Cannot contact OCSP server\n");
-			goto cleanup;
-		}
-
-		/* verify and check the response for revoked cert */
-		ret = check_ocsp_response(cert, issuer, &resp, &nonce, verbose);
-		if (ret == 1)
-			ok++;
-		else if (ret == 0) {
-			failed++;
-			break;
-		}
+	gnutls_x509_crt_init(&crt);
+	ret =
+	    gnutls_x509_crt_import(crt, &cert_list[0],
+				   GNUTLS_X509_FMT_DER);
+	if (ret < 0) {
+		fprintf(stderr, "Decoding error: %s\n",
+			gnutls_strerror(ret));
+		return -1;
 	}
 
-cleanup:
+	ret = gnutls_certificate_get_issuer(xcred, crt, &issuer, 0);
+	if (ret < 0 && cert_list_size > 1) {
+		gnutls_x509_crt_init(&issuer);
+		ret =
+		    gnutls_x509_crt_import(issuer, &cert_list[1],
+					   GNUTLS_X509_FMT_DER);
+		if (ret < 0) {
+			fprintf(stderr, "Decoding error: %s\n",
+				gnutls_strerror(ret));
+			return -1;
+		}
+		deinit_issuer = 1;
+	} else if (ret < 0) {
+		fprintf(stderr, "Cannot find issuer\n");
+		ret = -1;
+		goto cleanup;
+	}
+
+	ret =
+	    gnutls_rnd(GNUTLS_RND_NONCE, nonce.data, nonce.size);
+	if (ret < 0) {
+		fprintf(stderr, "gnutls_rnd: %s",
+			gnutls_strerror(ret));
+		ret = -1;
+		goto cleanup;
+	}
+
+	ret = send_ocsp_request(NULL, crt, issuer, &resp, &nonce);
+	if (ret < 0) {
+		fprintf(stderr, "Cannot contact OCSP server\n");
+		ret = -1;
+		goto cleanup;
+	}
+
+	/* verify and check the response for revoked cert */
+	ret = check_ocsp_response(crt, issuer, &resp, &nonce);
+
+      cleanup:
 	if (deinit_issuer)
 		gnutls_x509_crt_deinit(issuer);
-	if (deinit_cert)
-		gnutls_x509_crt_deinit(cert);
+	gnutls_x509_crt_deinit(crt);
 
-	if (failed > 0)
-		return -1;
-	return ok >= 1 ? (int) ok : -1;
+	return ret;
 }

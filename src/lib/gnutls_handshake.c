@@ -553,12 +553,7 @@ read_client_hello(gnutls_session_t session, uint8_t * data,
 		pos += 2;
 
 		DECR_LEN(len, suite_size);
-		suite_ptr = &data[pos];
 		pos += suite_size;
-
-		ret = _gnutls_server_select_suite(session, suite_ptr, suite_size, 1);
-		if (ret < 0)
-			return gnutls_assert_val(ret);
 
 		DECR_LEN(len, 1);
 		comp_size = data[pos++];	/* z is the number of compression methods */
@@ -613,13 +608,6 @@ read_client_hello(gnutls_session_t session, uint8_t * data,
 	 * Unconditionally try to parse extensions; safe renegotiation uses them in
 	 * sslv3 and higher, even though sslv3 doesn't officially support them.
 	 */
-	ret = _gnutls_parse_extensions(session, GNUTLS_EXT_MANDATORY,
-				       &data[pos], len);
-	if (ret < 0) {
-		gnutls_assert();
-		return ret;
-	}
-
 	ret = _gnutls_parse_extensions(session, GNUTLS_EXT_APPLICATION,
 				       &data[pos], len);
 	/* len is the rest of the parsed length */
@@ -633,6 +621,13 @@ read_client_hello(gnutls_session_t session, uint8_t * data,
 	if (sret < 0 && sret != GNUTLS_E_INT_RET_0) {
 		gnutls_assert();
 		return sret;
+	}
+
+	ret = _gnutls_parse_extensions(session, GNUTLS_EXT_MANDATORY,
+				       &data[pos], len);
+	if (ret < 0) {
+		gnutls_assert();
+		return ret;
 	}
 
 	ret =
@@ -658,10 +653,6 @@ read_client_hello(gnutls_session_t session, uint8_t * data,
 		    max_record_send_size =
 		    session->security_parameters.max_record_send_size;
 
-		ret = _gnutls_server_select_suite(session, suite_ptr, suite_size, 1);
-		if (ret < 0)
-			return gnutls_assert_val(ret);
-
 		ret = resume_copy_required_values(session);
 		if (ret < 0)
 			return gnutls_assert_val(ret);
@@ -671,7 +662,7 @@ read_client_hello(gnutls_session_t session, uint8_t * data,
 
 	/* select an appropriate cipher suite
 	 */
-	ret = _gnutls_server_select_suite(session, suite_ptr, suite_size, 0);
+	ret = _gnutls_server_select_suite(session, suite_ptr, suite_size);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -909,7 +900,7 @@ server_find_pk_algos_in_ciphersuites(const uint8_t *
  */
 int
 _gnutls_server_select_suite(gnutls_session_t session, uint8_t * data,
-			    unsigned int datalen, unsigned scsv_only)
+			    unsigned int datalen)
 {
 	int ret;
 	unsigned int i, j, cipher_suites_size;
@@ -943,9 +934,6 @@ _gnutls_server_select_suite(gnutls_session_t session, uint8_t * data,
 			}
 		}
 	}
-
-	if (scsv_only)
-		return 0;
 
 	pk_algos_size = MAX_ALGOS;
 	ret =
@@ -1990,22 +1978,23 @@ static int send_client_hello(gnutls_session_t session, int again)
 		if (_gnutls_set_current_version(session, hver->id) < 0)
 			return gnutls_assert_val(GNUTLS_E_UNSUPPORTED_VERSION_PACKET);
 
-		if (session->internals.priorities.min_record_version != 0) {
+		if (session->internals.priorities.ssl3_record_version != 0) {
 			/* Advertize the SSL 3.0 record packet version in
 			 * record packets during the handshake.
 			 * That is to avoid confusing implementations
 			 * that do not support TLS 1.2 and don't know
 			 * how 3,3 version of record packets look like.
 			 */
-			const version_entry_st *v = _gnutls_version_lowest(session);
-
-			if (v == NULL) {
-				gnutls_assert();
-				return GNUTLS_E_INTERNAL_ERROR;
-			} else {
+			if (!IS_DTLS(session))
 				_gnutls_record_set_default_version(session,
-								   v->major, v->minor);
-			}
+								   3, 0);
+			else if (hver->id == GNUTLS_DTLS0_9)
+				_gnutls_record_set_default_version(session,
+								   1, 0);
+			else
+				_gnutls_record_set_default_version(session,
+								   254,
+								   255);
 		}
 
 		/* In order to know when this session was initiated.
@@ -2065,8 +2054,7 @@ static int send_client_hello(gnutls_session_t session, int again)
 			ret =
 			    copy_ciphersuites(session, &extdata,
 					      TRUE);
-			if (session->security_parameters.entity == GNUTLS_CLIENT)
-				_gnutls_extension_list_add(session,
+			_gnutls_extension_list_add(session,
 						   GNUTLS_EXTENSION_SAFE_RENEGOTIATION);
 		} else
 			ret =
@@ -2503,25 +2491,20 @@ static int _gnutls_recv_supplemental(gnutls_session_t session)
  * full handshake will be performed.
  *
  * The non-fatal errors expected by this function are:
- * %GNUTLS_E_INTERRUPTED, %GNUTLS_E_AGAIN, 
- * %GNUTLS_E_WARNING_ALERT_RECEIVED, and %GNUTLS_E_GOT_APPLICATION_DATA,
- * the latter only in a case of rehandshake.
- *
+ * %GNUTLS_E_INTERRUPTED, %GNUTLS_E_AGAIN, and %GNUTLS_E_WARNING_ALERT_RECEIVED.
  * The former two interrupt the handshake procedure due to the lower
  * layer being interrupted, and the latter because of an alert that
  * may be sent by a server (it is always a good idea to check any
  * received alerts). On these errors call this function again, until it
  * returns 0; cf.  gnutls_record_get_direction() and
- * gnutls_error_is_fatal(). In DTLS sessions the non-fatal error
- * %GNUTLS_E_LARGE_PACKET is also possible, and indicates that
- * the MTU should be adjusted.
+ * gnutls_error_is_fatal().
  *
  * If this function is called by a server after a rehandshake request
  * then %GNUTLS_E_GOT_APPLICATION_DATA or
  * %GNUTLS_E_WARNING_ALERT_RECEIVED may be returned.  Note that these
  * are non fatal errors, only in the specific case of a rehandshake.
  * Their meaning is that the client rejected the rehandshake request or
- * in the case of %GNUTLS_E_GOT_APPLICATION_DATA it could also mean that
+ * in the case of %GNUTLS_E_GOT_APPLICATION_DATA it might also mean that
  * some data were pending.
  *
  * Returns: %GNUTLS_E_SUCCESS on success, otherwise a negative error code.
@@ -2538,9 +2521,6 @@ int gnutls_handshake(gnutls_session_t session)
 		/* first call */
 		if (session->internals.priorities.protocol.algorithms == 0)
 			return gnutls_assert_val(GNUTLS_E_NO_PRIORITIES_WERE_SET);
-
-		session->internals.crt_requested = 0;
-		session->internals.handshake_in_progress = 1;
 
 		gettime(&session->internals.dtls.handshake_start_time);
 		if (session->internals.handshake_timeout_ms &&
@@ -2611,11 +2591,6 @@ int gnutls_handshake(gnutls_session_t session)
 void
 gnutls_handshake_set_timeout(gnutls_session_t session, unsigned int ms)
 {
-	if (IS_DTLS(session)) {
-		gnutls_dtls_set_timeouts(session, 1000, ms);
-		return;
-	}
-
 	if (ms == GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT)
 		ms = 40 * 1000;
 	session->internals.handshake_timeout_ms = ms;
@@ -2627,24 +2602,10 @@ gnutls_handshake_set_timeout(gnutls_session_t session, unsigned int ms)
 		/* EAGAIN and INTERRUPTED are always non-fatal */ \
 		if (ret == GNUTLS_E_AGAIN || ret == GNUTLS_E_INTERRUPTED) \
 			return ret; \
-		if (ret == GNUTLS_E_GOT_APPLICATION_DATA && session->internals.initial_negotiation_completed != 0) \
-			return ret; \
-		if (session->internals.handshake_suspicious_loops < 16) { \
-			if (ret == GNUTLS_E_LARGE_PACKET) { \
-				session->internals.handshake_suspicious_loops++; \
-				return ret; \
-			} \
-			/* a warning alert might interrupt handshake */ \
-			if (allow_alert != 0 && ret==GNUTLS_E_WARNING_ALERT_RECEIVED) { \
-				session->internals.handshake_suspicious_loops++; \
-				return ret; \
-			} \
-		} \
+                /* a warning alert might interrupt handshake */ \
+		if (allow_alert != 0 && ret==GNUTLS_E_WARNING_ALERT_RECEIVED) return ret; \
 		gnutls_assert(); \
 		ERR( str, ret); \
-		/* do not allow non-fatal errors at this point */ \
-		if (gnutls_error_is_fatal(ret) == 0) ret = gnutls_assert_val(GNUTLS_E_INTERNAL_ERROR); \
-		session_invalidate(session); \
 		_gnutls_handshake_hash_buffers_clear(session); \
 		return ret; \
 	} } while (0)
@@ -2997,7 +2958,7 @@ static int send_handshake_final(gnutls_session_t session, int init)
 static int recv_handshake_final(gnutls_session_t session, int init)
 {
 	int ret = 0;
-	uint8_t ccs[3];
+	uint8_t ch;
 	unsigned int ccs_len = 1;
 	unsigned int tleft;
 	const version_entry_st *vers;
@@ -3032,7 +2993,7 @@ static int recv_handshake_final(gnutls_session_t session, int init)
 
 		ret =
 		    _gnutls_recv_int(session, GNUTLS_CHANGE_CIPHER_SPEC,
-				     -1, NULL, ccs, ccs_len, NULL, tleft);
+				     -1, NULL, &ch, ccs_len, NULL, tleft);
 		if (ret <= 0) {
 			ERR("recv ChangeCipherSpec", ret);
 			gnutls_assert();
@@ -3536,14 +3497,11 @@ remove_unwanted_ciphersuites(gnutls_session_t session,
  * This function will set the maximum size of all handshake messages.
  * Handshakes over this size are rejected with
  * %GNUTLS_E_HANDSHAKE_TOO_LARGE error code.  The default value is
- * 128kb which is typically large enough.  Set this to 0 if you do not
+ * 48kb which is typically large enough.  Set this to 0 if you do not
  * want to set an upper limit.
  *
  * The reason for restricting the handshake message sizes are to
  * limit Denial of Service attacks.
- *
- * Note that the maximum handshake size was increased to 128kb
- * from 48kb in GnuTLS 3.3.25.
  **/
 void
 gnutls_handshake_set_max_packet_length(gnutls_session_t session,

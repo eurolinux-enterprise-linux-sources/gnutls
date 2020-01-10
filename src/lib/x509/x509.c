@@ -164,71 +164,6 @@ void gnutls_x509_crt_deinit(gnutls_x509_crt_t cert)
 	gnutls_free(cert);
 }
 
-static int compare_sig_algorithm(gnutls_x509_crt_t cert)
-{
-	int ret, s2;
-	gnutls_datum_t sp1 = {NULL, 0};
-	gnutls_datum_t sp2 = {NULL, 0};
-	unsigned empty1 = 0, empty2 = 0;
-
-	ret = _gnutls_x509_get_signature_algorithm(cert->cert,
-						      "signatureAlgorithm.algorithm");
-	if (ret < 0) {
-		gnutls_assert();
-		return ret;
-	}
-
-	s2 = _gnutls_x509_get_signature_algorithm(cert->cert,
-						  "tbsCertificate.signature.algorithm");
-	if (ret != s2) {
-		_gnutls_debug_log("signatureAlgorithm.algorithm differs from tbsCertificate.signature.algorithm: %s, %s\n",
-			gnutls_sign_get_name(ret), gnutls_sign_get_name(s2));
-		gnutls_assert();
-		return GNUTLS_E_CERTIFICATE_ERROR;
-	}
-
-	/* compare the parameters */
-	ret = _gnutls_x509_read_value(cert->cert, "signatureAlgorithm.parameters", &sp1);
-	if (ret == GNUTLS_E_ASN1_ELEMENT_NOT_FOUND) {
-		empty1 = 1;
-	} else if (ret < 0) {
-		gnutls_assert();
-		return ret;
-	}
-
-	ret = _gnutls_x509_read_value(cert->cert, "signatureAlgorithm.parameters", &sp2);
-	if (ret == GNUTLS_E_ASN1_ELEMENT_NOT_FOUND) {
-		empty2 = 1;
-	} else if (ret < 0) {
-		gnutls_assert();
-		return ret;
-	}
-
-	/* handle equally empty parameters with missing parameters */
-	if (sp1.size == 2 && memcmp(sp1.data, "\x05\x00", 2) == 0) {
-		empty1 = 1;
-	 	_gnutls_free_datum(&sp1);
-	}
-
-	if (sp2.size == 2 && memcmp(sp2.data, "\x05\x00", 2) == 0) {
-		empty2 = 1;
-	 	_gnutls_free_datum(&sp2);
-	}
-
-	if (empty1 != empty2 || 
-	    sp1.size != sp2.size || safe_memcmp(sp1.data, sp2.data, sp1.size) != 0) {
-		gnutls_assert();
-		ret = GNUTLS_E_CERTIFICATE_ERROR;
-		goto cleanup;
-	}
-
-	ret = 0;
- cleanup:
- 	_gnutls_free_datum(&sp1);
- 	_gnutls_free_datum(&sp2);
- 	return ret;
-}
-
 /**
  * gnutls_x509_crt_import:
  * @cert: The structure to store the parsed certificate.
@@ -251,7 +186,6 @@ gnutls_x509_crt_import(gnutls_x509_crt_t cert,
 		       gnutls_x509_crt_fmt_t format)
 {
 	int result = 0;
-	int version;
 
 	if (cert == NULL) {
 		gnutls_assert();
@@ -292,7 +226,7 @@ gnutls_x509_crt_import(gnutls_x509_crt_t cert,
 	}
 
 	if (cert->expanded) {
-		/* Any earlier _asn1_strict_der_decode will modify the ASN.1
+		/* Any earlier asn1_der_decoding will modify the ASN.1
 		   structure, so we need to replace it with a fresh
 		   structure. */
 		result = crt_reinit(cert);
@@ -305,19 +239,12 @@ gnutls_x509_crt_import(gnutls_x509_crt_t cert,
 	cert->expanded = 1;
 
 	result =
-	    _asn1_strict_der_decode(&cert->cert, cert->der.data, cert->der.size, NULL);
+	    asn1_der_decoding(&cert->cert, cert->der.data, cert->der.size, NULL);
 	if (result != ASN1_SUCCESS) {
 		result = _gnutls_asn2err(result);
 		gnutls_assert();
 		goto cleanup;
 	}
-
-	result = compare_sig_algorithm(cert);
-	if (result < 0) {
-		gnutls_assert();
-		goto cleanup;
-	}
-
 
 	result = _gnutls_x509_get_raw_field2(cert->cert, &cert->der,
 					  "tbsCertificate.issuer.rdnSequence",
@@ -341,26 +268,6 @@ gnutls_x509_crt_import(gnutls_x509_crt_t cert,
 	if (result < 0) {
 		gnutls_assert();
 		goto cleanup;
-	}
-
-	/* enforce the rule that only version 3 certificates carry extensions */
-	result = gnutls_x509_crt_get_version(cert);
-	if (result < 0) {
-		gnutls_assert();
-		goto cleanup;
-	}
-
-	version = result;
-	if (version < 3) {
-		gnutls_datum_t exts;
-		result = _gnutls_x509_get_raw_field2(cert->cert, &cert->der,
-			"tbsCertificate.extensions", &exts);
-		if (result >= 0 && exts.size > 0) {
-			gnutls_assert();
-			_gnutls_debug_log("error: extensions present in certificate with version %d\n", version);
-			result = GNUTLS_E_X509_CERTIFICATE_ERROR;
-			goto cleanup;
-		}
 	}
 
 	/* Since we do not want to disable any extension
@@ -743,9 +650,6 @@ int gnutls_x509_crt_get_version(gnutls_x509_crt_t cert)
 		gnutls_assert();
 		return _gnutls_asn2err(result);
 	}
-
-	if (len != 1)
-		return gnutls_assert_val(GNUTLS_E_CERTIFICATE_ERROR);
 
 	return (int) version[0] + 1;
 }
@@ -2688,7 +2592,7 @@ _gnutls_x509_crt_check_revocation(gnutls_x509_crt_t cert,
 	uint8_t serial[128];
 	uint8_t cert_serial[128];
 	size_t serial_size, cert_serial_size;
-	int ret, j;
+	int ncerts, ret, i, j;
 	gnutls_x509_crl_iter_t iter = NULL;
 
 	if (cert == NULL) {
@@ -2724,8 +2628,13 @@ _gnutls_x509_crt_check_revocation(gnutls_x509_crt_t cert,
 		 *   certificate serial we have.
 		 */
 
-		iter = NULL;
-		do {
+		ncerts = gnutls_x509_crl_get_crt_count(crl_list[j]);
+		if (ncerts < 0) {
+			gnutls_assert();
+			return ncerts;
+		}
+
+		for (i = 0; i < ncerts; i++) {
 			serial_size = sizeof(serial);
 			ret =
 			    gnutls_x509_crl_iter_crt_serial(crl_list[j],
@@ -2733,11 +2642,10 @@ _gnutls_x509_crt_check_revocation(gnutls_x509_crt_t cert,
 							    serial,
 							    &serial_size,
 							    NULL);
-			if (ret == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE) {
-				break;
-			} else if (ret < 0) {
+
+			if (ret < 0) {
 				gnutls_assert();
-				goto fail;
+				return ret;
 			}
 
 			if (serial_size == cert_serial_size) {
@@ -2750,12 +2658,10 @@ _gnutls_x509_crt_check_revocation(gnutls_x509_crt_t cert,
 						     crl_list[j],
 						     GNUTLS_CERT_REVOKED |
 						     GNUTLS_CERT_INVALID);
-					ret = 1;	/* revoked! */
-					goto fail;
+					return 1;	/* revoked! */
 				}
 			}
-		} while(1);
-
+		}
 		gnutls_x509_crl_iter_deinit(iter);
 		iter = NULL;
 
@@ -2764,10 +2670,6 @@ _gnutls_x509_crt_check_revocation(gnutls_x509_crt_t cert,
 
 	}
 	return 0;		/* not revoked. */
-
- fail:
- 	gnutls_x509_crl_iter_deinit(iter);
- 	return ret;
 }
 
 
@@ -3013,7 +2915,7 @@ gnutls_x509_crt_get_crl_dist_points(gnutls_x509_crt_t cert,
 {
 	int ret;
 	gnutls_datum_t dist_points = { NULL, 0 };
-	unsigned type;
+	gnutls_x509_subject_alt_name_t type;
 	gnutls_x509_crl_dist_points_t cdp = NULL;
 	gnutls_datum_t t_san;
 
@@ -3336,7 +3238,7 @@ gnutls_x509_crt_list_import2(gnutls_x509_crt_t ** certs,
 
 	ret =
 	    gnutls_x509_crt_list_import(*certs, &init, data, format,
-					flags | GNUTLS_X509_CRT_LIST_IMPORT_FAIL_IF_EXCEED);
+					GNUTLS_X509_CRT_LIST_IMPORT_FAIL_IF_EXCEED);
 	if (ret == GNUTLS_E_SHORT_MEMORY_BUFFER) {
 		*certs =
 		    gnutls_realloc_fast(*certs,
@@ -3571,11 +3473,10 @@ gnutls_x509_crt_get_subject_unique_id(gnutls_x509_crt_t crt, char *buf,
 	    _gnutls_x509_read_value(crt->cert,
 				    "tbsCertificate.subjectUniqueID",
 				    &datum);
-	if (result < 0)
-		return gnutls_assert_val(result);
 
 	if (datum.size > *buf_size) {	/* then we're not going to fit */
 		*buf_size = datum.size;
+		buf[0] = '\0';
 		result = GNUTLS_E_SHORT_MEMORY_BUFFER;
 	} else {
 		*buf_size = datum.size;
@@ -3616,11 +3517,10 @@ gnutls_x509_crt_get_issuer_unique_id(gnutls_x509_crt_t crt, char *buf,
 	    _gnutls_x509_read_value(crt->cert,
 				    "tbsCertificate.issuerUniqueID",
 				    &datum);
-	if (result < 0)
-		return gnutls_assert_val(result);
 
 	if (datum.size > *buf_size) {	/* then we're not going to fit */
 		*buf_size = datum.size;
+		buf[0] = '\0';
 		result = GNUTLS_E_SHORT_MEMORY_BUFFER;
 	} else {
 		*buf_size = datum.size;
@@ -3761,20 +3661,17 @@ legacy_parse_aia(ASN1_TYPE src,
  *
  * If @what is %GNUTLS_IA_URI, @data will hold the accessLocation URI
  * data.  Requesting this @what value leads to an error if the
- * accessLocation is not of the "uniformResourceIdentifier" type. 
+ * accessLocation is not of the "uniformResourceIdentifier" type.
  *
  * If @what is %GNUTLS_IA_OCSP_URI, @data will hold the OCSP URI.
  * Requesting this @what value leads to an error if the accessMethod
  * is not 1.3.6.1.5.5.7.48.1 aka OSCP, or if accessLocation is not of
- * the "uniformResourceIdentifier" type. In that case %GNUTLS_E_UNKNOWN_ALGORITHM
- * will be returned, and @seq should be increased and this function
- * called again.
+ * the "uniformResourceIdentifier" type.
  *
  * If @what is %GNUTLS_IA_CAISSUERS_URI, @data will hold the caIssuers
  * URI.  Requesting this @what value leads to an error if the
  * accessMethod is not 1.3.6.1.5.5.7.48.2 aka caIssuers, or if
  * accessLocation is not of the "uniformResourceIdentifier" type.
- * In that case handle as in %GNUTLS_IA_OCSP_URI.
  *
  * More @what values may be allocated in the future as needed.
  *
@@ -3832,7 +3729,7 @@ gnutls_x509_crt_get_authority_info_access(gnutls_x509_crt_t crt,
 		return _gnutls_asn2err(ret);
 	}
 
-	ret = _asn1_strict_der_decode(&c2, aia.data, aia.size, NULL);
+	ret = asn1_der_decoding(&c2, aia.data, aia.size, NULL);
 	/* asn1_print_structure (stdout, c2, "", ASN1_PRINT_ALL); */
 	_gnutls_free_datum(&aia);
 	if (ret != ASN1_SUCCESS) {

@@ -33,16 +33,13 @@
 
 /* Functions for version handling. */
 const version_entry_st *version_to_entry(gnutls_protocol_t c);
-const version_entry_st *_gnutls_version_lowest(gnutls_session_t session);
+gnutls_protocol_t _gnutls_version_lowest(gnutls_session_t session);
 gnutls_protocol_t _gnutls_version_max(gnutls_session_t session);
 int _gnutls_version_priority(gnutls_session_t session,
 			     gnutls_protocol_t version);
 int _gnutls_version_is_supported(gnutls_session_t session,
 				 const gnutls_protocol_t version);
 gnutls_protocol_t _gnutls_version_get(uint8_t major, uint8_t minor);
-
-gnutls_mac_algorithm_t
-        gnutls_oid_to_mac(const char *oid);
 
 /* Functions for feature checks */
 inline static int
@@ -139,6 +136,7 @@ inline static int _gnutls_mac_get_key_size(const mac_entry_st * e)
 		return e->key_size;
 }
 
+#define _gnutls_x509_oid_to_mac(oid) (gnutls_mac_algorithm_t)_gnutls_x509_oid_to_digest(oid)
 gnutls_digest_algorithm_t _gnutls_x509_oid_to_digest(const char *oid);
 
 /* Functions for digests. */
@@ -176,7 +174,6 @@ _gnutls_cipher_suite_get_id(gnutls_kx_algorithm_t kx_algorithm,
 
 /* Functions for ciphers. */
 const cipher_entry_st *cipher_to_entry(gnutls_cipher_algorithm_t c);
-const cipher_entry_st *cipher_name_to_entry(const char *name);
 
 inline static int _gnutls_cipher_is_block(const cipher_entry_st * e)
 {
@@ -266,8 +263,6 @@ int _gnutls_kx_cert_pk_params(gnutls_kx_algorithm_t algorithm);
 int _gnutls_kx_needs_rsa_params(gnutls_kx_algorithm_t algorithm);
 mod_auth_st *_gnutls_kx_auth_struct(gnutls_kx_algorithm_t algorithm);
 int _gnutls_kx_is_ok(gnutls_kx_algorithm_t algorithm);
-
-int _gnutls_kx_get_id(const char *name);
 
 /* Type to KX mappings. */
 gnutls_kx_algorithm_t _gnutls_map_kx_get_kx(gnutls_credentials_type_t type,

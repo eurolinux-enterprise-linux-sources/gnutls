@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2002-2016 Free Software Foundation, Inc.
- * Copyright (C) 2016 Red Hat, Inc.
+ * Copyright (C) 2002-2012 Free Software Foundation, Inc.
  *
  * Author: Nikos Mavrogiannopoulos
  *
@@ -192,10 +191,9 @@ _gnutls_x509_cert_verify_peers(gnutls_session_t session,
 	gnutls_x509_crt_t *peer_certificate_list;
 	gnutls_datum_t resp;
 	int peer_certificate_list_size, i, x, ret;
-	gnutls_x509_crt_t issuer = NULL;
+	gnutls_x509_crt_t issuer;
 	unsigned int ocsp_status = 0;
 	unsigned int verify_flags;
-	unsigned issuer_deinit = 0;
 
 	/* No OCSP check so far */
 	session->internals.ocsp_check_ok = 0;
@@ -266,25 +264,21 @@ _gnutls_x509_cert_verify_peers(gnutls_session_t session,
 	if (ret < 0)
 		goto skip_ocsp;
 
-	if (peer_certificate_list_size > 1) {
+	if (peer_certificate_list_size > 1)
 		issuer = peer_certificate_list[1];
-	} else {
+	else {
 		ret =
 		    gnutls_x509_trust_list_get_issuer(cred->tlist,
 						      peer_certificate_list
-						      [0], &issuer, GNUTLS_TL_GET_COPY);
+						      [0], &issuer, 0);
 		if (ret < 0) {
 			goto skip_ocsp;
 		}
-		issuer_deinit = 1;
 	}
 
 	ret =
 	    check_ocsp_response(session, peer_certificate_list[0], issuer,
 				&resp, &ocsp_status);
-	if (issuer_deinit != 0)
-		gnutls_x509_crt_deinit(issuer);
-
 	if (ret < 0) {
 		CLEAR_CERTS;
 		return gnutls_assert_val(ret);
@@ -321,7 +315,6 @@ static int get_x509_name(gnutls_x509_crt_t crt, gnutls_str_array_t * names)
 	size_t max_size;
 	int i, ret = 0, ret2;
 	char name[MAX_CN];
-	unsigned have_dns_name = 0;
 
 	for (i = 0; !(ret < 0); i++) {
 		max_size = sizeof(name);
@@ -330,8 +323,6 @@ static int get_x509_name(gnutls_x509_crt_t crt, gnutls_str_array_t * names)
 		    gnutls_x509_crt_get_subject_alt_name(crt, i, name,
 							 &max_size, NULL);
 		if (ret == GNUTLS_SAN_DNSNAME) {
-			have_dns_name = 1;
-
 			ret2 =
 			    _gnutls_str_array_append(names, name,
 						     max_size);
@@ -342,17 +333,15 @@ static int get_x509_name(gnutls_x509_crt_t crt, gnutls_str_array_t * names)
 		}
 	}
 
-	if (have_dns_name == 0) {
-		max_size = sizeof(name);
-		ret =
-		    gnutls_x509_crt_get_dn_by_oid(crt, OID_X520_COMMON_NAME, 0, 0,
-						  name, &max_size);
-		if (ret >= 0) {
-			ret = _gnutls_str_array_append(names, name, max_size);
-			if (ret < 0) {
-				_gnutls_str_array_clear(names);
-				return gnutls_assert_val(ret);
-			}
+	max_size = sizeof(name);
+	ret =
+	    gnutls_x509_crt_get_dn_by_oid(crt, OID_X520_COMMON_NAME, 0, 0,
+					  name, &max_size);
+	if (ret >= 0) {
+		ret = _gnutls_str_array_append(names, name, max_size);
+		if (ret < 0) {
+			_gnutls_str_array_clear(names);
+			return gnutls_assert_val(ret);
 		}
 	}
 
@@ -518,10 +507,9 @@ parse_pem_cert_mem(gnutls_certificate_credentials_t res,
 		/* now we move ptr after the pem header 
 		 */
 		ptr++;
-		size--;
-
 		/* find the next certificate (if any)
 		 */
+		size = input_cert_size - (ptr - input_cert);
 
 		if (size > 0) {
 			char *ptr3;
@@ -534,7 +522,6 @@ parse_pem_cert_mem(gnutls_certificate_credentials_t res,
 					      sizeof(PEM_CERT_SEP2) - 1);
 
 			ptr = ptr3;
-			size = input_cert_size - (ptr - input_cert);
 		} else
 			ptr = NULL;
 
@@ -640,7 +627,6 @@ read_key_mem(gnutls_certificate_credentials_t res,
 						   pass, flags);
 		if (ret < 0) {
 			gnutls_assert();
-			gnutls_privkey_deinit(privkey);
 			return ret;
 		}
 
@@ -711,11 +697,11 @@ static int
 read_cert_url(gnutls_certificate_credentials_t res, const char *url)
 {
 	int ret;
-	gnutls_x509_crt_t crt = NULL;
+	gnutls_x509_crt_t crt;
 	gnutls_pcert_st *ccert;
 	gnutls_str_array_t names;
 	gnutls_datum_t t = {NULL, 0};
-	unsigned i, count = 0;
+	unsigned i;
 
 	_gnutls_str_array_init(&names);
 
@@ -743,13 +729,13 @@ read_cert_url(gnutls_certificate_credentials_t res, const char *url)
 
 	if (ret < 0) {
 		gnutls_assert();
-		goto cleanup;
+		goto cleanup1;
 	}
 
 	ret = get_x509_name(crt, &names);
 	if (ret < 0) {
 		gnutls_assert();
-		goto cleanup;
+		goto cleanup1;
 	}
 
 	/* Try to load the whole certificate chain from the PKCS #11 token */
@@ -761,18 +747,17 @@ read_cert_url(gnutls_certificate_credentials_t res, const char *url)
                 }
 
 		ret = gnutls_pcert_import_x509(&ccert[i], crt, 0);
+		gnutls_x509_crt_deinit(crt);
+
 		if (ret < 0) {
 			gnutls_assert();
 			goto cleanup;
 		}
-		count++;
 
 		ret = gnutls_pkcs11_get_raw_issuer(url, crt, &t, GNUTLS_X509_FMT_DER, 0);
 		if (ret < 0)
 			break;
-
-		gnutls_x509_crt_deinit(crt);
-		crt = NULL;
+			
 		ret = gnutls_x509_crt_init(&crt);
 		if (ret < 0) {
 			gnutls_assert();
@@ -782,25 +767,23 @@ read_cert_url(gnutls_certificate_credentials_t res, const char *url)
 		ret = gnutls_x509_crt_import(crt, &t, GNUTLS_X509_FMT_DER);
 		if (ret < 0) {
 			gnutls_assert();
-			goto cleanup;
+			goto cleanup1;
 		}
 		gnutls_free(t.data);
 		t.data = NULL;
 	}
 
-	ret = certificate_credential_append_crt_list(res, names, ccert, count);
+	ret = certificate_credential_append_crt_list(res, names, ccert, i+1);
 	if (ret < 0) {
 		gnutls_assert();
 		goto cleanup;
 	}
 
-	if (crt != NULL)
-		gnutls_x509_crt_deinit(crt);
-
 	return 0;
+cleanup1:
+	gnutls_x509_crt_deinit(crt);
+
 cleanup:
-	if (crt != NULL)
-		gnutls_x509_crt_deinit(crt);
 	gnutls_free(t.data);
 	_gnutls_str_array_clear(&names);
 	gnutls_free(ccert);
@@ -950,10 +933,8 @@ gnutls_certificate_set_x509_key_mem2(gnutls_certificate_credentials_t res,
 				flags)) < 0)
 		return ret;
 
-	if ((ret = read_cert_mem(res, cert->data, cert->size, type)) < 0) {
-		gnutls_privkey_deinit(res->pkey[res->ncerts]);
+	if ((ret = read_cert_mem(res, cert->data, cert->size, type)) < 0)
 		return ret;
-	}
 
 	res->ncerts++;
 
@@ -978,6 +959,7 @@ static int check_if_sorted(gnutls_pcert_st * crt, int nr)
 			ret = gnutls_x509_crt_init(&x509);
 			if (ret < 0)
 				return gnutls_assert_val(ret);
+
 			ret =
 			    gnutls_x509_crt_import(x509, &crt[i].cert,
 						   GNUTLS_X509_FMT_DER);
@@ -1070,9 +1052,6 @@ certificate_credentials_append_pkey(gnutls_certificate_credentials_t res,
  * Note that the certificates and keys provided, can be safely deinitialized
  * after this function is called.
  *
- * If that function fails to load the @res structure is at an undefined state, it must
- * not be reused to load other keys or certificates.
- *
  * Returns: %GNUTLS_E_SUCCESS (0) on success, or a negative error code.
  *
  * Since: 2.4.0
@@ -1146,9 +1125,6 @@ gnutls_certificate_set_x509_key(gnutls_certificate_credentials_t res,
 
 	res->ncerts++;
 
-	/* after this point we do not deinitialize anything on failure to avoid
-	 * double freeing. We intentionally keep everything as the credentials state
-	 * is documented to be on undefined state. */
 	if ((ret = _gnutls_check_key_cert_match(res)) < 0) {
 		gnutls_assert();
 		return ret;
@@ -1177,12 +1153,9 @@ gnutls_certificate_set_x509_key(gnutls_certificate_credentials_t res,
  * entity certificate (e.g., also an intermediate CA cert) then put
  * the certificate chain in @pcert_list. 
  *
- * Note that the @key and the elements of @pcert_list will become part of the credentials 
+ * Note that the @pcert_list and @key will become part of the credentials 
  * structure and must not be deallocated. They will be automatically deallocated 
  * when the @res structure is deinitialized.
- *
- * If that function fails to load the @res structure is at an undefined state, it must
- * not be reused to load other keys or certificates.
  *
  * Returns: %GNUTLS_E_SUCCESS (0) on success, or a negative error code.
  *
@@ -1197,7 +1170,6 @@ gnutls_certificate_set_key(gnutls_certificate_credentials_t res,
 {
 	int ret, i;
 	gnutls_str_array_t str_names;
-	gnutls_pcert_st *new_pcert_list;
 
 	_gnutls_str_array_init(&str_names);
 
@@ -1211,29 +1183,6 @@ gnutls_certificate_set_key(gnutls_certificate_credentials_t res,
 				goto cleanup;
 			}
 		}
-	} else if (names == NULL && pcert_list[0].type == GNUTLS_CRT_X509) {
-		gnutls_x509_crt_t crt;
-
-		ret = gnutls_x509_crt_init(&crt);
-		if (ret < 0) {
-			gnutls_assert();
-			goto cleanup;
-		}
-
-		ret = gnutls_x509_crt_import(crt, &pcert_list[0].cert, GNUTLS_X509_FMT_DER);
-		if (ret < 0) {
-			gnutls_assert();
-			gnutls_x509_crt_deinit(crt);
-			goto cleanup;
-		}
-
-		ret = get_x509_name(crt, &str_names);
-		gnutls_x509_crt_deinit(crt);
-
-		if (ret < 0) {
-			gnutls_assert();
-			goto cleanup;
-		}
 	}
 
 	if (res->pin.cb)
@@ -1246,34 +1195,20 @@ gnutls_certificate_set_key(gnutls_certificate_credentials_t res,
 		goto cleanup;
 	}
 
-	new_pcert_list = gnutls_malloc(sizeof(gnutls_pcert_st) * pcert_list_size);
-	if (new_pcert_list == NULL) {
-		gnutls_assert();
-		return GNUTLS_E_MEMORY_ERROR;
-	}
-	memcpy(new_pcert_list, pcert_list, sizeof(gnutls_pcert_st) * pcert_list_size);
-
 	ret =
 	    certificate_credential_append_crt_list(res, str_names,
-						   new_pcert_list,
+						   pcert_list,
 						   pcert_list_size);
 	if (ret < 0) {
 		gnutls_assert();
-		gnutls_free(new_pcert_list);
 		goto cleanup;
 	}
 
 	res->ncerts++;
 
-	/* Unlike gnutls_certificate_set_x509_key, we deinitialize everything
-	 * local after a failure. That is because the caller is responsible for
-	 * freeing these values after a failure, and if we keep references we
-	 * lead to double freeing */
 	if ((ret = _gnutls_check_key_cert_match(res)) < 0) {
 		gnutls_assert();
-		gnutls_free(new_pcert_list);
-		res->ncerts--;
-		goto cleanup;
+		return ret;
 	}
 
 	return 0;
@@ -1336,9 +1271,6 @@ gnutls_certificate_set_trust_list(gnutls_certificate_credentials_t res,
  * In case the @certfile is provided as a PKCS #11 URL, then the certificate, and its
  * present issuers in the token are are imported (i.e., the required trust chain).
  *
- * If that function fails to load the @res structure is at an undefined state, it must
- * not be reused to load other keys or certificates.
- *
  * Returns: %GNUTLS_E_SUCCESS (0) on success, or a negative error code.
  **/
 int
@@ -1380,9 +1312,6 @@ gnutls_certificate_set_x509_key_file(gnutls_certificate_credentials_t res,
  * In case the @certfile is provided as a PKCS #11 URL, then the certificate, and its
  * present issuers in the token are are imported (i.e., the required trust chain).
  *
- * If that function fails to load the @res structure is at an undefined state, it must
- * not be reused to load other keys or certificates.
- *
  * Returns: %GNUTLS_E_SUCCESS (0) on success, or a negative error code.
  **/
 int
@@ -1398,12 +1327,9 @@ gnutls_certificate_set_x509_key_file2(gnutls_certificate_credentials_t res,
 	 */
 	if ((ret = read_key_file(res, keyfile, type, pass, flags)) < 0)
 		return ret;
-	
 
-	if ((ret = read_cert_file(res, certfile, type)) < 0) {
-		gnutls_privkey_deinit(res->pkey[res->ncerts]);
+	if ((ret = read_cert_file(res, certfile, type)) < 0)
 		return ret;
-	}
 
 	res->ncerts++;
 

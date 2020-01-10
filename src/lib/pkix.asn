@@ -421,7 +421,6 @@ pkcs-8-EncryptedData ::= OCTET STRING
 
 -- PKCS #5 stuff
 
-pkcs-5-des-CBC-params ::= OCTET STRING (SIZE(8))
 pkcs-5-des-EDE3-CBC-params ::= OCTET STRING (SIZE(8))
 pkcs-5-aes128-CBC-params ::= OCTET STRING (SIZE(16))
 pkcs-5-aes192-CBC-params ::= OCTET STRING (SIZE(16))
@@ -621,7 +620,7 @@ ResponseData ::= SEQUENCE {
 ResponderID ::= CHOICE {
 -- Changed to work with the libtasn1 parser.
    byName   [1] EXPLICIT RDNSequence, --Name
-   byKey    [2] EXPLICIT OCTET STRING --SHA-1 hash of responder's public key 
+   byKey    [2] OCTET STRING --SHA-1 hash of responder's public key 
 }
 
 SingleResponse ::= SEQUENCE {

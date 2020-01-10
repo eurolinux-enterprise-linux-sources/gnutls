@@ -21,12 +21,9 @@ the server.  For clients that wants to send more than its own end
 entity certificate (e.g., also an intermediate CA cert) then put
 the certificate chain in  @code{pcert_list} . 
 
-Note that the  @code{key} and the elements of  @code{pcert_list} will become part of the credentials 
+Note that the  @code{pcert_list} and  @code{key} will become part of the credentials 
 structure and must not be deallocated. They will be automatically deallocated 
 when the  @code{res} structure is deinitialized.
-
-If that function fails to load the  @code{res} structure is at an undefined state, it must
-not be reused to load other keys or certificates.
 
 @strong{Returns:} @code{GNUTLS_E_SUCCESS}  (0) on success, or a negative error code.
 

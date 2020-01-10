@@ -108,7 +108,7 @@ static void cmd_parser(int argc, char **argv)
 	const char *url = NULL;
 	unsigned int detailed_url = 0, optct;
 	unsigned int bits = 0;
-	const char *label = NULL, *sec_param = NULL, *id = NULL;
+	const char *label = NULL, *sec_param = NULL;
 	unsigned flags;
 
 	optct = optionProcess(&p11toolOptions, argc, argv);
@@ -210,17 +210,12 @@ static void cmd_parser(int argc, char **argv)
 		label = OPT_ARG(LABEL);
 	}
 
-	if (HAVE_OPT(ID)) {
-		id = OPT_ARG(ID);
-	}
-
 	if (HAVE_OPT(BITS)) {
 		bits = OPT_VALUE_BITS;
 	}
 
 	if (HAVE_OPT(CURVE)) {
-		gnutls_ecc_curve_t curve = str_to_curve(OPT_ARG(CURVE));
-		bits = GNUTLS_CURVE_TO_BITS(curve);
+		bits = GNUTLS_CURVE_TO_BITS(str_to_curve(OPT_ARG(CURVE)));
 	}
 
 	if (HAVE_OPT(SEC_PARAM)) {
@@ -284,7 +279,7 @@ static void cmd_parser(int argc, char **argv)
 	} else if (HAVE_OPT(EXPORT_CHAIN)) {
 		pkcs11_export_chain(outfile, url, flags, &cinfo);
 	} else if (HAVE_OPT(WRITE)) {
-		pkcs11_write(outfile, url, label, id,
+		pkcs11_write(outfile, url, label,
 			     flags, &cinfo);
 	} else if (HAVE_OPT(INITIALIZE))
 		pkcs11_init(outfile, url, label, &cinfo);
@@ -294,26 +289,22 @@ static void cmd_parser(int argc, char **argv)
 		key_type = GNUTLS_PK_EC;
 		pkcs11_generate(outfile, url, key_type,
 				get_bits(key_type, bits, sec_param, 0),
-				label, id, detailed_url,
+				label, detailed_url,
 				flags, &cinfo);
 	} else if (HAVE_OPT(GENERATE_RSA)) {
 		key_type = GNUTLS_PK_RSA;
 		pkcs11_generate(outfile, url, key_type,
 				get_bits(key_type, bits, sec_param, 0),
-				label, id, detailed_url,
+				label, detailed_url,
 				flags, &cinfo);
 	} else if (HAVE_OPT(GENERATE_DSA)) {
 		key_type = GNUTLS_PK_DSA;
 		pkcs11_generate(outfile, url, key_type,
 				get_bits(key_type, bits, sec_param, 0),
-				label, id, detailed_url,
+				label, detailed_url,
 				flags, &cinfo);
 	} else if (HAVE_OPT(EXPORT_PUBKEY)) {
 		pkcs11_export_pubkey(outfile, url, detailed_url, flags, &cinfo);
-	} else if (HAVE_OPT(SET_ID)) {
-		pkcs11_set_id(outfile, url, detailed_url, flags, &cinfo, OPT_ARG(SET_ID));
-	} else if (HAVE_OPT(SET_LABEL)) {
-		pkcs11_set_label(outfile, url, detailed_url, flags, &cinfo, OPT_ARG(SET_LABEL));
 	} else {
 		USAGE(1);
 	}

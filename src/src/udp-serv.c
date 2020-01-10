@@ -85,7 +85,7 @@ void udp_server(const char *name, int port, int mtu)
 
 		cli_addr_size = sizeof(cli_addr);
 		ret =
-		    recvfrom(sock, buffer, sizeof(buffer)-1, MSG_PEEK,
+		    recvfrom(sock, buffer, sizeof(buffer), MSG_PEEK,
 			     (struct sockaddr *) &cli_addr,
 			     &cli_addr_size);
 		if (ret > 0) {
@@ -109,7 +109,7 @@ void udp_server(const char *name, int port, int mtu)
 				     human_addr((struct sockaddr *)
 						&cli_addr,
 						cli_addr_size, buffer,
-						sizeof(buffer)-1));
+						sizeof(buffer)));
 				gnutls_dtls_cookie_send(&cookie_key,
 							&cli_addr,
 							cli_addr_size,
@@ -118,7 +118,7 @@ void udp_server(const char *name, int port, int mtu)
 							&s, push_func);
 
 				/* discard peeked data */
-				recvfrom(sock, buffer, sizeof(buffer)-1, 0,
+				recvfrom(sock, buffer, sizeof(buffer), 0,
 					 (struct sockaddr *) &cli_addr,
 					 &cli_addr_size);
 				continue;
@@ -126,7 +126,7 @@ void udp_server(const char *name, int port, int mtu)
 			printf("Accepted connection from %s\n",
 			       human_addr((struct sockaddr *)
 					  &cli_addr, sizeof(cli_addr),
-					  buffer, sizeof(buffer)-1));
+					  buffer, sizeof(buffer)));
 		} else
 			continue;
 
@@ -163,7 +163,7 @@ void udp_server(const char *name, int port, int mtu)
 			do {
 				ret =
 				    gnutls_record_recv_seq(session, buffer,
-							   sizeof(buffer)-1,
+							   MAX_BUFFER,
 							   sequence);
 				if (ret ==
 				    GNUTLS_E_HEARTBEAT_PING_RECEIVED)

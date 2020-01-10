@@ -119,13 +119,13 @@ flag = {
 
 flag = {
     name      = generate-dsa;
-    descrip   = "Generate a DSA private-public key pair";
-    doc = "Generates a DSA private-public key pair on the specified token.";
+    descrip   = "Generate an RSA private-public key pair";
+    doc = "Generates an RSA private-public key pair on the specified token.";
 };
 flag = {
     name      = generate-ecc;
-    descrip   = "Generate an ECDSA private-public key pair";
-    doc = "Generates an ECDSA private-public key pair on the specified token.";
+    descrip   = "Generate an RSA private-public key pair";
+    doc = "Generates an RSA private-public key pair on the specified token.";
 };
 
 
@@ -136,31 +136,10 @@ flag = {
 };
 
 flag = {
-    name      = set-id;
-    descrip   = "Set the CKA_ID (in hex) for the specified by the URL object";
-    doc = "Sets the CKA_ID in the specified by the URL object. The ID should be specified in hexadecimal format without a '0x' prefix.";
-    arg-type  = string;
-};
-
-flag = {
-    name      = set-label;
-    descrip   = "Set the CKA_LABEL for the specified by the URL object";
-    doc = "Sets the CKA_LABEL in the specified by the URL object";
-    arg-type  = string;
-};
-
-flag = {
     name      = label;
     arg-type  = string;
     descrip   = "Sets a label for the write operation";
     doc       = "";
-};
-
-flag = {
-    name      = id;
-    arg-type  = string;
-    descrip   = "Sets an ID for the write operation";
-    doc       = "Sets the CKA_ID to be set by the write operation. The ID should be specified in hexadecimal format without a '0x' prefix.";
 };
 
 flag = {
@@ -288,7 +267,7 @@ flag = {
     name      = curve;
     arg-type  = string;
     descrip   = "Specify the curve used for EC key generation";
-    doc      = "Supported values are secp192r1, secp224r1, secp256r1, secp384r1 and secp521r1.";
+    doc      = "";
 };
 
 flag = {

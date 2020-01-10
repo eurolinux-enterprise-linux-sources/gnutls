@@ -2,12 +2,12 @@
 %bcond_with guile
 Summary: A TLS protocol implementation
 Name: gnutls
-Version: 3.3.29
-Release: 9%{?dist}
+Version: 3.3.8
+Release: 14%{?dist}
 # The libraries are LGPLv2.1+, utilities are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
-BuildRequires: p11-kit-devel >= 0.23.1, gettext
+BuildRequires: p11-kit-devel >= 0.20.7, gettext
 BuildRequires: zlib-devel, readline-devel, libtasn1-devel >= 3.8
 BuildRequires: libtool, automake, autoconf, texinfo
 BuildRequires: autogen-libopts-devel >= 5.18 autogen gettext-devel
@@ -16,12 +16,10 @@ BuildRequires: trousers-devel >= 0.3.11.2
 BuildRequires: libidn-devel
 BuildRequires: gperf
 BuildRequires: fipscheck
-BuildRequires: softhsm, net-tools
 Requires: p11-kit-trust
 # The automatic dependency on libtasn1 and p11-kit is insufficient,
-Requires: libtasn1 >= 3.9
-Requires: p11-kit >= 0.23.1
-Requires: trousers >= 0.3.11.2
+Requires: libtasn1 >= 3.8
+Requires: p11-kit >= 0.20.7
 %if %{with dane}
 BuildRequires: unbound-devel unbound-libs
 %endif
@@ -37,50 +35,31 @@ Source1: libgnutls-config
 Source2: hobble-gnutls
 Patch1: gnutls-3.2.7-rpath.patch
 Patch2: gnutls-3.1.11-nosrp.patch
+Patch3: gnutls-3.3.8-no-libtasn1-check.patch
 Patch4: gnutls-3.3.8-fips-key.patch
-Patch5: gnutls-3.3.8-padlock-disable.patch
-# In 3.3.8 we were shipping an early backport of a fix in GNUTLS_E_APPLICATION_DATA
-# behavior, which was using 3.4.0 semantics. We continue shipping to support
-# any applications depending on that.
-Patch6: gnutls-3.3.22-eapp-data.patch
-Patch7: gnutls-3.3.26-dh-params-1024.patch
-# Backport serv --sni-hostname option support (rhbz#1444792)
-Patch8: gnutls-3.3.29-serv-sni-hostname.patch
-Patch9: gnutls-3.3.29-serv-unrec-name.patch
-Patch10: gnutls-3.3.29-cli-sni-hostname.patch
-Patch11: gnutls-3.3.29-tests-sni-hostname.patch
-# Do not try to retrieve PIN from URI more than once
-Patch12: gnutls-3.3.29-pkcs11-retrieve-pin-from-uri-once.patch
-# Backport of fixes to address CVE-2018-10844 CVE-2018-10845 CVE-2018-10846
-# (rhbz#1589708 rhbz#1589707 rhbz1589704)
-Patch13: gnutls-3.3.29-dummy-wait-account-len-field.patch
-Patch14: gnutls-3.3.29-dummy-wait-hash-same-amount-of-blocks.patch
-Patch15: gnutls-3.3.29-cbc-mac-verify-ssl3-min-pad.patch
-Patch16: gnutls-3.3.29-remove-hmac-sha384-sha256-from-default.patch
-# Adjustment on tests
-Patch17: gnutls-3.3.29-do-not-run-sni-hostname-windows.patch
-# Backport testpkcs11 test. This test checks rhbz#1375307
-Patch18: gnutls-3.3.29-testpkcs11.patch
-# Disable failing PKCS#11 tests brought from master branch. The reasons are:
-# - ECC key generation without login is not supported
-# - Certificates are marked as private objects
-# - "--load-pubkey" option is not supported
-# - "--test-sign" option is not supported
-# - Certificates do not inherit its ID from the private key
-Patch19: gnutls-3.3.29-disable-failing-tests.patch
-# Do not mark certificates as private objects and re-enable test for this
-Patch20: gnutls-3.3.29-do-not-mark-object-as-private.patch
-Patch21: gnutls-3.3.29-re-enable-check-cert-write.patch
-# Increase the length of the RSA keys generated in testpkcs11 to 2048 bits.
-# This allows the test to run in FIPS mode
-Patch22: gnutls-3.3.29-tests-pkcs11-increase-RSA-gen-size.patch
-# Enlarge buffer size to support resumption with large keys (rhbz#1542461)
-Patch23: gnutls-3.3.29-serv-large-key-resumption.patch
-# HMAC-SHA-256 cipher suites brought back downstream for compatibility
-# The priority was set below AEAD
-Patch24: gnutls-3.3.29-bring-back-hmac-sha256.patch
-# Run KAT startup test for ECDSA (using secp256r1 curve) (rhbz#1673919)
-Patch25: gnutls-3.3.29-fips140-fix-ecdsa-kat-selftest.patch
+Patch5: gnutls-3.3.8-mem-issue.patch
+Patch6: gnutls-3.3.8-testdsa-rndport.patch
+Patch7: gnutls-3.3.8-padlock-disable.patch
+Patch8: gnutls-3.3.8-dh-fips-tests.patch
+Patch9: gnutls-3.3.8-drbg-fips-symbol.patch
+Patch10: gnutls-3.3.8-lcm-fips.patch
+Patch11: gnutls-3.3.8-sha224-fix.patch
+Patch12: gnutls-3.3.8-fips140-rsa.patch
+Patch13: gnutls-3.3.8-fips140-dsa1024.patch
+Patch14: gnutls-3.3.8-handshake-reset.patch
+Patch15: gnutls-3.3.8-handshake-reset2.patch
+Patch16: gnutls-3.3.8-keygen-fix.patch
+Patch17: gnutls-3.3.8-dh-fips-tests2.patch
+Patch18: gnutls-3.3.8-cve-2014-8564.patch
+Patch19: gnutls-3.3.8-zombie-fips.patch
+Patch20: gnutls-3.3.8-urandom-fd.patch
+Patch21: gnutls-3.3.8-fips-rnd-regr.patch
+Patch22: gnutls-3.3.8-urandom-fd-fips.patch
+Patch23: gnutls-3.3.8-rnd-reregister.patch
+Patch24: gnutls-3.3.8-handshake-reset3.patch
+Patch25: gnutls-3.3.8-fips-reseed.patch
+Patch26: gnutls-3.3.8-md5-downgrade.patch
+
 # Wildcard bundling exception https://fedorahosted.org/fpc/ticket/174
 Provides: bundled(gnulib) = 20130424
 
@@ -182,42 +161,34 @@ This package contains Guile bindings for the library.
 
 %patch1 -p1 -b .rpath
 %patch2 -p1 -b .nosrp
+%patch3 -p1 -b .libtasn1
 %patch4 -p1 -b .fips-key
-%patch5 -p1 -b .padlock-disable
-%patch6 -p1 -b .eapp-data
-%patch7 -p1 -b .dh-1024
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
-%patch17 -p1
-%patch18 -p1
-%patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch25 -p1
-
+%patch5 -p1 -b .mem-issue
+%patch6 -p1 -b .testdsa
+%patch7 -p1 -b .padlock-disable
+%patch8 -p1 -b .fips-dh
+%patch9 -p1 -b .fips-drbg
+%patch10 -p1 -b .fips-lcm
+%patch11 -p1 -b .sha224-fix
+%patch12 -p1 -b .fips-rsa-fix
+%patch13 -p1 -b .fips-dsa1024-fix
+%patch14 -p1 -b .handshake-reset
+%patch15 -p1 -b .handshake-reset2
+%patch16 -p1 -b .keygen-fix
+%patch17 -p1 -b .fips-dh2
+%patch18 -p1 -b .cve-2014-8564
+%patch19 -p1 -b .zombie-fips
+%patch20 -p1 -b .init-fd
+%patch21 -p1 -b .fips-regression
+%patch22 -p1 -b .init-fd-fips
+%patch23 -p1 -b .reregister
+%patch24 -p1 -b .handshake-reset3
+%patch25 -p1 -b .fips-reseed
+%patch26 -p1 -b .md5-downgrade
 sed 's/gnutls_srp.c//g' -i lib/Makefile.in
 sed 's/gnutls_srp.lo//g' -i lib/Makefile.in
 rm -f lib/minitasn1/*.c lib/minitasn1/*.h
 rm -f src/libopts/*.c src/libopts/*.h src/libopts/compat/*.c src/libopts/compat/*.h 
-
-# Touch man pages to avoid them to be regenerated after patches which change
-# .def files
-touch doc/manpages/gnutls-serv.1
-touch doc/manpages/gnutls-cli.1
-
-# Fix permissions for files brought by patches
-chmod ugo+x %{_builddir}/%{name}-%{version}/tests/testpkcs11.sh
-chmod ugo+x %{_builddir}/%{name}-%{version}/tests/sni-hostname.sh
 
 %{SOURCE2} -e
 autoreconf -if
@@ -225,16 +196,13 @@ autoreconf -if
 %build
 export LDFLAGS="-Wl,--no-add-needed"
 
+#	   --with-default-trust-store-pkcs11="pkcs11:model=p11-kit-trust;manufacturer=PKCS%2311%20Kit"
 %configure --with-libtasn1-prefix=%{_prefix} \
-	   --with-default-trust-store-pkcs11="pkcs11:model=p11-kit-trust;manufacturer=PKCS%2311%20Kit" \
            --with-included-libcfg \
-	   --with-arcfour128 \
-	   --with-ssl3 \
            --disable-static \
            --disable-openssl-compatibility \
            --disable-srp-authentication \
 	   --disable-non-suiteb-curves \
-	   --with-trousers-lib=%{_libdir}/libtspi.so.1 \
 	   --enable-fips140-mode \
 %if %{with guile}
            --enable-guile \
@@ -362,63 +330,8 @@ fi
 %endif
 
 %changelog
-* Tue Feb 12 2019 Anderson Sasaki <ansasaki@redhat.com> 3.3.29-9
-- Make sure the FIPS startup KAT selftest run for ECDSA (#1673919)
-
-* Fri Jul 20 2018 Anderson Sasaki <ansasaki@redhat.com> 3.3.29-8
-- Backported --sni-hostname option which allows overriding the hostname
-  advertised to the peer (#1444792)
-- Improved counter-measures in TLS CBC record padding for lucky13 attack
-  (CVE-2018-10844, #1589704, CVE-2018-10845, #1589707)
-- Added counter-measures for "Just in Time" PRIME + PROBE cache-based attack
-  (CVE-2018-10846, #1589708)
-- Address p11tool issue in object deletion in batch mode (#1375307)
-- Backport PKCS#11 tests from master branch. Some tests were disabled due to
-  unsupported features in 3.3.x (--load-pubkey and --test-sign options, ECC key
-  generation without login, and certificates do not inherit ID from the private
-  key)
-- p11tool explicitly marks certificates and public keys as NOT private objects
-  and private keys as private objects
-- Enlarge buffer size to support resumption with large keys (#1542461)
-- Legacy HMAC-SHA384 cipher suites were disabled by default
-- Added DSA key generation to p11tool (#1464896)
-- Address session renegotiation issue using client certificate (#1434091)
-- Address issue when importing private keys into Atos HSM (#1460125)
-
-* Fri May 26 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.26-9
-- Address crash in OCSP status request extension, by eliminating the
-  unneeded parsing (CVE-2017-7507, #1455828)
-
-* Wed Apr 26 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.26-7
-- Address interoperability issue with 3.5.x (#1388932)
-- Reject CAs which are both trusted and blacklisted in trust module (#1375303)
-- Added new functions to set issuer and subject ID in certificates (#1378373)
-- Reject connections with less than 1024-bit DH parameters (#1335931)
-- Fix issue that made GnuTLS parse only the first 32 extensions (#1383748)
-- Mention limitations of certtool in manpage (#1375463)
-- Read PKCS#8 files with HMAC-SHA256 -as generated by openssl 1.1 (#1380642)
-- Do not link directly to trousers but instead use dlopen (#1379739)
-- Fix incorrect OCSP validation (#1377569)
-- Added support for pin-value in PKCS#11 URIs (#1379283)
-- Added the --id option to p11tool (#1399232)
-- Improved sanity checks in RSA key generation (#1444780)
-- Addressed CVE-2017-5334, CVE-2017-5335, CVE-2017-5336, CVE-2017-5337,
-  CVE-2017-7869
-
-* Tue Jul 12 2016 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.24-1
-- Addressed issue with DSA public keys smaller than 2^1024 (#1238279)
-- Addressed two-byte buffer overflow in the DTLS-0.9 protocol (#1209365)
-- When writing certificates to smart cards write the CKA_ISSUER and
-  CKA_SERIAL_NUMBER fields to allow NSS reading them (#1272179)
-- Use the shared system certificate store (#1110750)
-- Address MD5 transcript collision attacks in TLS key exchange (#1289888, 
-  CVE-2015-7575)
-- Allow hashing data over 2^32 bytes (#1306953)
-- Ensure written PKCS#11 public keys are not marked as private (#1339453)
-- Ensure secure_getenv() is called on all uses of environment variables
-  (#1344591).
-- Fix issues related to PKCS #11 private key listing on certain HSMs
-  (#1351389)
+* Wed Dec  9 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.8-14
+- Prevent downgrade attack to RSA-MD5 in server key exchange.
 
 * Fri Jun  5 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.8-13
 - Corrected reseed and respect of max_number_of_bits_per_request in 

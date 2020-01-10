@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2000-2016 Free Software Foundation, Inc.
+ * Copyright (C) 2000-2014 Free Software Foundation, Inc.
  *
  * This file is part of LIBTASN1.
  *
@@ -84,7 +84,7 @@ _asn1_add_static_node (unsigned int type)
  * @name: null terminated string with the element's name to find.
  *
  * Searches for an element called @name starting from @pointer.  The
- * name is composed by different identifiers separated by dots.  When
+ * name is composed by differents identifiers separated by dots.  When
  * *@pointer has a name, the first identifier must be the name of
  * *@pointer, otherwise it must be the name of one child of *@pointer.
  *
@@ -120,9 +120,6 @@ asn1_find_node (asn1_node pointer, const char *name)
       if (n_end)
 	{
 	  nsize = n_end - n_start;
-	  if (nsize >= sizeof(n))
-		return NULL;
-
 	  memcpy (n, n_start, nsize);
 	  n[nsize] = 0;
 	  n_start = n_end;
@@ -161,9 +158,6 @@ asn1_find_node (asn1_node pointer, const char *name)
       if (n_end)
 	{
 	  nsize = n_end - n_start;
-	  if (nsize >= sizeof(n))
-		return NULL;
-
 	  memcpy (n, n_start, nsize);
 	  n[nsize] = 0;
 	  n_start = n_end;
@@ -322,14 +316,22 @@ _asn1_append_value (asn1_node node, const void *value, unsigned int len)
 {
   if (node == NULL)
     return node;
+  if (node->value != NULL && node->value != node->small_value)
+    {
+      /* value is allocated */
+      int prev_len = node->value_len;
+      node->value_len += len;
+      node->value = realloc (node->value, node->value_len);
+      if (node->value == NULL)
+	{
+	  node->value_len = 0;
+	  return NULL;
+	}
+      memcpy (&node->value[prev_len], value, len);
 
-  if (node->value == NULL)
-    return _asn1_set_value (node, value, len);
-
-  if (len == 0)
-    return node;
-
-  if (node->value == node->small_value)
+      return node;
+    }
+  else if (node->value == node->small_value)
     {
       /* value is in node */
       int prev_len = node->value_len;
@@ -340,31 +342,13 @@ _asn1_append_value (asn1_node node, const void *value, unsigned int len)
 	  node->value_len = 0;
 	  return NULL;
 	}
-
-      if (prev_len > 0)
-        memcpy (node->value, node->small_value, prev_len);
-
+      memcpy (node->value, node->small_value, prev_len);
       memcpy (&node->value[prev_len], value, len);
 
       return node;
     }
-  else /* if (node->value != NULL && node->value != node->small_value) */
-    {
-      /* value is allocated */
-      int prev_len = node->value_len;
-      node->value_len += len;
-
-      node->value = _asn1_realloc (node->value, node->value_len);
-      if (node->value == NULL)
-	{
-	  node->value_len = 0;
-	  return NULL;
-	}
-
-      memcpy (&node->value[prev_len], value, len);
-
-      return node;
-    }
+  else				/* node->value == NULL */
+    return _asn1_set_value (node, value, len);
 }
 
 /******************************************************************/
@@ -441,7 +425,11 @@ _asn1_set_right (asn1_node node, asn1_node right)
     return node;
   node->right = right;
   if (right)
-    right->left = node;
+    {
+      right->left = node;
+      if (right->up == NULL)
+        right->up = node->up;
+    }
   return node;
 }
 
@@ -555,35 +543,31 @@ _asn1_delete_list_and_nodes (void)
 
 
 char *
-_asn1_ltostr (int64_t v, char str[LTOSTR_MAX_SIZE])
+_asn1_ltostr (long v, char *str)
 {
-  uint64_t d, r;
+  long d, r;
   char temp[LTOSTR_MAX_SIZE];
   int count, k, start;
-  uint64_t val;
 
   if (v < 0)
     {
       str[0] = '-';
       start = 1;
-      val = -((uint64_t)v);
+      v = -v;
     }
   else
-    {
-      val = v;
-      start = 0;
-    }
+    start = 0;
 
   count = 0;
   do
     {
-      d = val / 10;
-      r = val - d * 10;
+      d = v / 10;
+      r = v - d * 10;
       temp[start + count] = '0' + (char) r;
       count++;
-      val = d;
+      v = d;
     }
-  while (val && ((start+count) < LTOSTR_MAX_SIZE-1));
+  while (v);
 
   for (k = 0; k < count; k++)
     str[k + start] = temp[start + count - k - 1];
@@ -641,13 +625,13 @@ _asn1_change_integer_value (asn1_node node)
 	    {
 	      while (1)
 		{
-		  p = _asn1_find_up (p);
+		  p = _asn1_get_up (p);
 		  if (p == node)
 		    {
 		      p = NULL;
 		      break;
 		    }
-		  if (p && p->right)
+		  if (p->right)
 		    {
 		      p = p->right;
 		      break;
@@ -717,12 +701,9 @@ _asn1_expand_object_id (asn1_node node)
 			      p5 =
 				_asn1_add_single_node (ASN1_ETYPE_CONSTANT);
 			      _asn1_set_name (p5, p4->name);
-			      if (p4->value)
-			        {
-			          tlen = _asn1_strlen (p4->value);
-			          if (tlen > 0)
-			            _asn1_set_value (p5, p4->value, tlen + 1);
-			        }
+			      tlen = _asn1_strlen (p4->value);
+			      if (tlen > 0)
+				_asn1_set_value (p5, p4->value, tlen + 1);
 			      if (p2 == p)
 				{
 				  _asn1_set_right (p5, p->down);
@@ -763,13 +744,13 @@ _asn1_expand_object_id (asn1_node node)
 
       if (move == RIGHT)
 	{
-	  if (p && p->right)
+	  if (p->right)
 	    p = p->right;
 	  else
 	    move = UP;
 	}
       if (move == UP)
-	p = _asn1_find_up (p);
+	p = _asn1_get_up (p);
     }
 
 
@@ -802,9 +783,6 @@ _asn1_expand_object_id (asn1_node node)
 		    {
 		      if (type_field (p4->type) == ASN1_ETYPE_CONSTANT)
 			{
-			  if (p4->value == NULL)
-			    return ASN1_VALUE_NOT_FOUND;
-
 			  if (name2[0])
 			    _asn1_str_cat (name2, sizeof (name2), ".");
 			  _asn1_str_cat (name2, sizeof (name2),
@@ -838,13 +816,13 @@ _asn1_expand_object_id (asn1_node node)
 
       if (move == RIGHT)
 	{
-	  if (p && p->right)
+	  if (p->right)
 	    p = p->right;
 	  else
 	    move = UP;
 	}
       if (move == UP)
-	p = _asn1_find_up (p);
+	p = _asn1_get_up (p);
     }
 
   return ASN1_SUCCESS;
@@ -908,13 +886,13 @@ _asn1_type_set_config (asn1_node node)
 
       if (move == RIGHT)
 	{
-	  if (p && p->right)
+	  if (p->right)
 	    p = p->right;
 	  else
 	    move = UP;
 	}
       if (move == UP)
-	p = _asn1_find_up (p);
+	p = _asn1_get_up (p);
     }
 
   return ASN1_SUCCESS;
@@ -955,7 +933,7 @@ _asn1_check_identifier (asn1_node node)
 	  if (p2 == NULL)
 	    {
 	      if (p->value)
-		_asn1_str_cpy (_asn1_identifierMissing, sizeof(_asn1_identifierMissing), (char*)p->value);
+		_asn1_strcpy (_asn1_identifierMissing, p->value);
 	      else
 		_asn1_strcpy (_asn1_identifierMissing, "(null)");
 	      return ASN1_IDENTIFIER_NOT_FOUND;
@@ -968,15 +946,9 @@ _asn1_check_identifier (asn1_node node)
 	  if (p2 && (type_field (p2->type) == ASN1_ETYPE_DEFAULT))
 	    {
 	      _asn1_str_cpy (name2, sizeof (name2), node->name);
-	      if (p2->value)
-	        {
-	          _asn1_str_cat (name2, sizeof (name2), ".");
-	          _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
-	          _asn1_str_cpy (_asn1_identifierMissing, sizeof(_asn1_identifierMissing), (char*)p2->value);
-	        }
-	      else
-		_asn1_strcpy (_asn1_identifierMissing, "(null)");
-
+	      _asn1_str_cat (name2, sizeof (name2), ".");
+	      _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
+	      _asn1_strcpy (_asn1_identifierMissing, p2->value);
 	      p2 = asn1_find_node (node, name2);
 	      if (!p2 || (type_field (p2->type) != ASN1_ETYPE_OBJECT_ID) ||
 		  !(p2->type & CONST_ASSIGN))
@@ -996,8 +968,7 @@ _asn1_check_identifier (asn1_node node)
 		  _asn1_str_cpy (name2, sizeof (name2), node->name);
 		  _asn1_str_cat (name2, sizeof (name2), ".");
 		  _asn1_str_cat (name2, sizeof (name2), (char *) p2->value);
-		  _asn1_str_cpy (_asn1_identifierMissing, sizeof(_asn1_identifierMissing), (char*)p2->value);
-
+		  _asn1_strcpy (_asn1_identifierMissing, p2->value);
 		  p2 = asn1_find_node (node, name2);
 		  if (!p2 || (type_field (p2->type) != ASN1_ETYPE_OBJECT_ID)
 		      || !(p2->type & CONST_ASSIGN))
@@ -1018,13 +989,13 @@ _asn1_check_identifier (asn1_node node)
 	{
 	  while (1)
 	    {
-	      p = _asn1_find_up (p);
+	      p = _asn1_get_up (p);
 	      if (p == node)
 		{
 		  p = NULL;
 		  break;
 		}
-	      if (p && p->right)
+	      if (p->right)
 		{
 		  p = p->right;
 		  break;
@@ -1078,13 +1049,13 @@ _asn1_set_default_tag (asn1_node node)
 	{
 	  while (1)
 	    {
-	      p = _asn1_find_up (p);
+	      p = _asn1_get_up (p);
 	      if (p == node)
 		{
 		  p = NULL;
 		  break;
 		}
-	      if (p && p->right)
+	      if (p->right)
 		{
 		  p = p->right;
 		  break;

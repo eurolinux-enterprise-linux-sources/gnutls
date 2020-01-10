@@ -61,34 +61,20 @@
 #include <read-file.h>
 
 unsigned char *lbuffer = NULL;
-unsigned long lbuffer_size = 0;
+int lbuffer_size = 0;
 
-static unsigned long file_size(FILE *fp)
-{
-	unsigned long size;
-	unsigned long cur = ftell(fp);
-	fseek(fp, 0, SEEK_END);
-	size = ftell(fp);
-	fseek(fp, cur, SEEK_SET);
-	return size;
-}
-
-void fix_lbuffer(unsigned long size)
+void fix_lbuffer(unsigned size)
 {
 	if (lbuffer_size == 0 || lbuffer == NULL) {
 		if (size == 0)
 			lbuffer_size = 64*1024;
 		else
-			lbuffer_size = MAX(64*1024,size+1);
+			lbuffer_size = MAX(64*1024,size);
 		lbuffer = malloc(lbuffer_size);
-	} else if (size > lbuffer_size) {
-		lbuffer_size = MAX(64*1024,size+1);
-		lbuffer = realloc(lbuffer, lbuffer_size);
-	}
-
-	if (lbuffer == NULL) {
-		fprintf(stderr, "memory error");
-		exit(1);
+		if (lbuffer == NULL) {
+			fprintf(stderr, "memory error");
+			exit(1);
+		}
 	}
 }
 
@@ -372,20 +358,14 @@ load_x509_private_key(int mand, common_info_st * info)
 gnutls_x509_crt_t load_cert(int mand, common_info_st * info)
 {
 	gnutls_x509_crt_t *crt;
-	gnutls_x509_crt_t ret_crt;
-	size_t size, i;
+	size_t size;
 
 	crt = load_cert_list(mand, &size, info);
-	if (crt) {
-		ret_crt = crt[0];
-		for (i=1;i<size;i++)
-			gnutls_x509_crt_deinit(crt[i]);
-		gnutls_free(crt);
-		return ret_crt;
-	}
 
-	return NULL;
+	return crt ? crt[0] : NULL;
 }
+
+#define MAX_CERTS 256
 
 /* Loads a certificate list
  */
@@ -393,11 +373,14 @@ gnutls_x509_crt_t *load_cert_list(int mand, size_t * crt_size,
 				  common_info_st * info)
 {
 	FILE *fd;
-	static gnutls_x509_crt_t *crt;
-	int ret;
+	static gnutls_x509_crt_t crt[MAX_CERTS];
+	char *ptr;
+	int ret, i;
 	gnutls_datum_t dat;
-	unsigned size;
-	unsigned int crt_max;
+	size_t size;
+	int ptr_size;
+
+	fix_lbuffer(0);
 
 	*crt_size = 0;
 	if (info->verbose)
@@ -417,27 +400,54 @@ gnutls_x509_crt_t *load_cert_list(int mand, size_t * crt_size,
 		exit(1);
 	}
 
-	fix_lbuffer(file_size(fd));
-
 	size = fread(lbuffer, 1, lbuffer_size - 1, fd);
 	lbuffer[size] = 0;
 
 	fclose(fd);
 
-	dat.data = (void *) lbuffer;
-	dat.size = size;
+	ptr = (void *) lbuffer;
+	ptr_size = size;
 
-	ret = gnutls_x509_crt_list_import2(&crt, &crt_max, &dat, GNUTLS_X509_FMT_PEM, 0);
-	if (ret < 0) {
-		fprintf(stderr, "Error loading certificates: %s\n", gnutls_strerror(ret));
-		exit(1);
+	for (i = 0; i < MAX_CERTS; i++) {
+		ret = gnutls_x509_crt_init(&crt[i]);
+		if (ret < 0) {
+			fprintf(stderr, "crt_init: %s\n",
+				gnutls_strerror(ret));
+			exit(1);
+		}
+
+		dat.data = (void *) ptr;
+		dat.size = ptr_size;
+
+		ret =
+		    gnutls_x509_crt_import(crt[i], &dat,
+					   info->incert_format);
+		if (ret < 0 && *crt_size > 0)
+			break;
+		if (ret < 0) {
+			fprintf(stderr, "crt_import: %s\n",
+				gnutls_strerror(ret));
+			exit(1);
+		}
+
+		ptr = strstr(ptr, "---END");
+		if (ptr == NULL)
+			break;
+		ptr++;
+
+		ptr_size = size;
+		ptr_size -=
+		    (unsigned int) ((unsigned char *) ptr -
+				    (unsigned char *) lbuffer);
+
+		if (ptr_size < 0)
+			break;
+
+		(*crt_size)++;
 	}
-
-	*crt_size = crt_max;
-
 	if (info->verbose)
 		fprintf(stderr, "Loaded %d certificates.\n",
-			(int) crt_max);
+			(int) *crt_size);
 
 	return crt;
 }
@@ -632,11 +642,7 @@ gnutls_pubkey_t load_public_key_or_import(int mand,
 
 	if (!privkey || (ret = gnutls_pubkey_import_privkey(pubkey, privkey, 0, 0)) < 0) {	/* could not get (e.g. on PKCS #11 */
 		gnutls_pubkey_deinit(pubkey);
-		pubkey = load_pubkey(0, info);
-		if (pubkey == NULL && mand) {
-			fprintf(stderr, "Could not determine the public key for the operation.\nYou must specify --load-privkey or --load-pubkey if missing.\n");
-			exit(1);
-		}
+		return load_pubkey(mand, info);
 	}
 
 	return pubkey;

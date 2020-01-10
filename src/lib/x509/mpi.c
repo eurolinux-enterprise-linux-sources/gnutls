@@ -45,7 +45,7 @@ int _gnutls_x509_read_der_int(uint8_t * der, int dersize, bigint_t * out)
 		return _gnutls_asn2err(result);
 	}
 
-	result = _asn1_strict_der_decode(&spk, der, dersize, NULL);
+	result = asn1_der_decoding(&spk, der, dersize, NULL);
 
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
@@ -117,6 +117,7 @@ _gnutls_get_asn_mpis(ASN1_TYPE asn, const char *root,
 	 * then the issuer's parameters should be used. This is not
 	 * done yet.
 	 */
+
 	if (pk_algorithm != GNUTLS_PK_RSA) {	/* RSA doesn't use parameters */
 		result = _gnutls_x509_read_value(asn, name, &tmp);
 		if (result < 0) {
@@ -124,11 +125,10 @@ _gnutls_get_asn_mpis(ASN1_TYPE asn, const char *root,
 			goto error;
 		}
 
-		result =
+		if ((result =
 		     _gnutls_x509_read_pubkey_params(pk_algorithm,
 						     tmp.data, tmp.size,
-						     params);
-		if (result < 0) {
+						     params)) < 0) {
 			gnutls_assert();
 			goto error;
 		}
@@ -137,8 +137,6 @@ _gnutls_get_asn_mpis(ASN1_TYPE asn, const char *root,
 	result = 0;
 
       error:
-	if (result < 0)
-		gnutls_pk_params_release(params);
 	_gnutls_free_datum(&tmp);
 	return result;
 }

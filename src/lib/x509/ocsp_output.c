@@ -112,8 +112,7 @@ static void print_req(gnutls_buffer_st * str, gnutls_ocsp_req_t req)
 		if (indx == 0)
 			adds(str, "\tExtensions:\n");
 
-		if (oid.size == sizeof(GNUTLS_OCSP_NONCE) &&
-		    memcmp(oid.data, GNUTLS_OCSP_NONCE, oid.size) == 0) {
+		if (memcmp(oid.data, GNUTLS_OCSP_NONCE, oid.size) == 0) {
 			gnutls_datum_t nonce;
 			unsigned int critical;
 
@@ -470,8 +469,7 @@ print_resp(gnutls_buffer_st * str, gnutls_ocsp_resp_t resp,
 			continue;
 		}
 
-		if (oid.size == sizeof(GNUTLS_OCSP_NONCE) &&
-		    memcmp(oid.data, GNUTLS_OCSP_NONCE, oid.size) == 0) {
+		if (memcmp(oid.data, GNUTLS_OCSP_NONCE, oid.size) == 0) {
 			gnutls_datum_t nonce;
 			unsigned int critical;
 
@@ -524,7 +522,7 @@ print_resp(gnutls_buffer_st * str, gnutls_ocsp_resp_t resp,
 				name = _("unknown");
 			addf(str, _("\tSignature Algorithm: %s\n"), name);
 		}
-		if (ret != GNUTLS_SIGN_UNKNOWN && gnutls_sign_is_secure(ret) == 0) {
+		if (gnutls_sign_is_secure(ret) == 0) {
 			adds(str,
 			     _("warning: signed using a broken signature "
 			       "algorithm that can be forged.\n"));

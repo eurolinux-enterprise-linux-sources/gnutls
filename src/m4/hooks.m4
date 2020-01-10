@@ -39,9 +39,9 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   # Interfaces changed/added/removed:   CURRENT++       REVISION=0
   # Interfaces added:                             AGE++
   # Interfaces removed:                           AGE=0 (+bump all symbol versions in .map)
-  AC_SUBST(LT_CURRENT, 71)
-  AC_SUBST(LT_REVISION, 3)
-  AC_SUBST(LT_AGE, 43)
+  AC_SUBST(LT_CURRENT, 69)
+  AC_SUBST(LT_REVISION, 0)
+  AC_SUBST(LT_AGE, 41)
 
   AC_SUBST(LT_SSL_CURRENT, 27)
   AC_SUBST(LT_SSL_REVISION, 2)
@@ -61,10 +61,10 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   DLL_VERSION=`expr ${LT_CURRENT} - ${LT_AGE}`
   AC_SUBST(DLL_VERSION)
 
-  PKG_CHECK_MODULES(NETTLE, [nettle >= 2.7], [cryptolib="nettle"], [
+  PKG_CHECK_MODULES(NETTLE, [nettle >= 2.7 nettle < 3.0], [cryptolib="nettle"], [
 AC_MSG_ERROR([[
   *** 
-  *** Libnettle 2.7.1 was not found.
+  *** Libnettle 2.7.1 was not found. Note that this version of gnutls doesn't support nettle 3.0.
 ]])
   ])
   PKG_CHECK_MODULES(HOGWEED, [hogweed >= 2.7], [], [
@@ -75,15 +75,6 @@ AC_MSG_ERROR([[
   ])
   AM_CONDITIONAL(ENABLE_NETTLE, test "$cryptolib" = "nettle")
   AC_DEFINE([HAVE_LIBNETTLE], 1, [nettle is enabled])
-  nettle_version=`$PKG_CONFIG --modversion nettle`
-
-  if $PKG_CONFIG --atleast-version=3.0 nettle; then
-        AC_DEFINE([USE_NETTLE3], 1, [nettle 3.0 or later])
-	use_nettle3=yes
-  else
-	use_nettle3=no
-  fi
-  AM_CONDITIONAL(USE_NETTLE3, test "$use_nettle3" = "yes")
 
   GNUTLS_REQUIRES_PRIVATE="Requires.private: nettle, hogweed"
 
@@ -113,7 +104,7 @@ AC_MSG_ERROR([[
       included_libtasn1=$withval,
       included_libtasn1=no)
   if test "$included_libtasn1" = "no"; then
-    PKG_CHECK_MODULES(LIBTASN1, [libtasn1 >= 4.0], [], [included_libtasn1=yes])
+    PKG_CHECK_MODULES(LIBTASN1, [libtasn1 >= 3.9], [], [included_libtasn1=yes])
     if test "$included_libtasn1" = yes; then
       AC_MSG_WARN([[
   *** 
@@ -127,15 +118,6 @@ AC_MSG_ERROR([[
 
   if test "$included_libtasn1" = "no"; then
     GNUTLS_REQUIRES_PRIVATE="${GNUTLS_REQUIRES_PRIVATE}, libtasn1"
-    oldlibs="$LIBS"
-    LIBS="$LIBS $LIBTASN1_LIBS"
-    oldcflags="$CFLAGS"
-    CFLAGS="$CFLAGS $LIBTASN1_CFLAGS"
-    AC_CHECK_FUNC(asn1_decode_simple_ber,
-                [AC_DEFINE(HAVE_ASN1_DECODE_SIMPLE_BER, 1, [Have this function])], [])
-    LIBS="$oldlibs"
-  else
-                AC_DEFINE(HAVE_ASN1_DECODE_SIMPLE_BER, 1, [Have this function])
   fi
 
   AC_MSG_CHECKING([whether C99 macros are supported])

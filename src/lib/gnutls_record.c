@@ -349,6 +349,12 @@ int gnutls_bye(gnutls_session_t session, gnutls_close_request_t how)
 	return 0;
 }
 
+inline static void session_invalidate(gnutls_session_t session)
+{
+	session->internals.invalid_connection = 1;
+}
+
+
 inline static void session_unresumable(gnutls_session_t session)
 {
 	session->internals.resumable = RESUME_FALSE;
@@ -509,7 +515,7 @@ _gnutls_send_tlen_int(gnutls_session_t session, content_type_t type,
 		/* Adjust header length and add sequence for DTLS */
 		if (IS_DTLS(session))
 			memcpy(&headers[3],
-			       record_state->sequence_number.i, 8);
+			       &record_state->sequence_number.i, 8);
 
 		_gnutls_record_log
 		    ("REC[%p]: Preparing Packet %s(%d) with length: %d and min pad: %d\n",
@@ -775,12 +781,6 @@ record_add_to_buffers(gnutls_session_t session,
 			     gnutls_alert_get_name((int) bufel->msg.
 						   data[1]));
 
-			if (!session->internals.initial_negotiation_completed &&
-			    session->internals.handshake_in_progress && STATE == STATE0) { /* handshake hasn't started */
-				ret = gnutls_assert_val(GNUTLS_E_UNEXPECTED_PACKET);
-				goto unexpected_packet;
-			}
-
 			session->internals.last_alert = bufel->msg.data[1];
 
 			/* if close notify is received and
@@ -797,6 +797,7 @@ record_add_to_buffers(gnutls_session_t session,
 				/* if the alert is FATAL or WARNING
 				 * return the apropriate message
 				 */
+
 				gnutls_assert();
 				ret = GNUTLS_E_WARNING_ALERT_RECEIVED;
 				if (bufel->msg.data[0] == GNUTLS_AL_FATAL) {
@@ -1592,11 +1593,12 @@ gnutls_record_send(gnutls_session_t session, const void *data,
 }
 
 /**
- * gnutls_record_cork:
+ * gnutls_cork:
  * @session: is a #gnutls_session_t structure.
  *
- * If called, gnutls_record_send() will no longer send any records.
- * Any sent records will be cached until gnutls_record_uncork() is called.
+ * If called gnutls_record_send() will no longer send partial records.
+ * All queued records will be sent when gnutls_uncork() is called, or
+ * when the maximum record size is reached.
  *
  * This function is safe to use with DTLS after GnuTLS 3.3.0.
  *
@@ -1608,11 +1610,11 @@ void gnutls_record_cork(gnutls_session_t session)
 }
 
 /**
- * gnutls_record_uncork:
+ * gnutls_uncork:
  * @session: is a #gnutls_session_t structure.
  * @flags: Could be zero or %GNUTLS_RECORD_WAIT
  *
- * This resets the effect of gnutls_record_cork(), and flushes any pending
+ * This resets the effect of gnutls_cork(), and flushes any pending
  * data. If the %GNUTLS_RECORD_WAIT flag is specified then this
  * function will block until the data is sent or a fatal error
  * occurs (i.e., the function will retry on %GNUTLS_E_AGAIN and

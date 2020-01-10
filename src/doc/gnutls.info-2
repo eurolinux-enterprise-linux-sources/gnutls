@@ -1,6 +1,6 @@
-This is gnutls.info, produced by makeinfo version 6.3 from gnutls.texi.
+This is gnutls.info, produced by makeinfo version 5.2 from gnutls.texi.
 
-This manual is last updated 23 March 2015 for version 3.3.29 of GnuTLS.
+This manual is last updated 29 July 2014 for version 3.3.8 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -25,327 +25,6 @@ START-INFO-DIR-ENTRY
 * psktool: (gnutls)Invoking psktool.	Simple TLS-Pre-Shared-Keys manager.
 * srptool: (gnutls)Invoking srptool.	Simple SRP password tool.
 END-INFO-DIR-ENTRY
-
-
-File: gnutls.info,  Node: Associating the credentials,  Next: Setting up the transport layer,  Prev: Session initialization,  Up: How to use GnuTLS in applications
-
-6.4 Associating the credentials
-===============================
-
-* Menu:
-
-* Certificate credentials::
-* SRP credentials::
-* PSK credentials::
-* Anonymous credentials::
-
-Each authentication method is associated with a key exchange method, and
-a credentials type.  The contents of the credentials is
-method-dependent, e.g.  certificates for certificate authentication and
-should be initialized and associated with a session (see *note
-gnutls_credentials_set::).  A mapping of the key exchange methods with
-the credential types is shown in *note Table 6.2: tab:key-exchange-cred.
-
-Authentication     Key exchange       Client         Server
-method                                credentials    credentials
-                                                     
---------------------------------------------------------------------
-Certificate        'KX_RSA',          'CRD_CERTIFICATE''CRD_CERTIFICATE'
-                   'KX_DHE_RSA',                     
-                   'KX_DHE_DSS',
-                   'KX_ECDHE_RSA',
-                   'KX_ECDHE_ECDSA',
-                   'KX_RSA_EXPORT'
-Password and       'KX_SRP_RSA',      'CRD_SRP'      'CRD_CERTIFICATE',
-certificate        'KX_SRP_DSS'                      'CRD_SRP'
-                                                     
-Password           'KX_SRP'           'CRD_SRP'      'CRD_SRP'
-                                                     
-Anonymous          'KX_ANON_DH',      'CRD_ANON'     'CRD_ANON'
-                   'KX_ANON_ECDH'                    
-Pre-shared key     'KX_PSK',          'CRD_PSK'      'CRD_PSK'
-                   'KX_DHE_PSK',                     
-                   'KX_ECDHE_PSK'
-
-Table 6.2: Key exchange algorithms and the corresponding credential
-types.
-
-
-File: gnutls.info,  Node: Certificate credentials,  Next: SRP credentials,  Up: Associating the credentials
-
-6.4.1 Certificates
-------------------
-
-Server certificate authentication
-.................................
-
-When using certificates the server is required to have at least one
-certificate and private key pair.  Clients may not hold such a pair, but
-a server could require it.  In this section we discuss general issues
-applying to both client and server certificates.  The next section will
-elaborate on issues arising from client authentication only.
-
-'INT *note gnutls_certificate_allocate_credentials:: (gnutls_certificate_credentials_t * RES)'
-'VOID *note gnutls_certificate_free_credentials:: (gnutls_certificate_credentials_t SC)'
-
-After the credentials structures are initialized, the certificate and
-key pair must be loaded.  This occurs before any TLS session is
-initialized, and the same structures are reused for multiple sessions.
-Depending on the certificate type different loading functions are
-available, as shown below.  For X.509 certificates, the functions will
-accept and use a certificate chain that leads to a trusted authority.
-The certificate chain must be ordered in such way that every certificate
-certifies the one before it.  The trusted authority's certificate need
-not to be included since the peer should possess it already.
-
-'INT *note gnutls_certificate_set_x509_key_mem2:: (gnutls_certificate_credentials_t RES, const gnutls_datum_t * CERT, const gnutls_datum_t * KEY, gnutls_x509_crt_fmt_t TYPE, const char * PASS, unsigned int FLAGS)'
-'INT *note gnutls_certificate_set_x509_key:: (gnutls_certificate_credentials_t RES, gnutls_x509_crt_t * CERT_LIST, int CERT_LIST_SIZE, gnutls_x509_privkey_t KEY)'
-'INT *note gnutls_certificate_set_x509_key_file2:: (gnutls_certificate_credentials_t RES, const char * CERTFILE, const char * KEYFILE, gnutls_x509_crt_fmt_t TYPE, const char * PASS, unsigned int FLAGS)'
-
-'INT *note gnutls_certificate_set_openpgp_key_mem:: (gnutls_certificate_credentials_t RES, const gnutls_datum_t * CERT, const gnutls_datum_t * KEY, gnutls_openpgp_crt_fmt_t FORMAT)'
-'INT *note gnutls_certificate_set_openpgp_key:: (gnutls_certificate_credentials_t RES, gnutls_openpgp_crt_t CRT, gnutls_openpgp_privkey_t PKEY)'
-'INT *note gnutls_certificate_set_openpgp_key_file:: (gnutls_certificate_credentials_t RES, const char * CERTFILE, const char * KEYFILE, gnutls_openpgp_crt_fmt_t FORMAT)'
-
-Note however, that since functions like *note
-gnutls_certificate_set_x509_key_file2:: may accept URLs that specify
-objects stored in token, another important function is *note
-gnutls_certificate_set_pin_function::.  That allows setting a callback
-function to retrieve a PIN if the input keys are protected by PIN by the
-token.
-
- -- Function: void gnutls_certificate_set_pin_function
-          (gnutls_certificate_credentials_t CRED, gnutls_pin_callback_t
-          FN, void * USERDATA)
-     CRED: is a 'gnutls_certificate_credentials_t' structure.
-
-     FN: A PIN callback
-
-     USERDATA: Data to be passed in the callback
-
-     This function will set a callback function to be used when required
-     to access a protected object.  This function overrides any other
-     global PIN functions.
-
-     Note that this function must be called right after initialization
-     to have effect.
-
-     *Since:* 3.1.0
-
-If the imported keys and certificates need to be accessed before any TLS
-session is established, it is convenient to use *note
-gnutls_certificate_set_key:: in combination with *note
-gnutls_pcert_import_x509_raw:: and *note
-gnutls_privkey_import_x509_raw::.
-
- -- Function: int gnutls_certificate_set_key
-          (gnutls_certificate_credentials_t RES, const char ** NAMES,
-          int NAMES_SIZE, gnutls_pcert_st * PCERT_LIST, int
-          PCERT_LIST_SIZE, gnutls_privkey_t KEY)
-     RES: is a 'gnutls_certificate_credentials_t' structure.
-
-     NAMES: is an array of DNS name of the certificate (NULL if none)
-
-     NAMES_SIZE: holds the size of the names list
-
-     PCERT_LIST: contains a certificate list (path) for the specified
-     private key
-
-     PCERT_LIST_SIZE: holds the size of the certificate list
-
-     KEY: is a 'gnutls_privkey_t' key
-
-     This function sets a certificate/private key pair in the
-     gnutls_certificate_credentials_t structure.  This function may be
-     called more than once, in case multiple keys/certificates exist for
-     the server.  For clients that wants to send more than its own end
-     entity certificate (e.g., also an intermediate CA cert) then put
-     the certificate chain in 'pcert_list' .
-
-     Note that the 'key' and the elements of 'pcert_list' will become
-     part of the credentials structure and must not be deallocated.
-     They will be automatically deallocated when the 'res' structure is
-     deinitialized.
-
-     If that function fails to load the 'res' structure is at an
-     undefined state, it must not be reused to load other keys or
-     certificates.
-
-     *Returns:* 'GNUTLS_E_SUCCESS' (0) on success, or a negative error
-     code.
-
-     *Since:* 3.0
-
-If multiple certificates are used with the functions above each client's
-request will be served with the certificate that matches the requested
-name (see *note Server name indication::).
-
-As an alternative to loading from files or buffers, a callback may be
-used for the server or the client to specify the certificate and the key
-at the handshake time.  In that case a certificate should be selected
-according the peer's signature algorithm preferences.  To get those
-preferences use *note gnutls_sign_algorithm_get_requested::.  Both
-functions are shown below.
-
-'VOID *note gnutls_certificate_set_retrieve_function:: (gnutls_certificate_credentials_t CRED, gnutls_certificate_retrieve_function * FUNC)'
-'VOID *note gnutls_certificate_set_retrieve_function2:: (gnutls_certificate_credentials_t CRED, gnutls_certificate_retrieve_function2 * FUNC)'
-'INT *note gnutls_sign_algorithm_get_requested:: (gnutls_session_t SESSION, size_t INDX, gnutls_sign_algorithm_t * ALGO)'
-c The functions above do not handle the requested server name
-automatically.  A server would need to check the name requested by the
-client using *note gnutls_server_name_get::, and serve the appropriate
-certificate.  Note that some of these functions require the
-'gnutls_pcert_st' structure to be filled in.  Helper functions to fill
-in the structure are listed below.
-
-typedef struct gnutls_pcert_st
-{
-  gnutls_pubkey_t pubkey;
-  gnutls_datum_t cert;
-  gnutls_certificate_type_t type;
-} gnutls_pcert_st;
-
-'INT *note gnutls_pcert_import_x509:: (gnutls_pcert_st * PCERT, gnutls_x509_crt_t CRT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_openpgp:: (gnutls_pcert_st * PCERT, gnutls_openpgp_crt_t CRT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_x509_raw:: (gnutls_pcert_st * PCERT, const gnutls_datum_t * CERT, gnutls_x509_crt_fmt_t FORMAT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_openpgp_raw:: (gnutls_pcert_st * PCERT, const gnutls_datum_t * CERT, gnutls_openpgp_crt_fmt_t FORMAT, gnutls_openpgp_keyid_t KEYID, unsigned int FLAGS)'
-'VOID *note gnutls_pcert_deinit:: (gnutls_pcert_st * PCERT)'
-
-In a handshake, the negotiated cipher suite depends on the certificate's
-parameters, so some key exchange methods might not be available with all
-certificates.  GnuTLS will disable ciphersuites that are not compatible
-with the key, or the enabled authentication methods.  For example keys
-marked as sign-only, will not be able to access the plain RSA
-ciphersuites, that require decryption.  It is not recommended to use RSA
-keys for both signing and encryption.  If possible use a different key
-for the 'DHE-RSA' which uses signing and 'RSA' that requires decryption.
-All the key exchange methods shown in *note Table 4.1: tab:key-exchange.
-are available in certificate authentication.
-
-Client certificate authentication
-.................................
-
-If a certificate is to be requested from the client during the
-handshake, the server will send a certificate request message.  This
-behavior is controlled *note gnutls_certificate_server_set_request::.
-The request contains a list of the acceptable by the server certificate
-signers.  This list is constructed using the trusted certificate
-authorities of the server.  In cases where the server supports a large
-number of certificate authorities it makes sense not to advertise all of
-the names to save bandwidth.  That can be controlled using the function
-*note gnutls_certificate_send_x509_rdn_sequence::.  This however will
-have the side-effect of not restricting the client to certificates
-signed by server's acceptable signers.
-
- -- Function: void gnutls_certificate_server_set_request
-          (gnutls_session_t SESSION, gnutls_certificate_request_t REQ)
-     SESSION: is a 'gnutls_session_t' structure.
-
-     REQ: is one of GNUTLS_CERT_REQUEST, GNUTLS_CERT_REQUIRE
-
-     This function specifies if we (in case of a server) are going to
-     send a certificate request message to the client.  If 'req' is
-     GNUTLS_CERT_REQUIRE then the server will return an error if the
-     peer does not provide a certificate.  If you do not call this
-     function then the client will not be asked to send a certificate.
-
- -- Function: void gnutls_certificate_send_x509_rdn_sequence
-          (gnutls_session_t SESSION, int STATUS)
-     SESSION: is a pointer to a 'gnutls_session_t' structure.
-
-     STATUS: is 0 or 1
-
-     If status is non zero, this function will order gnutls not to send
-     the rdnSequence in the certificate request message.  That is the
-     server will not advertise its trusted CAs to the peer.  If status
-     is zero then the default behaviour will take effect, which is to
-     advertise the server's trusted CAs.
-
-     This function has no effect in clients, and in authentication
-     methods other than certificate with X.509 certificates.
-
-Client or server certificate verification
-.........................................
-
-Certificate verification is possible by loading the trusted authorities
-into the credentials structure by using the following functions,
-applicable to X.509 and OpenPGP certificates.
-
-'INT *note gnutls_certificate_set_x509_system_trust:: (gnutls_certificate_credentials_t CRED)'
-'INT *note gnutls_certificate_set_x509_trust_file:: (gnutls_certificate_credentials_t CRED, const char * CAFILE, gnutls_x509_crt_fmt_t TYPE)'
-'INT *note gnutls_certificate_set_openpgp_keyring_file:: (gnutls_certificate_credentials_t C, const char * FILE, gnutls_openpgp_crt_fmt_t FORMAT)'
-
-The peer's certificate is not automatically verified and one must call
-*note gnutls_certificate_verify_peers3:: after a successful handshake to
-verify the certificate's signature and the owner of the certificate.
-The verification status returned can be printed using *note
-gnutls_certificate_verification_status_print::.
-
-Alternatively the verification can occur during the handshake by using
-*note gnutls_certificate_set_verify_function::.
-
-The functions above provide a brief verification output.  If a detailed
-output is required one should call *note gnutls_certificate_get_peers::
-to obtain the raw certificate of the peer and verify it using the
-functions discussed in *note X.509 certificates::.
-
- -- Function: int gnutls_certificate_verify_peers3 (gnutls_session_t
-          SESSION, const char * HOSTNAME, unsigned int * STATUS)
-     SESSION: is a gnutls session
-
-     HOSTNAME: is the expected name of the peer; may be 'NULL'
-
-     STATUS: is the output of the verification
-
-     This function will verify the peer's certificate and store the
-     status in the 'status' variable as a bitwise or'd
-     gnutls_certificate_status_t values or zero if the certificate is
-     trusted.  Note that value in 'status' is set only when the return
-     value of this function is success (i.e, failure to trust a
-     certificate does not imply a negative return value).  The default
-     verification flags used by this function can be overridden using
-     'gnutls_certificate_set_verify_flags()' .  See the documentation of
-     'gnutls_certificate_verify_peers2()' for details in the
-     verification process.
-
-     If the 'hostname' provided is non-NULL then this function will
-     compare the hostname in the certificate against the given.  The
-     comparison will be accurate for ascii names; non-ascii names are
-     compared byte-by-byte.  If names do not match the
-     'GNUTLS_CERT_UNEXPECTED_OWNER' status flag will be set.
-
-     In order to verify the purpose of the end-certificate (by checking
-     the extended key usage), use 'gnutls_certificate_verify_peers()' .
-
-     *Returns:* a negative error code on error and 'GNUTLS_E_SUCCESS'
-     (0) when the peer's certificate was successfully parsed,
-     irrespective of whether it was verified.
-
-     *Since:* 3.1.4
-
- -- Function: void gnutls_certificate_set_verify_function
-          (gnutls_certificate_credentials_t CRED,
-          gnutls_certificate_verify_function * FUNC)
-     CRED: is a 'gnutls_certificate_credentials_t' structure.
-
-     FUNC: is the callback function
-
-     This function sets a callback to be called when peer's certificate
-     has been received in order to verify it on receipt rather than
-     doing after the handshake is completed.
-
-     The callback's function prototype is: int
-     (*callback)(gnutls_session_t);
-
-     If the callback function is provided then gnutls will call it, in
-     the handshake, just after the certificate message has been
-     received.  To verify or obtain the certificate the
-     'gnutls_certificate_verify_peers2()' ,
-     'gnutls_certificate_type_get()' , 'gnutls_certificate_get_peers()'
-     functions can be used.
-
-     The callback function should return 0 for the handshake to continue
-     or non-zero to terminate.
-
-     *Since:* 2.10.0
 
 
 File: gnutls.info,  Node: SRP credentials,  Next: PSK credentials,  Prev: Certificate credentials,  Up: Associating the credentials
@@ -653,8 +332,8 @@ intended errno value instead of setting 'errno' directly.
      ERR: error value to store in session-specific errno variable.
 
      Store 'err' in the session-specific errno variable.  Useful values
-     for 'err' are EINTR, EAGAIN and EMSGSIZE, other values are treated
-     will be treated as real errors in the push/pull function.
+     for 'err' is EAGAIN and EINTR, other values are treated will be
+     treated as real errors in the push/pull function.
 
      This function is useful in replacement push and pull functions set
      by 'gnutls_transport_set_push_function()' and
@@ -779,9 +458,6 @@ which direction to check prior to restoring a function call.
      function was trying to read data, and 1 if it was trying to write
      data.
 
-     This function's output is unreliable if you are using the 'session'
-     in different threads, for sending and receiving.
-
      *Returns:* 0 if trying to read data, 1 if trying to write data.
 
 Moreover, to prevent blocking from DTLS' retransmission timers to block
@@ -855,26 +531,20 @@ the actual key exchange.
      handshake will be performed.
 
      The non-fatal errors expected by this function are:
-     'GNUTLS_E_INTERRUPTED' , 'GNUTLS_E_AGAIN' ,
-     'GNUTLS_E_WARNING_ALERT_RECEIVED' , and
-     'GNUTLS_E_GOT_APPLICATION_DATA' , the latter only in a case of
-     rehandshake.
-
-     The former two interrupt the handshake procedure due to the lower
-     layer being interrupted, and the latter because of an alert that
-     may be sent by a server (it is always a good idea to check any
-     received alerts).  On these errors call this function again, until
-     it returns 0; cf.  'gnutls_record_get_direction()' and
-     'gnutls_error_is_fatal()' .  In DTLS sessions the non-fatal error
-     'GNUTLS_E_LARGE_PACKET' is also possible, and indicates that the
-     MTU should be adjusted.
+     'GNUTLS_E_INTERRUPTED' , 'GNUTLS_E_AGAIN' , and
+     'GNUTLS_E_WARNING_ALERT_RECEIVED' .  The former two interrupt the
+     handshake procedure due to the lower layer being interrupted, and
+     the latter because of an alert that may be sent by a server (it is
+     always a good idea to check any received alerts).  On these errors
+     call this function again, until it returns 0; cf.
+     'gnutls_record_get_direction()' and 'gnutls_error_is_fatal()' .
 
      If this function is called by a server after a rehandshake request
      then 'GNUTLS_E_GOT_APPLICATION_DATA' or
      'GNUTLS_E_WARNING_ALERT_RECEIVED' may be returned.  Note that these
      are non fatal errors, only in the specific case of a rehandshake.
      Their meaning is that the client rejected the rehandshake request
-     or in the case of 'GNUTLS_E_GOT_APPLICATION_DATA' it could also
+     or in the case of 'GNUTLS_E_GOT_APPLICATION_DATA' it might also
      mean that some data were pending.
 
      *Returns:* 'GNUTLS_E_SUCCESS' on success, otherwise a negative
@@ -995,7 +665,8 @@ these functions are fatal for the protocol or can be ignored.
      functions that relate to a TLS session (e.g., record layer or
      handshake layer handling functions).
 
-     *Returns:* Non-zero value on fatal errors or zero on non-fatal.
+     *Returns:* zero on non fatal errors or positive 'error' values.
+     Non-zero on fatal error codes.
 
 Although, in the TLS protocol the receive function can be called at any
 time, when DTLS is used the GnuTLS receive functions must be called once
@@ -1109,9 +780,9 @@ transmission.  The following functions provide that functionality.
  -- Function: void gnutls_record_cork (gnutls_session_t SESSION)
      SESSION: is a 'gnutls_session_t' structure.
 
-     If called, 'gnutls_record_send()' will no longer send any records.
-     Any sent records will be cached until 'gnutls_record_uncork()' is
-     called.
+     If called 'gnutls_record_send()' will no longer send partial
+     records.  All queued records will be sent when 'gnutls_uncork()' is
+     called, or when the maximum record size is reached.
 
      This function is safe to use with DTLS after GnuTLS 3.3.0.
 
@@ -1123,10 +794,10 @@ transmission.  The following functions provide that functionality.
 
      FLAGS: Could be zero or 'GNUTLS_RECORD_WAIT'
 
-     This resets the effect of 'gnutls_record_cork()' , and flushes any
-     pending data.  If the 'GNUTLS_RECORD_WAIT' flag is specified then
-     this function will block until the data is sent or a fatal error
-     occurs (i.e., the function will retry on 'GNUTLS_E_AGAIN' and
+     This resets the effect of 'gnutls_cork()' , and flushes any pending
+     data.  If the 'GNUTLS_RECORD_WAIT' flag is specified then this
+     function will block until the data is sent or a fatal error occurs
+     (i.e., the function will retry on 'GNUTLS_E_AGAIN' and
      'GNUTLS_E_INTERRUPTED' ).
 
      If the flag 'GNUTLS_RECORD_WAIT' is not specified and the function
@@ -1302,12 +973,7 @@ SECURE192      Means all the known to be secure ciphersuites
                verification profile is set to
                GNUTLS_PROFILE_HIGH (128-bits).
                
-SECURE256      Currently alias for SECURE192.  This option,
-               will enable ciphers which use a 256-bit key but,
-               due to limitations of the TLS protocol, the
-               overall security level will be 192-bits (the
-               security level depends on more factors than
-               cipher key size).
+SECURE256      Currently alias for SECURE192.
                
 SUITEB128      Means all the NSA Suite B cryptography (RFC5430)
                ciphersuites with an 128 bit security level, as
@@ -1535,9 +1201,9 @@ Keyword                          Description
 %PROFILE_(LOW|LEGACY|MEDIUM|HIGH|ULTRA)require a certificate
                                  verification profile the
                                  corresponds to the specified
-                                 security level, see
-                                 *note Table 6.7: tab:key-sizes.
-                                 for the mappings to values.
+                                 security level, see *note
+                                 Table 6.7: tab:key-sizes. for
+                                 the mappings to values.
                                  
 %PROFILE_(SUITEB128|SUITEB192)   require a certificate
                                  verification profile the
@@ -1600,7 +1266,7 @@ bits    and SRP   key     parameter
         parameter size
         size
 -----------------------------------------------------------------
-<64     <768      <128    'INSECURE'     Considered to be
+<72     <1008     <160    'INSECURE'     Considered to be
                                          insecure
                                          
 64      768       128     'VERY WEAK'    Short term protection
@@ -1766,9 +1432,7 @@ gnutls_db_check_entry:: for expiration.
 A server utilizing tickets should generate ticket encryption and
 authentication keys using *note gnutls_session_ticket_key_generate::.
 Those keys should be associated with the GnuTLS session using *note
-gnutls_session_ticket_enable_server::, and should be rotated regularly
-(e.g., every few hours), to prevent them from becoming long-term keys
-which if revealed could be used to decrypt all previous sessions.
+gnutls_session_ticket_enable_server::.
 
  -- Function: int gnutls_session_ticket_enable_server (gnutls_session_t
           SESSION, const gnutls_datum_t * KEY)
@@ -2010,23 +1674,21 @@ below.
      available for the DANE record then the verify flag
      'DANE_VERIFY_NO_DNSSEC_DATA' is set.
 
+     Note that the CA constraint only applies for the directly
+     certifying CA and does not account for long CA chains.  Moreover
+     this function does not validate the provided chain.
+
      Due to the many possible options of DANE, there is no single threat
      model countered.  When notifying the user about DANE verification
      results it may be better to mention: DANE verification did not
      reject the certificate, rather than mentioning a successful DANE
      verication.
 
-     Note that this function is designed to be run in addition to PKIX -
-     certificate chain - verification.  To be run independently the
-     'DANE_VFLAG_ONLY_CHECK_EE_USAGE' flag should be specified; then the
-     function will check whether the key of the peer matches the key
-     advertized in the DANE entry.
+     If the 'q' parameter is provided it will be used for caching
+     entries.
 
-     *Returns:* a negative error code on error and 'DANE_E_SUCCESS' (0)
-     when the DANE entries were successfully parsed, irrespective of
-     whether they were verified (see 'verify' for that information).  If
-     no usable entries were encountered
-     'DANE_E_REQUESTED_DATA_NOT_AVAILABLE' will be returned.
+     *Returns:* On success, 'DANE_E_SUCCESS' (0) is returned, otherwise
+     a negative error value.
 
 'INT *note dane_verify_session_crt:: (dane_state_t S, gnutls_session_t SESSION, const char * HOSTNAME, const char * PROTO, unsigned int PORT, unsigned int SFLAGS, unsigned int VFLAGS, unsigned int * VERIFY)'
 'CONST CHAR * *note dane_strerror:: (int ERROR)'
@@ -2829,7 +2491,8 @@ int main(void)
 
         /* set the connection MTU */
         gnutls_dtls_set_mtu(session, 1000);
-        /* gnutls_dtls_set_timeouts(session, 1000, 60000); */
+        gnutls_handshake_set_timeout(session,
+                                     GNUTLS_DEFAULT_HANDSHAKE_TIMEOUT);
 
         /* Perform the TLS handshake */
         do {
@@ -4994,7 +4657,7 @@ authentication.
  */
 
 #define MAX_BUFFER 1024
-#define PORT 5557
+#define PORT 5556
 
 typedef struct {
         gnutls_session_t session;
@@ -6148,8 +5811,7 @@ GnuTLS is not a low-level cryptographic library, i.e., it does not
 provide access to basic cryptographic primitives.  However it abstracts
 the internal cryptographic back-end (see *note Cryptographic Backend::),
 providing symmetric crypto, hash and HMAC algorithms, as well access to
-the random number generation.  For a low-level crypto API the usage of
-nettle (1) library is recommended.
+the random number generation.
 
 * Menu:
 
@@ -6157,10 +5819,6 @@ nettle (1) library is recommended.
 * Public key algorithms::
 * Hash and HMAC functions::
 * Random number generation::
-
-   ---------- Footnotes ----------
-
-   (1) See <http://www.lysator.liu.se/~nisse/nettle/>.
 
 
 File: gnutls.info,  Node: Symmetric algorithms,  Next: Public key algorithms,  Up: Using GnuTLS as a cryptographic library
@@ -6257,9 +5915,7 @@ Figure 8.1: The random number levels.
      This function will generate random data and store it to output
      buffer.
 
-     This function is thread-safe and also fork-safe.
-
-     *Returns:* Zero on success, or a negative error code on error.
+     *Returns:* Zero or a negative error code on error.
 
      *Since:* 2.12.0
 
@@ -6321,7 +5977,7 @@ to 'more'.  Both will exit with a status code of 0.
                                      - disabled as '--no-dane'
             --local-dns            Use the local DNS server for DNSSEC resolving
                                      - disabled as '--no-local-dns'
-            --ca-verification      Enable CA certificate verification
+            --ca-verification      Disable CA certificate verification
                                      - disabled as '--no-ca-verification'
                                      - enabled by default
             --ocsp                 Enable OCSP certificate verification
@@ -6329,21 +5985,14 @@ to 'more'.  Both will exit with a status code of 0.
         -r, --resume               Establish a session and resume
         -e, --rehandshake          Establish a session and rehandshake
         -s, --starttls             Connect, establish a plain session and start TLS
-            --app-proto=str        an alias for the 'starttls-proto' option
-            --starttls-proto=str   The application protocol to be used to obtain the server's certificate
-     (https, ftp, smtp, imap, ldap, xmpp)
-                                     - prohibits the option 'starttls'
         -u, --udp                  Use DTLS (datagram TLS) over UDP
             --mtu=num              Set MTU for datagram TLS
                                      - it must be in the range:
                                        0 to 17000
             --crlf                 Send CR LF instead of LF
-            --fastopen             Enable TCP Fast Open
             --x509fmtder           Use DER format for certificates to read from
         -f, --fingerprint          Send the openpgp fingerprint, instead of the key
             --print-cert           Print peer's certificate in PEM format
-            --save-cert=str        Save the peer's certificate chain in the specified file in PEM format
-            --save-ocsp=str        Save the peer's OCSP status response in the provided file
             --dh-bits=num          The minimum number of bits allowed for DH
             --priority=str         Priorities string
             --x509cafile=str       Certificate file or PKCS #11 URL to use
@@ -6354,11 +6003,9 @@ to 'more'.  Both will exit with a status code of 0.
             --pgpkeyring=file      PGP Key ring file to use
                                      - file must pre-exist
             --pgpcertfile=file     PGP Public Key (certificate) file to use
-                                     - requires the option 'pgpkeyfile'
                                      - file must pre-exist
             --x509keyfile=str      X.509 key file or PKCS #11 URL to use
             --x509certfile=str     X.509 Certificate file or PKCS #11 URL to use
-                                     - requires the option 'x509keyfile'
             --pgpsubkey=str        PGP subkey to use (hex or auto)
             --srpusername=str      SRP username to use
             --srppasswd=str        SRP password to use
@@ -6371,23 +6018,22 @@ to 'more'.  Both will exit with a status code of 0.
             --benchmark-tls-kx     Benchmark TLS key exchange methods
             --benchmark-tls-ciphers  Benchmark TLS ciphers
         -l, --list                 Print a list of the supported algorithms and modes
-                                     - prohibits the option 'port'
-            --priority-list        Print a list of the supported priority strings
             --noticket             Don't allow session tickets
             --srtp-profiles=str    Offer SRTP profiles
             --alpn=str             Application layer protocol
                                      - may appear multiple times
         -b, --heartbeat            Activate heartbeat support
-            --recordsize=num       The maximum record size to advertize
+        -!, --recordsize=num       The maximum record size to advertize
                                      - it must be in the range:
                                        0 to 4096
-            --disable-sni          Do not send a Server Name Indication (SNI)
-            --disable-extensions   Disable all the TLS extensions
-            --inline-commands      Inline commands of the form ^<cmd>^
-            --inline-commands-prefix=str Change the default delimiter for inline commands.
-            --provider=file        Specify the PKCS #11 provider library
+        -", --disable-sni          Do not send a Server Name Indication (SNI)
+        -#, --disable-extensions   Disable all the TLS extensions
+        -$, --inline-commands      Inline commands of the form ^<cmd>^
+        -%, --inline-commands-prefix=str Change the default (^) used as a delimiter for inline commands.  The
+     value is a single US-ASCII character (octets 0 - 127).
+        -&, --provider=file        Specify the PKCS #11 provider library
                                      - file must pre-exist
-            --fips140-mode         Reports the status of the FIPS140-2 mode in gnutls library
+        -', --fips140-mode         Reports the status of the FIPS140-2 mode in gnutls library
         -v, --version[=arg]        output version information and exit
         -h, --help                 display extended usage information and exit
         -!, --more-help            extended usage information passed thru pager
@@ -6497,26 +6143,6 @@ starttls option (-s)
 This is the "connect, establish a plain session and start tls" option.
 The TLS session will be initiated when EOF or a SIGALRM is received.
 
-app-proto option
-----------------
-
-This is an alias for the 'starttls-proto' option, *note the
-starttls-proto option documentation: gnutls-cli starttls-proto.
-
-starttls-proto option
----------------------
-
-This is the "the application protocol to be used to obtain the server's
-certificate (https, ftp, smtp, imap)" option.  This option takes a
-string argument.
-
-This option has some usage constraints.  It:
-   * must not appear in combination with any of the following options:
-     starttls.
-
-Specify the application layer protocol for STARTTLS. If the protocol is
-supported, gnutls-cli will proceed to the TLS negotiation.
-
 dh-bits option
 --------------
 
@@ -6548,11 +6174,6 @@ list option (-l)
 ----------------
 
 This is the "print a list of the supported algorithms and modes" option.
-
-This option has some usage constraints.  It:
-   * must not appear in combination with any of the following options:
-     port.
-
 Print a list of the supported algorithms and modes.  If a priority
 string is given then only the enabled ciphersuites are shown.
 
@@ -6586,11 +6207,12 @@ renegotiate.
 inline-commands-prefix option
 -----------------------------
 
-This is the "change the default delimiter for inline commands."  option.
-This option takes a string argument.  Change the default delimiter (^)
-used for inline commands.  The delimiter is expected to be a single
-US-ASCII character (octets 0 - 127).  This option is only relevant if
-inline commands are enabled via the inline-commands option
+This is the "change the default (^) used as a delimiter for inline
+commands. 	the value is a single us-ascii character (octets 0 - 127)."
+option.  This option takes a string argument.  Change the default (^)
+delimiter used for inline commands.  The delimiter is expected to be a
+single US-ASCII character (octets 0 - 127).  This option is only
+relevant if inline commands are enabled via the inline-commands option
 
 provider option
 ---------------
@@ -6722,10 +6344,8 @@ to 'more'.  Both will exit with a status code of 0.
         -d, --debug=num            Enable debugging
                                      - it must be in the range:
                                        0 to 9999
-            --sni-hostname=str     Server's hostname for server name extension
-            --sni-hostname-fatal   Send fatal alert on sni-hostname mismatch
             --noticket             Don't accept session tickets
-        -g, --generate             Generate Diffie-Hellman parameters
+        -g, --generate             Generate Diffie-Hellman and RSA-export parameters
         -q, --quiet                Suppress some messages
             --nodb                 Do not use a resumption database
             --http                 Act as an HTTP server
@@ -6770,8 +6390,6 @@ to 'more'.  Both will exit with a status code of 0.
                                      - file must pre-exist
         -p, --port=num             The port to connect to
         -l, --list                 Print a list of the supported algorithms and modes
-            --provider=file        Specify the PKCS #11 provider library
-                                     - file must pre-exist
         -v, --version[=arg]        output version information and exit
         -h, --help                 display extended usage information and exit
         -!, --more-help            extended usage information passed thru pager
@@ -6825,13 +6443,6 @@ list option (-l)
 This is the "print a list of the supported algorithms and modes" option.
 Print a list of the supported algorithms and modes.  If a priority
 string is given then only the enabled ciphersuites are shown.
-
-provider option
----------------
-
-This is the "specify the pkcs #11 provider library" option.  This option
-takes a file argument.  This will override the default options in
-/etc/gnutls/pkcs11.conf
 
 gnutls-serv exit status
 -----------------------
@@ -7028,9 +6639,8 @@ to 'more'.  Both will exit with a status code of 0.
         -p, --port=num             The port to connect to
                                      - it must be in the range:
                                        0 to 65536
-            --app-proto=str        an alias for the 'starttls-proto' option
-            --starttls-proto=str   The application protocol to be used to obtain the server's certificate
-     (https, ftp, smtp, imap, ldap, xmpp)
+            --app-proto=str        The application protocol to be used to obtain the server's certificate
+     (https, smtp, imap)
         -v, --version[=arg]        output version information and exit
         -h, --help                 display extended usage information and exit
         -!, --more-help            extended usage information passed thru pager
@@ -7439,28 +7049,6 @@ When writing GTK-DOC style documentation for your new APIs, don't forget
 to add 'Since:' tags to indicate the GnuTLS version the API was
 introduced in.
 
-Heartbeat extension.
-....................
-
-One such extension is HeartBeat protocol (RFC6520:
-<https://tools.ietf.org/html/rfc6520>) implementation.  To enable it use
-option -heartbeat with example client and server supplied with gnutls:
-
-     ./doc/credentials/gnutls-http-serv --priority "NORMAL:-CIPHER-ALL:+NULL" -d 100 \
-         --heartbeat --echo
-     ./src/gnutls-cli --priority "NORMAL:-CIPHER-ALL:+NULL" -d 100 localhost -p 5556 \
-         --insecure --heartbeat
-
-After that pasting
-     **HEARTBEAT**
-command into gnutls-cli will trigger corresponding command on the server
-and it will send HeartBeat Request with random length to client.
-
-Another way is to run capabilities check with:
-
-     ./doc/credentials/gnutls-http-serv -d 100 --heartbeat
-     ./src/gnutls-cli-debug localhost -p 5556
-
 Adding a new Supplemental Data Handshake Message
 ------------------------------------------------
 
@@ -7549,6 +7137,28 @@ Lastly, add the new supplemental data type to
          GNUTLS_SUPPLEMENTAL_USER_MAPPING_DATA = 0,
          GNUTLS_SUPPLEMENTAL_FOOBAR_DATA = 1
      } gnutls_supplemental_data_format_type_t;
+
+Heartbeat extension.
+....................
+
+One such extension is HeartBeat protocol (RFC6520:
+<https://tools.ietf.org/html/rfc6520>) implementation.  To enable it use
+option -heartbeat with example client and server supplied with gnutls:
+
+     ./doc/credentials/gnutls-http-serv --priority "NORMAL:-CIPHER-ALL:+NULL" -d 100 \
+         --heartbeat --echo
+     ./src/gnutls-cli --priority "NORMAL:-CIPHER-ALL:+NULL" -d 100 localhost -p 5556 \
+         --insecure --heartbeat
+
+After that pasting
+     **HEARTBEAT**
+command into gnutls-cli will trigger corresponding command on the server
+and it will send HeartBeat Request with random length to client.
+
+Another way is to run capabilities check with:
+
+     ./doc/credentials/gnutls-http-serv -d 100 --heartbeat
+     ./src/gnutls-cli-debug localhost -p 5556
 
 
 File: gnutls.info,  Node: Cryptographic Backend,  Prev: TLS Extension Handling,  Up: Internal architecture of GnuTLS
@@ -7698,25 +7308,25 @@ Old function           Replacement
 -------------------------------------------------------------------
 'gnutls_transport_set_lowat'To replace its functionality the function
                        *note gnutls_record_check_pending:: has
-                       to be used, as described in
-                       *note Asynchronous operation::
+                       to be used, as described in *note
+                       Asynchronous operation::
                        
 'gnutls_session_get_server_random',They are replaced by the safer function
 'gnutls_session_get_client_random'*note gnutls_session_get_random::
                        
 'gnutls_session_get_master_secret'Replaced by the keying material exporters
-                       discussed in
-                       *note Deriving keys for other applications/protocols::
+                       discussed in *note Deriving keys for
+                       other applications/protocols::
                        
 'gnutls_transport_set_global_errno'Replaced by using the system's errno
-                       fascility or
-                       *note gnutls_transport_set_errno::.
+                       fascility or *note
+                       gnutls_transport_set_errno::.
                        
-'gnutls_x509_privkey_verify_data'Replaced by
-                       *note gnutls_pubkey_verify_data::.
+'gnutls_x509_privkey_verify_data'Replaced by *note
+                       gnutls_pubkey_verify_data::.
                        
-'gnutls_certificate_verify_peers'Replaced by
-                       *note gnutls_certificate_verify_peers2::.
+'gnutls_certificate_verify_peers'Replaced by *note
+                       gnutls_certificate_verify_peers2::.
                        
 'gnutls_psk_netconf_derive_key'Removed.  The key derivation function was
                        never standardized.
@@ -7728,8 +7338,8 @@ Old function           Replacement
                        the API.
                        
 'gnutls_certificate_get_x509_crls',Removed to allow updating the internal
-'gnutls_certificate_get_x509_cas'structures.  Replaced by
-                       *note gnutls_certificate_get_issuer::.
+'gnutls_certificate_get_x509_cas'structures.  Replaced by *note
+                       gnutls_certificate_get_issuer::.
                        
 'gnutls_certificate_get_openpgp_keyring'Removed.
                        
@@ -7747,15 +7357,15 @@ Few functions have been deprecated and are listed below.
 Old function           Replacement
                        
 -------------------------------------------------------------------
-'gnutls_pubkey_verify_hash'The function
-                       *note gnutls_pubkey_verify_hash2:: is
-                       provided and is functionally equivalent
-                       and safer to use.
+'gnutls_pubkey_verify_hash'The function *note
+                       gnutls_pubkey_verify_hash2:: is provided
+                       and is functionally equivalent and safer
+                       to use.
                        
-'gnutls_pubkey_verify_data'The function
-                       *note gnutls_pubkey_verify_data2:: is
-                       provided and is functionally equivalent
-                       and safer to use.
+'gnutls_pubkey_verify_data'The function *note
+                       gnutls_pubkey_verify_data2:: is provided
+                       and is functionally equivalent and safer
+                       to use.
                        
 
 Upgrading to 3.2.x from 3.1.x
@@ -7767,9 +7377,9 @@ Few functions have been deprecated and are listed below.
 Old function           Replacement
                        
 -------------------------------------------------------------------
-'gnutls_privkey_sign_raw_data'The function
-                       *note gnutls_privkey_sign_hash:: is
-                       equivalent when the flag
+'gnutls_privkey_sign_raw_data'The function *note
+                       gnutls_privkey_sign_hash:: is equivalent
+                       when the flag
                        'GNUTLS_PRIVKEY_SIGN_FLAG_TLS1_RSA' is
                        specified.
                        
@@ -7934,4 +7544,352 @@ style guides will help you:
      manuals and GTK-DOC web pages.
 
    * Supply a ChangeLog and NEWS entries, where appropriate.
+
+
+File: gnutls.info,  Node: Certification,  Prev: Contributing,  Up: Support
+
+B.5 Certification
+=================
+
+Many cryptographic libraries claim certifications from national or
+international bodies.  These certifications are tied on a specific (and
+often restricted) version of the library or a specific product using the
+library, and typically in the case of software they assure that the
+algorithms implemented are correct.  The major certifications known are:
+   * USA's FIPS 140-2 at Level 1 which certifies that approved
+     algorithms are used (see
+     <http://en.wikipedia.org/wiki/FIPS_140-2>);
+   * Common Criteria for Information Technology Security Evaluation
+     (CC), an international standard for verification of elaborate
+     security claims (see
+     <http://en.wikipedia.org/wiki/Common_Criteria>).
+
+Obtaining such a certification is an expensive and elaborate job that
+has no immediate value for a continuously developed free software
+library (as the certification is tied to the particular version tested),
+and in the case of algorithm verification of FIPS 140-2 it doesn't make
+much sense as the library is freely available and anyone can verify the
+correctness of algorithm implementation.  As such we are not actively
+pursuing this kind of certification.  If you are, nevertheless,
+interested, see *note Commercial Support::.
+
+
+File: gnutls.info,  Node: Error codes,  Next: Supported ciphersuites,  Prev: Support,  Up: Top
+
+Appendix C Error Codes and Descriptions
+***************************************
+
+The error codes used throughout the library are described below.  The
+return code 'GNUTLS_E_SUCCESS' indicate successful operation, and is
+guaranteed to have the value 0, so you can use it in logical
+expressions.
+
+0           GNUTLS_E_SUCCESS              Success.
+-3          GNUTLS_E_UNKNOWN_COMPRESSION_ALGORITHMCould not negotiate a
+                                          supported compression
+                                          method.
+-6          GNUTLS_E_UNKNOWN_CIPHER_TYPE  The cipher type is
+                                          unsupported.
+-7          GNUTLS_E_LARGE_PACKET         The transmitted packet is
+                                          too large (EMSGSIZE).
+-8          GNUTLS_E_UNSUPPORTED_VERSION_PACKETA record packet with
+                                          illegal version was
+                                          received.
+-9          GNUTLS_E_UNEXPECTED_PACKET_LENGTHA TLS packet with
+                                          unexpected length was
+                                          received.
+-10         GNUTLS_E_INVALID_SESSION      The specified session has
+                                          been invalidated for some
+                                          reason.
+-12         GNUTLS_E_FATAL_ALERT_RECEIVED A TLS fatal alert has
+                                          been received.
+-15         GNUTLS_E_UNEXPECTED_PACKET    An unexpected TLS packet
+                                          was received.
+-16         GNUTLS_E_WARNING_ALERT_RECEIVEDA TLS warning alert has
+                                          been received.
+-18         GNUTLS_E_ERROR_IN_FINISHED_PACKETAn error was encountered
+                                          at the TLS Finished
+                                          packet calculation.
+-19         GNUTLS_E_UNEXPECTED_HANDSHAKE_PACKETAn unexpected TLS
+                                          handshake packet was
+                                          received.
+-21         GNUTLS_E_UNKNOWN_CIPHER_SUITE Could not negotiate a
+                                          supported cipher suite.
+-22         GNUTLS_E_UNWANTED_ALGORITHM   An algorithm that is not
+                                          enabled was negotiated.
+-23         GNUTLS_E_MPI_SCAN_FAILED      The scanning of a large
+                                          integer has failed.
+-24         GNUTLS_E_DECRYPTION_FAILED    Decryption has failed.
+-25         GNUTLS_E_MEMORY_ERROR         Internal error in memory
+                                          allocation.
+-26         GNUTLS_E_DECOMPRESSION_FAILED Decompression of the TLS
+                                          record packet has failed.
+-27         GNUTLS_E_COMPRESSION_FAILED   Compression of the TLS
+                                          record packet has failed.
+-28         GNUTLS_E_AGAIN                Resource temporarily
+                                          unavailable, try again.
+-29         GNUTLS_E_EXPIRED              The requested session has
+                                          expired.
+-30         GNUTLS_E_DB_ERROR             Error in Database
+                                          backend.
+-31         GNUTLS_E_SRP_PWD_ERROR        Error in password file.
+-32         GNUTLS_E_INSUFFICIENT_CREDENTIALSInsufficient credentials
+                                          for that request.
+-33         GNUTLS_E_HASH_FAILED          Hashing has failed.
+-34         GNUTLS_E_BASE64_DECODING_ERRORBase64 decoding error.
+-35         GNUTLS_E_MPI_PRINT_FAILED     Could not export a large
+                                          integer.
+-37         GNUTLS_E_REHANDSHAKE          Rehandshake was requested
+                                          by the peer.
+-38         GNUTLS_E_GOT_APPLICATION_DATA TLS Application data were
+                                          received, while expecting
+                                          handshake data.
+-39         GNUTLS_E_RECORD_LIMIT_REACHED The upper limit of record
+                                          packet sequence numbers
+                                          has been reached.  Wow!
+-40         GNUTLS_E_ENCRYPTION_FAILED    Encryption has failed.
+-43         GNUTLS_E_CERTIFICATE_ERROR    Error in the certificate.
+-44         GNUTLS_E_PK_ENCRYPTION_FAILED Public key encryption has
+                                          failed.
+-45         GNUTLS_E_PK_DECRYPTION_FAILED Public key decryption has
+                                          failed.
+-46         GNUTLS_E_PK_SIGN_FAILED       Public key signing has
+                                          failed.
+-47         GNUTLS_E_X509_UNSUPPORTED_CRITICAL_EXTENSIONUnsupported critical
+                                          extension in X.509
+                                          certificate.
+-48         GNUTLS_E_KEY_USAGE_VIOLATION  Key usage violation in
+                                          certificate has been
+                                          detected.
+-49         GNUTLS_E_NO_CERTIFICATE_FOUND No certificate was found.
+-50         GNUTLS_E_INVALID_REQUEST      The request is invalid.
+-51         GNUTLS_E_SHORT_MEMORY_BUFFER  The given memory buffer
+                                          is too short to hold
+                                          parameters.
+-52         GNUTLS_E_INTERRUPTED          Function was interrupted.
+-53         GNUTLS_E_PUSH_ERROR           Error in the push
+                                          function.
+-54         GNUTLS_E_PULL_ERROR           Error in the pull
+                                          function.
+-55         GNUTLS_E_RECEIVED_ILLEGAL_PARAMETERAn illegal parameter has
+                                          been received.
+-56         GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLEThe requested data were
+                                          not available.
+-57         GNUTLS_E_PKCS1_WRONG_PAD      Wrong padding in PKCS1
+                                          packet.
+-58         GNUTLS_E_RECEIVED_ILLEGAL_EXTENSIONAn illegal TLS extension
+                                          was received.
+-59         GNUTLS_E_INTERNAL_ERROR       GnuTLS internal error.
+-60         GNUTLS_E_CERTIFICATE_KEY_MISMATCHThe certificate and the
+                                          given key do not match.
+-61         GNUTLS_E_UNSUPPORTED_CERTIFICATE_TYPEThe certificate type is
+                                          not supported.
+-62         GNUTLS_E_X509_UNKNOWN_SAN     Unknown Subject
+                                          Alternative name in X.509
+                                          certificate.
+-63         GNUTLS_E_DH_PRIME_UNACCEPTABLEThe Diffie-Hellman prime
+                                          sent by the server is not
+                                          acceptable (not long
+                                          enough).
+-64         GNUTLS_E_FILE_ERROR           Error while reading file.
+-67         GNUTLS_E_ASN1_ELEMENT_NOT_FOUNDASN1 parser: Element was
+                                          not found.
+-68         GNUTLS_E_ASN1_IDENTIFIER_NOT_FOUNDASN1 parser: Identifier
+                                          was not found
+-69         GNUTLS_E_ASN1_DER_ERROR       ASN1 parser: Error in DER
+                                          parsing.
+-70         GNUTLS_E_ASN1_VALUE_NOT_FOUND ASN1 parser: Value was
+                                          not found.
+-71         GNUTLS_E_ASN1_GENERIC_ERROR   ASN1 parser: Generic
+                                          parsing error.
+-72         GNUTLS_E_ASN1_VALUE_NOT_VALID ASN1 parser: Value is not
+                                          valid.
+-73         GNUTLS_E_ASN1_TAG_ERROR       ASN1 parser: Error in
+                                          TAG.
+-74         GNUTLS_E_ASN1_TAG_IMPLICIT    ASN1 parser: error in
+                                          implicit tag
+-75         GNUTLS_E_ASN1_TYPE_ANY_ERROR  ASN1 parser: Error in
+                                          type 'ANY'.
+-76         GNUTLS_E_ASN1_SYNTAX_ERROR    ASN1 parser: Syntax
+                                          error.
+-77         GNUTLS_E_ASN1_DER_OVERFLOW    ASN1 parser: Overflow in
+                                          DER parsing.
+-78         GNUTLS_E_TOO_MANY_EMPTY_PACKETSToo many empty record
+                                          packets have been
+                                          received.
+-79         GNUTLS_E_OPENPGP_UID_REVOKED  The OpenPGP User ID is
+                                          revoked.
+-80         GNUTLS_E_UNKNOWN_PK_ALGORITHM An unknown public key
+                                          algorithm was
+                                          encountered.
+-81         GNUTLS_E_TOO_MANY_HANDSHAKE_PACKETSToo many handshake
+                                          packets have been
+                                          received.
+-84         GNUTLS_E_NO_TEMPORARY_RSA_PARAMSNo temporary RSA
+                                          parameters were found.
+-86         GNUTLS_E_NO_COMPRESSION_ALGORITHMSNo supported compression
+                                          algorithms have been
+                                          found.
+-87         GNUTLS_E_NO_CIPHER_SUITES     No supported cipher
+                                          suites have been found.
+-88         GNUTLS_E_OPENPGP_GETKEY_FAILEDCould not get OpenPGP
+                                          key.
+-89         GNUTLS_E_PK_SIG_VERIFY_FAILED Public key signature
+                                          verification has failed.
+-90         GNUTLS_E_ILLEGAL_SRP_USERNAME The SRP username supplied
+                                          is illegal.
+-91         GNUTLS_E_SRP_PWD_PARSING_ERRORParsing error in password
+                                          file.
+-93         GNUTLS_E_NO_TEMPORARY_DH_PARAMSNo temporary DH
+                                          parameters were found.
+-94         GNUTLS_E_OPENPGP_FINGERPRINT_UNSUPPORTEDThe OpenPGP fingerprint
+                                          is not supported.
+-95         GNUTLS_E_X509_UNSUPPORTED_ATTRIBUTEThe certificate has
+                                          unsupported attributes.
+-96         GNUTLS_E_UNKNOWN_HASH_ALGORITHMThe hash algorithm is
+                                          unknown.
+-97         GNUTLS_E_UNKNOWN_PKCS_CONTENT_TYPEThe PKCS structure's
+                                          content type is unknown.
+-98         GNUTLS_E_UNKNOWN_PKCS_BAG_TYPEThe PKCS structure's bag
+                                          type is unknown.
+-99         GNUTLS_E_INVALID_PASSWORD     The given password
+                                          contains invalid
+                                          characters.
+-100        GNUTLS_E_MAC_VERIFY_FAILED    The Message
+                                          Authentication Code
+                                          verification failed.
+-101        GNUTLS_E_CONSTRAINT_ERROR     Some constraint limits
+                                          were reached.
+-102        GNUTLS_E_WARNING_IA_IPHF_RECEIVEDReceived a TLS/IA
+                                          Intermediate Phase
+                                          Finished message
+-103        GNUTLS_E_WARNING_IA_FPHF_RECEIVEDReceived a TLS/IA Final
+                                          Phase Finished message
+-104        GNUTLS_E_IA_VERIFY_FAILED     Verifying TLS/IA phase
+                                          checksum failed
+-105        GNUTLS_E_UNKNOWN_ALGORITHM    The specified algorithm
+                                          or protocol is unknown.
+-106        GNUTLS_E_UNSUPPORTED_SIGNATURE_ALGORITHMThe signature algorithm
+                                          is not supported.
+-107        GNUTLS_E_SAFE_RENEGOTIATION_FAILEDSafe renegotiation
+                                          failed.
+-108        GNUTLS_E_UNSAFE_RENEGOTIATION_DENIEDUnsafe renegotiation
+                                          denied.
+-109        GNUTLS_E_UNKNOWN_SRP_USERNAME The SRP username supplied
+                                          is unknown.
+-110        GNUTLS_E_PREMATURE_TERMINATIONThe TLS connection was
+                                          non-properly terminated.
+-201        GNUTLS_E_BASE64_ENCODING_ERRORBase64 encoding error.
+-202        GNUTLS_E_INCOMPATIBLE_GCRYPT_LIBRARYThe crypto library
+                                          version is too old.
+-203        GNUTLS_E_INCOMPATIBLE_LIBTASN1_LIBRARYThe tasn1 library version
+                                          is too old.
+-204        GNUTLS_E_OPENPGP_KEYRING_ERRORError loading the
+                                          keyring.
+-205        GNUTLS_E_X509_UNSUPPORTED_OID The OID is not supported.
+-206        GNUTLS_E_RANDOM_FAILED        Failed to acquire random
+                                          data.
+-207        GNUTLS_E_BASE64_UNEXPECTED_HEADER_ERRORBase64 unexpected header
+                                          error.
+-208        GNUTLS_E_OPENPGP_SUBKEY_ERROR Could not find OpenPGP
+                                          subkey.
+-209        GNUTLS_E_CRYPTO_ALREADY_REGISTEREDThere is already a crypto
+                                          algorithm with lower
+                                          priority.
+-210        GNUTLS_E_HANDSHAKE_TOO_LARGE  The handshake data size
+                                          is too large.
+-211        GNUTLS_E_CRYPTODEV_IOCTL_ERRORError interfacing with
+                                          /dev/crypto
+-212        GNUTLS_E_CRYPTODEV_DEVICE_ERRORError opening /dev/crypto
+-213        GNUTLS_E_CHANNEL_BINDING_NOT_AVAILABLEChannel binding data not
+                                          available
+-214        GNUTLS_E_BAD_COOKIE           The cookie was bad.
+-215        GNUTLS_E_OPENPGP_PREFERRED_KEY_ERRORThe OpenPGP key has not a
+                                          preferred key set.
+-216        GNUTLS_E_INCOMPAT_DSA_KEY_WITH_TLS_PROTOCOLThe given DSA key is
+                                          incompatible with the
+                                          selected TLS protocol.
+-292        GNUTLS_E_HEARTBEAT_PONG_RECEIVEDA heartbeat pong message
+                                          was received.
+-293        GNUTLS_E_HEARTBEAT_PING_RECEIVEDA heartbeat ping message
+                                          was received.
+-300        GNUTLS_E_PKCS11_ERROR         PKCS #11 error.
+-301        GNUTLS_E_PKCS11_LOAD_ERROR    PKCS #11 initialization
+                                          error.
+-302        GNUTLS_E_PARSING_ERROR        Error in parsing.
+-303        GNUTLS_E_PKCS11_PIN_ERROR     Error in provided PIN.
+-305        GNUTLS_E_PKCS11_SLOT_ERROR    PKCS #11 error in slot
+-306        GNUTLS_E_LOCKING_ERROR        Thread locking error
+-307        GNUTLS_E_PKCS11_ATTRIBUTE_ERRORPKCS #11 error in
+                                          attribute
+-308        GNUTLS_E_PKCS11_DEVICE_ERROR  PKCS #11 error in device
+-309        GNUTLS_E_PKCS11_DATA_ERROR    PKCS #11 error in data
+-310        GNUTLS_E_PKCS11_UNSUPPORTED_FEATURE_ERRORPKCS #11 unsupported
+                                          feature
+-311        GNUTLS_E_PKCS11_KEY_ERROR     PKCS #11 error in key
+-312        GNUTLS_E_PKCS11_PIN_EXPIRED   PKCS #11 PIN expired
+-313        GNUTLS_E_PKCS11_PIN_LOCKED    PKCS #11 PIN locked
+-314        GNUTLS_E_PKCS11_SESSION_ERROR PKCS #11 error in session
+-315        GNUTLS_E_PKCS11_SIGNATURE_ERRORPKCS #11 error in
+                                          signature
+-316        GNUTLS_E_PKCS11_TOKEN_ERROR   PKCS #11 error in token
+-317        GNUTLS_E_PKCS11_USER_ERROR    PKCS #11 user error
+-318        GNUTLS_E_CRYPTO_INIT_FAILED   The initialization of
+                                          crypto backend has
+                                          failed.
+-319        GNUTLS_E_TIMEDOUT             The operation timed out
+-320        GNUTLS_E_USER_ERROR           The operation was
+                                          cancelled due to user
+                                          error
+-321        GNUTLS_E_ECC_NO_SUPPORTED_CURVESNo supported ECC curves
+                                          were found
+-322        GNUTLS_E_ECC_UNSUPPORTED_CURVEThe curve is unsupported
+-323        GNUTLS_E_PKCS11_REQUESTED_OBJECT_NOT_AVAILBLEThe requested PKCS #11
+                                          object is not available
+-324        GNUTLS_E_CERTIFICATE_LIST_UNSORTEDThe provided X.509
+                                          certificate list is not
+                                          sorted (in subject to
+                                          issuer order)
+-325        GNUTLS_E_ILLEGAL_PARAMETER    An illegal parameter was
+                                          found.
+-326        GNUTLS_E_NO_PRIORITIES_WERE_SETNo or insufficient
+                                          priorities were set.
+-327        GNUTLS_E_X509_UNSUPPORTED_EXTENSIONUnsupported extension in
+                                          X.509 certificate.
+-328        GNUTLS_E_SESSION_EOF          Peer has terminated the
+                                          connection
+-329        GNUTLS_E_TPM_ERROR            TPM error.
+-330        GNUTLS_E_TPM_KEY_PASSWORD_ERRORError in provided
+                                          password for key to be
+                                          loaded in TPM.
+-331        GNUTLS_E_TPM_SRK_PASSWORD_ERRORError in provided SRK
+                                          password for TPM.
+-332        GNUTLS_E_TPM_SESSION_ERROR    Cannot initialize a
+                                          session with the TPM.
+-333        GNUTLS_E_TPM_KEY_NOT_FOUND    TPM key was not found in
+                                          persistent storage.
+-334        GNUTLS_E_TPM_UNINITIALIZED    TPM is not initialized.
+-340        GNUTLS_E_NO_CERTIFICATE_STATUSThere is no certificate
+                                          status (OCSP).
+-341        GNUTLS_E_OCSP_RESPONSE_ERROR  The OCSP response is
+                                          invalid
+-342        GNUTLS_E_RANDOM_DEVICE_ERROR  Error in the system's
+                                          randomness device.
+-343        GNUTLS_E_AUTH_ERROR           Could not authenticate
+                                          peer.
+-344        GNUTLS_E_NO_APPLICATION_PROTOCOLNo common application
+                                          protocol could be
+                                          negotiated.
+-345        GNUTLS_E_SOCKETS_INIT_ERROR   Error in sockets
+                                          initialization.
+-400        GNUTLS_E_SELF_TEST_ERROR      Error while performing
+                                          self checks.
+-401        GNUTLS_E_NO_SELF_TEST         There is no self test for
+                                          this algorithm.
+-402        GNUTLS_E_LIB_IN_ERROR_STATE   An error has been
+                                          detected in the library
+                                          and cannot continue
+                                          operations.
+-403        GNUTLS_E_PK_GENERATION_ERROR  Error in public key
+                                          generation.
 

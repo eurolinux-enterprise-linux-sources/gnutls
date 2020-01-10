@@ -73,9 +73,7 @@ void _gnutls_rnd_deinit(void)
  * This function will generate random data and store it to output
  * buffer.
  *
- * This function is thread-safe and also fork-safe.
- *
- * Returns: Zero on success, or a negative error code on error.
+ * Returns: Zero or a negative error code on error.
  *
  * Since: 2.12.0
  **/

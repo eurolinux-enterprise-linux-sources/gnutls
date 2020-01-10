@@ -1,0 +1,16 @@
+diff --git a/lib/random.h b/lib/random.h
+index 370a2f9..59e3f3c 100644
+--- a/lib/random.h
++++ b/lib/random.h
+@@ -50,7 +50,10 @@ int _gnutls_rnd_init(void);
+ 
+ inline static int _gnutls_rnd_check(void)
+ {
+-       return _gnutls_rnd_ops.check(gnutls_rnd_ctx);
++	if (_gnutls_rnd_ops.check)
++		return _gnutls_rnd_ops.check(gnutls_rnd_ctx);
++	else
++		return 0;
+ }
+ 
+ #ifndef _WIN32

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-AM_CFLAGS = $(WERROR_CFLAGS) $(WSTACK_CFLAGS) $(WARN_CFLAGS) $(NETTLE_CFLAGS) $(P11_KIT_CFLAGS)
+AM_CFLAGS = $(WERROR_CFLAGS) $(WSTACK_CFLAGS) $(WARN_CFLAGS) $(NETTLE_CFLAGS)
 AM_CPPFLAGS = \
 	-I$(srcdir)/../../gl		\
 	-I$(builddir)/../../gl		\
@@ -41,6 +41,8 @@ libgnutls_x509_la_SOURCES =	\
 	extensions.c		\
 	mpi.c			\
 	output.c		\
+	pbkdf2-sha1.c		\
+	pbkdf2-sha1.h		\
 	pkcs12.c		\
 	pkcs12_bag.c		\
 	pkcs12_encr.c		\

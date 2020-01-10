@@ -75,12 +75,11 @@
 #define ASN1_NULL_SIZE 2
 
 int _gnutls_x509_set_time(ASN1_TYPE c2, const char *where, time_t tim,
-			  int force_general);
+			  int general);
 
 int _gnutls_x509_decode_string(unsigned int etype,
 			       const uint8_t * der, size_t der_size,
-			       gnutls_datum_t * output,
-			       unsigned allow_ber);
+			       gnutls_datum_t * output);
 
 int _gnutls_x509_encode_string(unsigned int etype,
 			       const void *input_data, size_t input_size,
@@ -119,8 +118,7 @@ int _gnutls_x509_export_int_named2(ASN1_TYPE asn1_data, const char *name,
 int _gnutls_x509_read_value(ASN1_TYPE c, const char *root,
 			    gnutls_datum_t * ret);
 int _gnutls_x509_read_string(ASN1_TYPE c, const char *root,
-			     gnutls_datum_t * ret, unsigned int etype,
-			     unsigned allow_ber);
+			     gnutls_datum_t * ret, unsigned int etype);
 int _gnutls_x509_write_value(ASN1_TYPE c, const char *root,
 			     const gnutls_datum_t * data);
 
@@ -194,10 +192,6 @@ _gnutls_check_if_same_key2(gnutls_x509_crt_t cert1,
 			   gnutls_datum_t *cert2bin);
 
 bool
-_gnutls_check_valid_key_id(gnutls_datum_t *key_id,
-			   gnutls_x509_crt_t cert, time_t now);
-
-bool
 _gnutls_check_if_same_cert(gnutls_x509_crt_t cert1,
 			   gnutls_x509_crt_t cert2);
 
@@ -233,16 +227,5 @@ int x509_raw_crt_to_raw_pubkey(const gnutls_datum_t * cert,
 
 int x509_crt_to_raw_pubkey(gnutls_x509_crt_t crt,
 			   gnutls_datum_t * rpubkey);
-
-inline static int _asn1_strict_der_decode (asn1_node * element, const void *ider,
-		       int len, char *errorDescription)
-{
-#ifdef ASN1_DECODE_FLAG_ALLOW_INCORRECT_TIME
-# define _ASN1_DER_FLAGS ASN1_DECODE_FLAG_ALLOW_INCORRECT_TIME|ASN1_DECODE_FLAG_STRICT_DER
-#else
-# define _ASN1_DER_FLAGS ASN1_DECODE_FLAG_STRICT_DER
-#endif
-	return asn1_der_decoding2(element, ider, &len, _ASN1_DER_FLAGS, errorDescription);
-}
 
 #endif

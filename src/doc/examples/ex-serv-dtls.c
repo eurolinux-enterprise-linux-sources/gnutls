@@ -28,7 +28,7 @@
  */
 
 #define MAX_BUFFER 1024
-#define PORT 5557
+#define PORT 5556
 
 typedef struct {
         gnutls_session_t session;

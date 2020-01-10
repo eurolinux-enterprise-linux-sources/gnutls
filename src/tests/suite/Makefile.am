@@ -87,22 +87,22 @@ nodist_libecore_la_SOURCES = ecore/src/lib/ecore_anim.c			\
 
 nodist_check_SCRIPTS = eagain testsrn testcompat chain invalid-cert testrandom \
 	testpkcs11 testpkcs11.pkcs15 testpkcs11.softhsm testpkcs11.sc-hsm \
-	testrng test-ciphersuite-names
+	testrng
 
-TESTS = test-ciphersuite-names eagain testsrn testcompat chain invalid-cert \
-	testpkcs11 testrng test-ciphersuite-names
+TESTS = ciphersuite/test-ciphersuites.sh eagain testsrn testcompat chain invalid-cert \
+	testpkcs11 testrng
 
 if ENABLE_PKCS11
-TESTS += crl-test
+check_PROGRAMS += pkcs11-chainverify pkcs11-get-issuer
+TESTS += pkcs11-chainverify pkcs11-get-issuer crl-test
 endif
 
 TESTS_ENVIRONMENT = EXEEXT=$(EXEEXT) \
-	LC_ALL="C"				\
-	VALGRIND="$(VALGRIND)"			\
-	LIBTOOL="$(LIBTOOL)"			\
-	top_builddir="$(top_builddir)"		\
-	srcdir="$(srcdir)"			\
-	OPENSSL_ia32cap=0x00000000
+	LC_ALL="C"					\
+	VALGRIND="$(VALGRIND)"				\
+	LIBTOOL="$(LIBTOOL)"				\
+	top_builddir="$(top_builddir)"			\
+	srcdir="$(srcdir)"
 
 if ENABLE_DANE
 TESTS += testdane

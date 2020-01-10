@@ -381,23 +381,19 @@ gnutls_session_t initialize_session(int dtls)
 					GNUTLS_HB_PEER_ALLOWED_TO_SEND);
 
 #ifdef ENABLE_DTLS_SRTP
-        if (HAVE_OPT(SRTP_PROFILES)) {
-                ret =
-                    gnutls_srtp_set_profile_direct(session,
-                                                   OPT_ARG(SRTP_PROFILES),
-                                                   &err);
-                if (ret == GNUTLS_E_INVALID_REQUEST)
-                        fprintf(stderr, "Syntax error at: %s\n", err);
-                else if (ret != 0)
-                        fprintf(stderr, "Error in profiles: %s\n",
-                                gnutls_strerror(ret));
-                else fprintf(stderr,"DTLS profile set to %s\n",
-                             OPT_ARG(SRTP_PROFILES));
-
-                if (ret != 0) exit(1);
-        }
+	if (HAVE_OPT(SRTP_PROFILES)) {
+		ret =
+		    gnutls_srtp_set_profile_direct(session,
+						   OPT_ARG(SRTP_PROFILES),
+						   &err);
+		if (ret == GNUTLS_E_INVALID_REQUEST)
+			fprintf(stderr, "Syntax error at: %s\n", err);
+		else
+			fprintf(stderr, "Error in profiles: %s\n",
+				gnutls_strerror(ret));
+		exit(1);
+	}
 #endif
-
 
 	return session;
 }
@@ -955,22 +951,6 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 #ifdef ENABLE_PKCS11
-	if (HAVE_OPT(PROVIDER)) {
-		ret = gnutls_pkcs11_init(GNUTLS_PKCS11_FLAG_MANUAL, NULL);
-		if (ret < 0)
-			fprintf(stderr, "pkcs11_init: %s",
-				gnutls_strerror(ret));
-		else {
-			ret =
-			    gnutls_pkcs11_add_provider(OPT_ARG(PROVIDER),
-						       NULL);
-			if (ret < 0) {
-				fprintf(stderr, "pkcs11_add_provider: %s",
-					gnutls_strerror(ret));
-				exit(1);
-			}
-		}
-	}
 	pkcs11_common(NULL);
 #endif
 

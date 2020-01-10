@@ -118,14 +118,19 @@ static const char *_gnutls_extension_get_name(uint16_t type)
 static int
 _gnutls_extension_list_check(gnutls_session_t session, uint16_t type)
 {
-	int i;
+	if (session->security_parameters.entity == GNUTLS_CLIENT) {
+		int i;
 
-	for (i = 0; i < session->internals.extensions_sent_size; i++) {
-		if (type == session->internals.extensions_sent[i])
-			return 0;	/* ok found */
+		for (i = 0; i < session->internals.extensions_sent_size;
+		     i++) {
+			if (type == session->internals.extensions_sent[i])
+				return 0;	/* ok found */
+		}
+
+		return GNUTLS_E_RECEIVED_ILLEGAL_EXTENSION;
 	}
 
-	return GNUTLS_E_RECEIVED_ILLEGAL_EXTENSION;
+	return 0;
 }
 
 int
@@ -166,12 +171,10 @@ _gnutls_parse_extensions(gnutls_session_t session,
 		type = _gnutls_read_uint16(&data[pos]);
 		pos += 2;
 
-		if (session->security_parameters.entity == GNUTLS_CLIENT) {
-			if ((ret =
-			     _gnutls_extension_list_check(session, type)) < 0) {
-				gnutls_assert();
-				return ret;
-			}
+		if ((ret =
+		     _gnutls_extension_list_check(session, type)) < 0) {
+			gnutls_assert();
+			return ret;
 		}
 
 		DECR_LENGTH_RET(next, 2, 0);
@@ -189,11 +192,6 @@ _gnutls_parse_extensions(gnutls_session_t session,
 			     _gnutls_extension_get_name(type), type);
 
 			continue;
-		}
-
-		/* only store the extension number if we support it */
-		if (session->security_parameters.entity == GNUTLS_SERVER) {
-			_gnutls_extension_list_add(session, type);
 		}
 
 		_gnutls_handshake_log
@@ -214,24 +212,23 @@ _gnutls_parse_extensions(gnutls_session_t session,
 }
 
 /* Adds the extension we want to send in the extensions list.
- * This list is used in client side to check whether the (later) received
+ * This list is used to check whether the (later) received
  * extensions are the ones we requested.
- *
- * In server side, this list is used to ensure we don't send
- * extensions that we didn't receive a corresponding value.
  */
 void _gnutls_extension_list_add(gnutls_session_t session, uint16_t type)
 {
 
-	if (session->internals.extensions_sent_size <
-	    MAX_EXT_TYPES) {
-		session->internals.extensions_sent[session->
-						   internals.extensions_sent_size]
-		    = type;
-		session->internals.extensions_sent_size++;
-	} else {
-		_gnutls_handshake_log
-		    ("extensions: Increase MAX_EXT_TYPES\n");
+	if (session->security_parameters.entity == GNUTLS_CLIENT) {
+		if (session->internals.extensions_sent_size <
+		    MAX_EXT_TYPES) {
+			session->internals.extensions_sent[session->
+							   internals.extensions_sent_size]
+			    = type;
+			session->internals.extensions_sent_size++;
+		} else {
+			_gnutls_handshake_log
+			    ("extensions: Increase MAX_EXT_TYPES\n");
+		}
 	}
 }
 
@@ -260,14 +257,6 @@ _gnutls_gen_extensions(gnutls_session_t session,
 		    && p->parse_type != parse_type)
 			continue;
 
-		/* ensure we are sending only what we received */
-		if (session->security_parameters.entity == GNUTLS_SERVER) {
-			if ((ret =
-			     _gnutls_extension_list_check(session, p->type)) < 0) {
-				continue;
-			}
-		}
-
 		ret = _gnutls_buffer_append_prefix(extdata, 16, p->type);
 		if (ret < 0)
 			return gnutls_assert_val(ret);
@@ -291,8 +280,7 @@ _gnutls_gen_extensions(gnutls_session_t session,
 
 			/* add this extension to the extension list
 			 */
-			if (session->security_parameters.entity == GNUTLS_CLIENT)
-				_gnutls_extension_list_add(session, p->type);
+			_gnutls_extension_list_add(session, p->type);
 
 			_gnutls_handshake_log
 			    ("EXT[%p]: Sending extension %s (%d bytes)\n",

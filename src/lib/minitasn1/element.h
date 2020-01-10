@@ -23,13 +23,7 @@
 #define _ELEMENT_H
 
 
-struct node_tail_cache_st
-{
-	asn1_node head; /* the first element of the sequence */
-	asn1_node tail;
-};
-
-int _asn1_append_sequence_set (asn1_node node, struct node_tail_cache_st *pcached);
+int _asn1_append_sequence_set (asn1_node node, asn1_node *pcached);
 
 int _asn1_convert_integer (const unsigned char *value,
 			   unsigned char *value_out,

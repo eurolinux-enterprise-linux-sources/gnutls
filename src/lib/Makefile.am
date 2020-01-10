@@ -74,7 +74,7 @@ COBJECTS = gnutls_range.c gnutls_record.c \
 	gnutls_auth.c gnutls_v2_compat.c gnutls_datum.c			\
 	gnutls_session_pack.c gnutls_mpi.c gnutls_pk.c gnutls_cert.c	\
 	gnutls_global.c gnutls_constate.c gnutls_anon_cred.c		\
-	pkix_asn1_tab.c gnutls_asn1_tab.c abstract_int.h		\
+	pkix_asn1_tab.c gnutls_asn1_tab.c				\
 	gnutls_mem.c gnutls_ui.c vasprintf.c vasprintf.h		\
 	gnutls_sig.c gnutls_ecc.c gnutls_alert.c gnutls_privkey_raw.c	\
 	system.c gnutls_str.c gnutls_state.c gnutls_x509.c		\
@@ -129,8 +129,8 @@ libgnutls_la_LIBADD = ../gl/libgnu.la x509/libgnutls_x509.la \
 	ext/libgnutls_ext.la \
 	auth/libgnutls_auth.la algorithms/libgnutls_alg.la \
 	extras/libgnutls_extras.la
-thirdparty_libadd = $(LTLIBZ) $(LTLIBINTL) $(LIBSOCKET) $(LTLIBNSL) \
-	$(LTLIBICONV) $(P11_KIT_LIBS) $(LIB_SELECT)
+thirdparty_libadd = $(LTLIBZ) $(LTLIBINTL) $(LIBSOCKET) \
+	$(LTLIBICONV) $(P11_KIT_LIBS) $(LIB_SELECT) $(TSS_LIBS)
 
 if ENABLE_NETTLE
 libgnutls_la_LIBADD += accelerated/libaccelerated.la
@@ -146,10 +146,6 @@ endif
 
 if ENABLE_FIPS140
 thirdparty_libadd += $(FIPS140_LIBS)
-endif
-
-if ENABLE_TROUSERS
-thirdparty_libadd += $(LIBDL)
 endif
 
 if ENABLE_OPENPGP
@@ -215,5 +211,5 @@ gnutls_asn1_tab.c: $(srcdir)/gnutls.asn
 	-asn1Parser $(srcdir)/gnutls.asn gnutls_asn1_tab.c
 
 priority_options.h: $(srcdir)/priority_options.gperf
-	-gperf --global-table -t $^ > $@-tmp && sed -i 's/^const struct priority_options_st \*/static const struct priority_options_st \*/' $@-tmp && mv $@-tmp $@
+	-gperf -t $^ > $@-tmp && mv $@-tmp $@
 

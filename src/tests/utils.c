@@ -27,21 +27,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <time.h>
-#include <unistd.h>
-#include <errno.h>
-#include <assert.h>
-#ifndef _WIN32
-# include <netinet/in.h>
-# include <sys/socket.h>
-#else
-#ifdef _WIN32
-# include <windows.h>		/* for Sleep */
-# include <winbase.h>  
-#endif
-#endif
-#include <gnutls/gnutls.h>
-#include <gnutls/crypto.h>
 
 #include "utils.h"
 
@@ -67,26 +52,6 @@ void fail(const char *format, ...)
 	fputs(str, stderr);
 	error_count++;
 	exit(1);
-}
-
-void sec_sleep(int sec)
-{
-	int ret;
-#ifdef HAVE_NANOSLEEP
-	struct timespec ts;
-
-	ts.tv_sec = sec;
-	ts.tv_nsec = 0;
-	do {
-		ret = nanosleep(&ts, NULL);
-	} while (ret == -1 && errno == EINTR);
-	if (ret == -1)
-		abort();
-#else
-	do {
-		ret = sleep(sec);
-	} while (ret == -1 && errno == EINTR);
-#endif
 }
 
 void success(const char *format, ...)
@@ -185,75 +150,4 @@ int main(int argc, char *argv[])
 		       error_count);
 
 	return error_count ? 1 : 0;
-}
-
-struct tmp_file_st {
-	char file[TMPNAME_SIZE];
-	struct tmp_file_st *next;
-};
-
-static struct tmp_file_st *temp_files = (void*)-1;
-
-static void append(const char *file)
-{
-	struct tmp_file_st *p;
-
-	if (temp_files == (void*)-1)
-		return;
-
-	p = calloc(1, sizeof(*p));
-
-	assert(p != NULL);
-	strcpy(p->file, file);
-	p->next = temp_files;
-	temp_files = p;
-}
-
-char *get_tmpname(char s[TMPNAME_SIZE])
-{
-	unsigned char rnd[6];
-	static char _s[TMPNAME_SIZE];
-	int ret;
-	char *p;
-	const char *path;
-
-	ret = gnutls_rnd(GNUTLS_RND_NONCE, rnd, sizeof(rnd));
-	if (ret < 0)
-		return NULL;
-
-	path = getenv("builddir");
-	if (path == NULL)
-		path = ".";
-
-	if (s == NULL)
-		p = _s;
-	else
-		p = s;
-
-	snprintf(p, TMPNAME_SIZE, "%s/tmpfile-%02x%02x%02x%02x%02x%02x.tmp", path, (unsigned)rnd[0], (unsigned)rnd[1],
-		(unsigned)rnd[2], (unsigned)rnd[3], (unsigned)rnd[4], (unsigned)rnd[5]);
-
-	append(p);
-
-	return p;
-}
-
-void track_temp_files(void)
-{
-	temp_files = NULL;
-}
-
-void delete_temp_files(void)
-{
-	struct tmp_file_st *p = temp_files;
-	struct tmp_file_st *next;
-
-	if (p == (void*)-1)
-		return;
-
-	while(p != NULL) {
-		next = p->next;
-		free(p);
-		p = next;
-	}
 }

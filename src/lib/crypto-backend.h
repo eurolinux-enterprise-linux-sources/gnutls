@@ -77,7 +77,6 @@ typedef struct {
 
 typedef struct gnutls_crypto_rnd {
 	int (*init) (void **ctx);
-	int (*check) (void **ctx);
 	int (*rnd) (void *ctx, int level, void *data, size_t datasize);
 	void (*rnd_refresh) (void *ctx);
 	void (*deinit) (void *ctx);

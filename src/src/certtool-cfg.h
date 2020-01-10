@@ -21,7 +21,6 @@
  */
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <gnutls/x509.h>
 
 void cfg_init(void);
@@ -31,7 +30,7 @@ void read_crt_set(gnutls_x509_crt_t crt, const char *input_str,
 		  const char *oid);
 void read_crq_set(gnutls_x509_crq_t crq, const char *input_str,
 		  const char *oid);
-int64_t read_int(const char *input_str);
+long read_int(const char *input_str);
 const char *read_str(const char *input_str);
 int read_yesno(const char *input_str, int def);
 
@@ -79,7 +78,6 @@ int get_ipsec_ike_status(void);
 void get_dc_set(int type, void *crt);
 void get_ca_issuers_set(gnutls_x509_crt_t crt);
 void get_ocsp_issuer_set(gnutls_x509_crt_t crt);
-void crt_unique_ids_set(gnutls_x509_crt_t crt);
 
 void get_cn_crq_set(gnutls_x509_crq_t crq);
 void get_uid_crq_set(gnutls_x509_crq_t crq);

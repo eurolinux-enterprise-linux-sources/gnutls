@@ -100,7 +100,7 @@ void gnutls_pkcs11_obj_set_pin_function(gnutls_pkcs11_obj_t obj,
  * @GNUTLS_PKCS11_OBJ_FLAG_MARK_PRIVATE: marked as private (requires PIN to access).
  * @GNUTLS_PKCS11_OBJ_FLAG_MARK_NOT_PRIVATE: marked as not private.
  * @GNUTLS_PKCS11_OBJ_FLAG_RETRIEVE_ANY: When retrieving an object, do not set any requirements.
- * @GNUTLS_PKCS11_OBJ_FLAG_RETRIEVE_TRUSTED: When retrieving an object, only retrieve the marked as trusted.
+ * GNUTLS_PKCS11_OBJ_FLAG_RETRIEVE_TRUSTED: When retrieving an object, only retrieve the marked as trusted.
  *   In gnutls_pkcs11_crt_is_known() it implies %GNUTLS_PKCS11_OBJ_FLAG_RETRIEVE_COMPARE if %GNUTLS_PKCS11_OBJ_FLAG_COMPARE_KEY is not given.
  * @GNUTLS_PKCS11_OBJ_FLAG_RETRIEVE_DISTRUSTED: When retrieving an object, only retrieve the marked as distrusted.
  * @GNUTLS_PKCS11_OBJ_FLAG_COMPARE: When checking an object's presence, fully compare it before returning any result.
@@ -109,7 +109,6 @@ void gnutls_pkcs11_obj_set_pin_function(gnutls_pkcs11_obj_t obj,
  * @GNUTLS_PKCS11_OBJ_FLAG_MARK_CA: Mark the object as a CA.
  * @GNUTLS_PKCS11_OBJ_FLAG_MARK_KEY_WRAP: Mark the generated key pair as wrapping and unwrapping keys.
  * @GNUTLS_PKCS11_OBJ_FLAG_OVERWRITE_TRUSTMOD_EXT: When an issuer is requested, override its extensions with the ones present in the trust module.
- * @GNUTLS_PKCS11_OBJ_FLAG_NO_STORE_PUBKEY: When generating a keypair don't store the public key (store).
  *
  * Enumeration of different PKCS #11 object flags.
  */
@@ -128,9 +127,7 @@ typedef enum gnutls_pkcs11_obj_flags {
 	GNUTLS_PKCS11_OBJ_FLAG_MARK_CA = (1<<11),
 	GNUTLS_PKCS11_OBJ_FLAG_MARK_KEY_WRAP = (1<<12),
 	GNUTLS_PKCS11_OBJ_FLAG_COMPARE_KEY = (1<<13),
-	GNUTLS_PKCS11_OBJ_FLAG_OVERWRITE_TRUSTMOD_EXT = (1<<14),
-	GNUTLS_PKCS11_OBJ_FLAG_NO_STORE_PUBKEY = (1<<20)
-	/* flags 1<<29 and later are reserved - see pkcs11_int.h */
+	GNUTLS_PKCS11_OBJ_FLAG_OVERWRITE_TRUSTMOD_EXT = (1<<14)
 } gnutls_pkcs11_obj_flags;
 
 /**
@@ -173,28 +170,11 @@ int gnutls_pkcs11_crt_is_known(const char *url, gnutls_x509_crt_t cert,
 
 int gnutls_pkcs11_copy_x509_crt(const char *token_url,
 				gnutls_x509_crt_t crt,
-				const char *label,
-				unsigned int flags /* GNUTLS_PKCS11_OBJ_FLAG_* */);
-
-int gnutls_pkcs11_copy_x509_crt2(const char *token_url,
-				gnutls_x509_crt_t crt,
-				const char *label,
-				const gnutls_datum_t *id,
-				unsigned int flags /* GNUTLS_PKCS11_OBJ_FLAG_* */);
-
+				const char *label, unsigned int flags
+				/* GNUTLS_PKCS11_OBJ_FLAG_* */ );
 int gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 				    gnutls_x509_privkey_t key,
 				    const char *label,
-				    unsigned int key_usage
-				    /*GNUTLS_KEY_* */ ,
-				    unsigned int flags
-				    /* GNUTLS_PKCS11_OBJ_FLAG_* */
-    );
-
-int gnutls_pkcs11_copy_x509_privkey2(const char *token_url,
-				    gnutls_x509_privkey_t key,
-				    const char *label,
-				    const gnutls_datum_t *cid,
 				    unsigned int key_usage
 				    /*GNUTLS_KEY_* */ ,
 				    unsigned int flags
@@ -242,10 +222,6 @@ typedef enum {
 int gnutls_pkcs11_obj_get_info(gnutls_pkcs11_obj_t crt,
 			       gnutls_pkcs11_obj_info_t itype,
 			       void *output, size_t * output_size);
-int gnutls_pkcs11_obj_set_info(gnutls_pkcs11_obj_t crt,
-			       gnutls_pkcs11_obj_info_t itype,
-			       const void *data, size_t data_size,
-			       unsigned flags);
 
 /**
  * gnutls_pkcs11_obj_attr_t:
@@ -296,7 +272,6 @@ typedef enum {
  * @GNUTLS_PKCS11_OBJ_PRIVKEY: Private key.
  * @GNUTLS_PKCS11_OBJ_SECRET_KEY: Secret key.
  * @GNUTLS_PKCS11_OBJ_DATA: Data object.
- * @GNUTLS_PKCS11_OBJ_X509_CRT_EXTENSION: X.509 certificate extension (supported by p11-kit trust module only).
  *
  * Enumeration of object types.
  */
@@ -400,21 +375,12 @@ int gnutls_pkcs11_privkey_generate(const char *url,
 				   gnutls_pk_algorithm_t pk,
 				   unsigned int bits,
 				   const char *label, unsigned int flags);
+
 int
 gnutls_pkcs11_privkey_generate2(const char *url,
 				gnutls_pk_algorithm_t pk,
 				unsigned int bits,
 				const char *label,
-				gnutls_x509_crt_fmt_t fmt,
-				gnutls_datum_t * pubkey,
-				unsigned int flags);
-
-int
-gnutls_pkcs11_privkey_generate3(const char *url,
-				gnutls_pk_algorithm_t pk,
-				unsigned int bits,
-				const char *label,
-				const gnutls_datum_t *cid,
 				gnutls_x509_crt_fmt_t fmt,
 				gnutls_datum_t * pubkey,
 				unsigned int flags);

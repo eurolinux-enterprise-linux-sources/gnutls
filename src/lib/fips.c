@@ -37,8 +37,6 @@ unsigned int _gnutls_lib_mode = LIB_STATE_POWERON;
 #define FIPS_KERNEL_FILE "/proc/sys/crypto/fips_enabled"
 #define FIPS_SYSTEM_FILE "/etc/system-fips"
 
-static int _fips_mode = -1;
-
 /* Returns:
  * 0 - FIPS mode disabled
  * 1 - FIPS mode enabled and enforced
@@ -48,20 +46,21 @@ unsigned _gnutls_fips_mode_enabled(void)
 {
 unsigned f1p = 0, f2p;
 FILE* fd;
+static int fips_mode = -1;
 const char *p;
 
-	if (_fips_mode != -1)
-		return _fips_mode;
+	if (fips_mode != -1)
+		return fips_mode;
 
-	p = secure_getenv("GNUTLS_FORCE_FIPS_MODE");
+	p = getenv("GNUTLS_FORCE_FIPS_MODE");
 	if (p) {
 		if (p[0] == '1')
-			_fips_mode = 1;
+			fips_mode = 1;
 		else if (p[0] == '2')
-			_fips_mode = 2;
+			fips_mode = 2;
 		else
-			_fips_mode = 0;
-		return _fips_mode;
+			fips_mode = 0;
+		return fips_mode;
 	}
 
 	fd = fopen(FIPS_KERNEL_FILE, "r");
@@ -77,29 +76,20 @@ const char *p;
 
 	if (f1p != 0 && f2p != 0) {
 		_gnutls_debug_log("FIPS140-2 mode enabled\n");
-		_fips_mode = 1;
-		return _fips_mode;
+		fips_mode = 1;
+		return fips_mode;
 	}
 
 	if (f2p != 0) {
 		/* a funny state where self tests are performed
 		 * and ignored */
 		_gnutls_debug_log("FIPS140-2 ZOMBIE mode enabled\n");
-		_fips_mode = 2;
-		return _fips_mode;
+		fips_mode = 2;
+		return fips_mode;
 	}
 
-	_fips_mode = 0;
-	return _fips_mode;
-}
-
-/* This _fips_mode == 2 is a strange mode where checks are being
- * performed, but its output is ignored. */
-void _gnutls_fips_mode_reset_zombie(void)
-{
-	if (_fips_mode == 2) {
-		_fips_mode = 0;
-	}
+	fips_mode = 0;
+	return fips_mode;
 }
 
 #define GNUTLS_LIBRARY_NAME "libgnutls.so.28"

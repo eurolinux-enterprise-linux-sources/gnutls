@@ -1,0 +1,178 @@
+From c25a14ab6ce15d18338a7499e5849225aea03a7d Mon Sep 17 00:00:00 2001
+From: Nikos Mavrogiannopoulos <nmav@redhat.com>
+Date: Tue, 14 Oct 2014 13:57:33 +0200
+Subject: [PATCH] FIPS140-2 RSA key generation changes to account for seed
+ starting with null byte
+
+---
+ lib/nettle/int/dsa-fips.h           |  2 ++
+ lib/nettle/int/provable-prime.c     | 25 ++++++++++++++++++-------
+ lib/nettle/int/rsa-keygen-fips186.c | 33 ++++++++++++++++++++-------------
+ 3 files changed, 40 insertions(+), 20 deletions(-)
+
+diff --git a/lib/nettle/int/dsa-fips.h b/lib/nettle/int/dsa-fips.h
+index 571bc0a..08fac25 100644
+--- a/lib/nettle/int/dsa-fips.h
++++ b/lib/nettle/int/dsa-fips.h
+@@ -115,4 +115,6 @@ hash (uint8_t digest[DIGEST_SIZE], unsigned length, void *data)
+   return;
+ }
+ 
++unsigned mpz_seed_sizeinbase_256_u(mpz_t s, unsigned nominal);
++
+ #endif /* DSA_FIPS_H_INCLUDED */
+diff --git a/lib/nettle/int/provable-prime.c b/lib/nettle/int/provable-prime.c
+index 3bb46aa..e4a4325 100644
+--- a/lib/nettle/int/provable-prime.c
++++ b/lib/nettle/int/provable-prime.c
+@@ -992,6 +992,18 @@ static unsigned small_prime_check(unsigned x)
+ 	return 1;
+ }
+ 
++/* The seed in FIPS186-3 is used either as an integer or blob,
++ * but when used as an integer it must not be trunacated below
++ * the "nominal" seed size. This function returns the size
++ * that way. */
++unsigned mpz_seed_sizeinbase_256_u(mpz_t s, unsigned nominal)
++{
++	unsigned ret = nettle_mpz_sizeinbase_256_u(s);
++	if (ret < nominal)
++		return nominal;
++	return ret;
++}
++
+ static int st_provable_prime_small(mpz_t p,
+ 				   unsigned *prime_seed_length,
+ 				   void *prime_seed,
+@@ -1018,7 +1030,7 @@ static int st_provable_prime_small(mpz_t p,
+ 	nettle_mpz_set_str_256_u(s, seed_length, seed);
+ 
+  retry:
+-	tseed_length = nettle_mpz_sizeinbase_256_u(s);
++	tseed_length = mpz_seed_sizeinbase_256_u(s, seed_length);
+ 	if (tseed_length > sizeof(tseed)) {
+ 		goto fail;
+ 	}
+@@ -1030,7 +1042,7 @@ static int st_provable_prime_small(mpz_t p,
+ 
+ 	mpz_add_ui(s, s, 1);
+ 
+-	tseed_length = nettle_mpz_sizeinbase_256_u(s);
++	tseed_length = mpz_seed_sizeinbase_256_u(s, seed_length);
+ 	if (tseed_length > sizeof(tseed))
+ 		goto fail;
+ 
+@@ -1071,7 +1083,7 @@ static int st_provable_prime_small(mpz_t p,
+ 	mpz_set_ui(p, c);
+ 
+ 	if (prime_seed != NULL) {
+-		tseed_length = nettle_mpz_sizeinbase_256_u(s);
++		tseed_length = mpz_seed_sizeinbase_256_u(s, tseed_length);
+ 		if (*prime_seed_length < tseed_length)
+ 			goto fail;
+ 
+@@ -1161,7 +1173,7 @@ st_provable_prime(mpz_t p,
+ 			goto fail;
+ 
+ 		for (i = 0; i < iterations; i++) {
+-			tseed_length = nettle_mpz_sizeinbase_256_u(s);
++			tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
+ 			if (tseed_length > sizeof(tseed))
+ 				goto fail;
+ 			nettle_mpz_get_str_256(tseed_length, tseed, s);
+@@ -1212,9 +1224,8 @@ st_provable_prime(mpz_t p,
+ 
+ 	mpz_set_ui(r, 0); /* a = 0 */
+ 	if (iterations > 0) {
+-
+ 		for (i = 0; i < iterations; i++) {
+-			tseed_length = nettle_mpz_sizeinbase_256_u(s);
++			tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
+ 			if (tseed_length > sizeof(tseed))
+ 				goto fail;
+ 
+@@ -1249,7 +1260,7 @@ st_provable_prime(mpz_t p,
+ 			mpz_set(p, c);
+ 
+ 			if (prime_seed != NULL) {
+-				tseed_length = nettle_mpz_sizeinbase_256_u(s);
++				tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
+ 				if (*prime_seed_length < tseed_length)
+ 					goto fail;
+ 
+diff --git a/lib/nettle/int/rsa-keygen-fips186.c b/lib/nettle/int/rsa-keygen-fips186.c
+index 754842a..624aa36 100644
+--- a/lib/nettle/int/rsa-keygen-fips186.c
++++ b/lib/nettle/int/rsa-keygen-fips186.c
+@@ -53,7 +53,7 @@ unsigned iterations;
+ unsigned storage_length = 0, i;
+ uint8_t *storage = NULL;
+ uint8_t pseed[MAX_PVP_SEED_SIZE+1];
+-unsigned pseed_length = sizeof(pseed);
++unsigned pseed_length = sizeof(pseed), tseed_length;
+ unsigned max = bits*5;
+ 
+ 	mpz_init(p0);
+@@ -85,11 +85,13 @@ unsigned max = bits*5;
+ 
+ 		nettle_mpz_set_str_256_u(s, pseed_length, pseed);
+ 		for (i = 0; i < iterations; i++) {
+-			pseed_length = nettle_mpz_sizeinbase_256_u(s);
+-			nettle_mpz_get_str_256(pseed_length, pseed, s);
++			tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
++			if (tseed_length > sizeof(pseed))
++				goto fail;
++			nettle_mpz_get_str_256(tseed_length, pseed, s);
+ 
+ 			hash(&storage[(iterations - i - 1) * DIGEST_SIZE],
+-			     pseed_length, pseed);
++			     tseed_length, pseed);
+ 			mpz_add_ui(s, s, 1);
+ 		}
+ 
+@@ -170,11 +172,13 @@ unsigned max = bits*5;
+ 		mpz_set_ui(x, 0); /* a = 0 */
+ 		if (iterations > 0) {
+ 			for (i = 0; i < iterations; i++) {
+-				pseed_length = nettle_mpz_sizeinbase_256_u(s);
+-				nettle_mpz_get_str_256(pseed_length, pseed, s);
++				tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
++				if (tseed_length > sizeof(pseed))
++					goto fail;
++				nettle_mpz_get_str_256(tseed_length, pseed, s);
+ 
+ 				hash(&storage[(iterations - i - 1) * DIGEST_SIZE],
+-				     pseed_length, pseed);
++				     tseed_length, pseed);
+ 				mpz_add_ui(s, s, 1);
+ 			}
+ 
+@@ -203,16 +207,19 @@ unsigned max = bits*5;
+ 			mpz_powm(r1, r2, p0, p);
+ 			if (mpz_cmp_ui(r1, 1) == 0) {
+ 				if (prime_seed_length != NULL) {
+-					pseed_length = nettle_mpz_sizeinbase_256_u(s);
+-					nettle_mpz_get_str_256(pseed_length, pseed, s);
++					tseed_length = mpz_seed_sizeinbase_256_u(s, pseed_length);
++					if (tseed_length > sizeof(pseed))
++						goto fail;
++
++					nettle_mpz_get_str_256(tseed_length, pseed, s);
+ 
+-					if (*prime_seed_length < pseed_length) {
+-						*prime_seed_length = pseed_length;
++					if (*prime_seed_length < tseed_length) {
++						*prime_seed_length = tseed_length;
+ 						goto fail;
+ 					}
+-					*prime_seed_length = pseed_length;
++					*prime_seed_length = tseed_length;
+ 					if (prime_seed != NULL)
+-						memcpy(prime_seed, pseed, pseed_length);
++						memcpy(prime_seed, pseed, tseed_length);
+ 				}
+ 				ret = 1;
+ 				goto cleanup;
+-- 
+1.9.3
+

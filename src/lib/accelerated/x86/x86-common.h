@@ -22,8 +22,6 @@
 
 #include <config.h>
 
-#include "nettle/gnettle.h"
-
 extern unsigned int _gnutls_x86_cpuid_s[3];
 
 #if defined(ASM_X86)
@@ -38,10 +36,6 @@ unsigned int gnutls_have_cpuid(void);
 # endif				/* ASM_X86_32 */
 
 #endif
-
-#define CHECK_AES_KEYSIZE(s) \
-	if (s != 16 && s != 24 && s != 32) \
-		return GNUTLS_E_INVALID_REQUEST
 
 #define NN_HASH(name, update_func, digest_func, NAME) {	\
  #name,						\

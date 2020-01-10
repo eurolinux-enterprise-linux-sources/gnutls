@@ -111,7 +111,7 @@ typedef struct {
 /* The size of a handshake message should not
  * be larger than this value.
  */
-#define MAX_HANDSHAKE_PACKET_SIZE 128*1024
+#define MAX_HANDSHAKE_PACKET_SIZE 48*1024
 
 #define TLS_MAX_SESSION_ID_SIZE 32
 
@@ -235,8 +235,6 @@ typedef enum record_flush_t {
 
 #define GNUTLS_POINTER_TO_INT(_) ((int) GNUTLS_POINTER_TO_INT_CAST (_))
 #define GNUTLS_INT_TO_POINTER(_) ((void*) GNUTLS_POINTER_TO_INT_CAST (_))
-
-#define GNUTLS_KX_INVALID (-1)
 
 typedef struct {
 	uint8_t pint[3];
@@ -435,6 +433,15 @@ struct gnutls_key_st {
 
 	auth_cred_st *cred;	/* used to specify keys/certificates etc */
 
+	int crt_requested;
+	/* some ciphersuites use this
+	 * to provide client authentication.
+	 * 1 if client auth was requested
+	 * by the peer, 0 otherwise
+	 *** In case of a server this
+	 * holds 1 if we should wait
+	 * for a client certificate verify
+	 */
 };
 typedef struct gnutls_key_st gnutls_key_st;
 
@@ -467,7 +474,6 @@ typedef struct cipher_entry_st {
 typedef struct mac_entry_st {
 	const char *name;
 	const char *oid;	/* OID of the hash - if it is a hash */
-	const char *mac_oid;    /* OID of the MAC algorithm - if it is a MAC */
 	gnutls_mac_algorithm_t id;
 	unsigned output_size;
 	unsigned key_size;
@@ -480,7 +486,6 @@ typedef struct mac_entry_st {
 typedef struct {
 	const char *name;
 	gnutls_protocol_t id;	/* gnutls internal version number */
-	unsigned age;		/* internal ordering by protocol age */
 	uint8_t major;		/* defined by the protocol */
 	uint8_t minor;		/* defined by the protocol */
 	transport_t transport;	/* Type of transport, stream or datagram */
@@ -489,7 +494,6 @@ typedef struct {
 	bool extensions;	/* whether it supports extensions */
 	bool selectable_sighash;	/* whether signatures can be selected */
 	bool selectable_prf;	/* whether the PRF is ciphersuite-defined */
-	bool obsolete;		/* Do not use this protocol version as record version */
 } version_entry_st;
 
 
@@ -654,7 +658,7 @@ struct gnutls_priority_st {
 	unsigned int max_empty_records;
 	unsigned int dumbfw;
 	safe_renegotiation_t sr;
-	bool min_record_version;
+	bool ssl3_record_version;
 	bool server_precedence;
 	bool allow_wrong_pms;
 	/* Whether stateless compression will be used */
@@ -868,8 +872,8 @@ typedef struct {
 	struct gnutls_privkey_st *selected_key;
 	bool selected_need_free;
 
-	/* In case of a client holds the extensions we sent to the peer;
-	 * otherwise the extensions we received from the client.
+	/* holds the extensions we sent to the peer
+	 * (in case of a client)
 	 */
 	uint16_t extensions_sent[MAX_EXT_TYPES];
 	uint16_t extensions_sent_size;
@@ -957,11 +961,6 @@ typedef struct {
 
 	/* DTLS session state */
 	dtls_st dtls;
-	/* Protect from infinite loops due to GNUTLS_E_LARGE_PACKET non-handling
-	 * or due to multiple alerts being received. */
-	unsigned handshake_suspicious_loops;
-	/* should be non-zero when a handshake is in progress */
-	bool handshake_in_progress;
 
 	/* if set it means that the master key was set using
 	 * gnutls_session_set_master() rather than being negotiated. */
@@ -973,11 +972,6 @@ typedef struct {
 	time_t handshake_endtime;	/* end time in seconds */
 	unsigned int handshake_timeout_ms;	/* timeout in milliseconds */
 	unsigned int record_timeout_ms;	/* timeout in milliseconds */
-
-	unsigned crt_requested; /* 1 if client auth was requested (i.e., client cert).
-	 * In case of a server this holds 1 if we should wait
-	 * for a client certificate verify
-	 */
 
 	gnutls_buffer_st hb_local_data;
 	gnutls_buffer_st hb_remote_data;
@@ -1071,6 +1065,12 @@ inline static size_t max_user_send_size(gnutls_session_t session,
 		max = gnutls_dtls_get_data_mtu(session);
 	else {
 		max = session->security_parameters.max_record_send_size;
+		/* DTLS data MTU accounts for those */
+
+		if (_gnutls_cipher_is_block(record_params->cipher))
+			max -=
+			    _gnutls_cipher_get_block_size(record_params->
+							  cipher);
 	}
 
 	return max;

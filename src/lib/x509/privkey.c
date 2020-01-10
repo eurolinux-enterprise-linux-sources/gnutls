@@ -147,7 +147,7 @@ _gnutls_privkey_decode_pkcs1_rsa_key(const gnutls_datum_t * raw_key,
 	}
 
 	result =
-	    _asn1_strict_der_decode(&pkey_asn, raw_key->data, raw_key->size,
+	    asn1_der_decoding(&pkey_asn, raw_key->data, raw_key->size,
 			      NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
@@ -262,7 +262,7 @@ _gnutls_privkey_decode_ecc_key(ASN1_TYPE* pkey_asn, const gnutls_datum_t * raw_k
 	}
 
 	ret =
-	    _asn1_strict_der_decode(pkey_asn, raw_key->data, raw_key->size,
+	    asn1_der_decoding(pkey_asn, raw_key->data, raw_key->size,
 			      NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
@@ -369,7 +369,7 @@ decode_dsa_key(const gnutls_datum_t * raw_key, gnutls_x509_privkey_t pkey)
 	pkey->params.algo = GNUTLS_PK_DSA;
 
 	result =
-	    _asn1_strict_der_decode(&dsa_asn, raw_key->data, raw_key->size,
+	    asn1_der_decoding(&dsa_asn, raw_key->data, raw_key->size,
 			      NULL);
 	if (result != ASN1_SUCCESS) {
 		gnutls_assert();
@@ -651,46 +651,9 @@ gnutls_x509_privkey_import2(gnutls_x509_privkey_t key,
 			    const char *password, unsigned int flags)
 {
 	int ret = 0;
-	unsigned head_enc = 1;
 
-	if (format == GNUTLS_X509_FMT_PEM) {
-		size_t left;
-		char *ptr;
-
-		ptr = memmem(data->data, data->size, "PRIVATE KEY-----", sizeof("PRIVATE KEY-----")-1);
-
-		if (ptr != NULL) {
-			left = data->size - ((ptrdiff_t)ptr - (ptrdiff_t)data->data);
-
-			if (data->size - left > 15) {
-				ptr -= 15;
-				left += 15;
-			} else {
-				ptr = (char*)data->data;
-				left = data->size;
-			}
-
-			ptr = memmem(ptr, left, "-----BEGIN ", sizeof("-----BEGIN ")-1);
-			if (ptr != NULL) {
-				ptr += sizeof("-----BEGIN ")-1;
-				left = data->size - ((ptrdiff_t)ptr - (ptrdiff_t)data->data);
-			}
-
-			if (ptr != NULL && left > sizeof(PEM_KEY_RSA)) {
-				if (memcmp(ptr, PEM_KEY_RSA, sizeof(PEM_KEY_RSA)-1) == 0 ||
-				    memcmp(ptr, PEM_KEY_ECC, sizeof(PEM_KEY_ECC)-1) == 0 ||
-				    memcmp(ptr, PEM_KEY_DSA, sizeof(PEM_KEY_DSA)-1) == 0) {
-				    	head_enc = 0;
-				}
-			}
-		}
-	}
-
-	if (head_enc == 0 || (password == NULL && !(flags & GNUTLS_PKCS_NULL_PASSWORD))) {
+	if (password == NULL && !(flags & GNUTLS_PKCS_NULL_PASSWORD)) {
 		ret = gnutls_x509_privkey_import(key, data, format);
-		if (ret >= 0)
-			return ret;
-
 		if (ret < 0) {
 			gnutls_assert();
 		}
@@ -889,7 +852,6 @@ gnutls_x509_privkey_import_rsa_raw2(gnutls_x509_privkey_t key,
 
 	key->params.params_nr = RSA_PRIVATE_PARAMS;
 	key->pk_algorithm = GNUTLS_PK_RSA;
-	key->params.algo = key->pk_algorithm;
 
 	return 0;
 
@@ -977,7 +939,6 @@ gnutls_x509_privkey_import_dsa_raw(gnutls_x509_privkey_t key,
 
 	key->params.params_nr = DSA_PRIVATE_PARAMS;
 	key->pk_algorithm = GNUTLS_PK_DSA;
-	key->params.algo = key->pk_algorithm;
 
 	return 0;
 
@@ -1046,7 +1007,6 @@ gnutls_x509_privkey_import_ecc_raw(gnutls_x509_privkey_t key,
 	key->params.params_nr++;
 
 	key->pk_algorithm = GNUTLS_PK_EC;
-	key->params.algo = key->pk_algorithm;
 
 	return 0;
 
@@ -1477,7 +1437,7 @@ gnutls_x509_privkey_generate(gnutls_x509_privkey_t key,
 	ret = _gnutls_pk_generate_keys(algo, bits, &key->params);
 	if (ret < 0) {
 		gnutls_assert();
-		goto cleanup;
+		return ret;
 	}
 
 #ifndef ENABLE_FIPS140
@@ -1487,7 +1447,7 @@ gnutls_x509_privkey_generate(gnutls_x509_privkey_t key,
 #endif
 	if (ret < 0) {
 		gnutls_assert();
-		goto cleanup;
+		return ret;
 	}
 
 	ret = _gnutls_asn1_encode_privkey(algo, &key->key, &key->params);

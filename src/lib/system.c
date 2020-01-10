@@ -139,11 +139,6 @@ int system_recv_timeout(gnutls_transport_ptr_t ptr, unsigned int ms)
 	int ret;
 	int fd = GNUTLS_POINTER_TO_INT(ptr);
 
-	if (fd < 0 || fd >= FD_SETSIZE) {
-		errno = EINVAL;
-		return -1;
-	}
-
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
 
@@ -323,7 +318,7 @@ void gnutls_system_global_deinit()
  */
 int _gnutls_find_config_path(char *path, size_t max_size)
 {
-	const char *home_dir = secure_getenv("HOME");
+	const char *home_dir = getenv("HOME");
 
 	if (home_dir != NULL && home_dir[0] != 0) {
 		snprintf(path, max_size, "%s/" CONFIG_PATH, home_dir);
@@ -553,10 +548,8 @@ int add_system_trust(gnutls_x509_trust_list_t list, unsigned int tl_flags,
  * @tl_vflags: gnutls_certificate_verify_flags if flags specifies GNUTLS_TL_VERIFY_CRL
  *
  * This function adds the system's default trusted certificate
- * authorities to the trusted list. Note that on unsupported systems
+ * authorities to the trusted list. Note that on unsupported system
  * this function returns %GNUTLS_E_UNIMPLEMENTED_FEATURE.
- *
- * This function implies the flag %GNUTLS_TL_NO_DUPLICATES.
  *
  * Returns: The number of added elements or a negative error code on error.
  *
@@ -567,7 +560,7 @@ gnutls_x509_trust_list_add_system_trust(gnutls_x509_trust_list_t list,
 					unsigned int tl_flags,
 					unsigned int tl_vflags)
 {
-	return add_system_trust(list, tl_flags|GNUTLS_TL_NO_DUPLICATES, tl_vflags);
+	return add_system_trust(list, tl_flags, tl_vflags);
 }
 
 #if defined(_WIN32)
@@ -582,43 +575,24 @@ int _gnutls_ucs2_to_utf8(const void *data, size_t size,
 	int len = 0, src_len;
 	char *dst = NULL;
 	char *src = NULL;
-	static unsigned flags = 0;
-	static int checked = 0;
 
-	if (checked == 0) {
-		/* Not all windows versions support MB_ERR_INVALID_CHARS */
-		ret =
-		    WideCharToMultiByte(CP_UTF8, MB_ERR_INVALID_CHARS,
-				L"hello", -1, NULL, 0, NULL, NULL);
-		if (ret > 0)
-			flags = MB_ERR_INVALID_CHARS;
-		checked = 1;
-	}
+	src_len = size / 2;
 
-	if (((uint8_t *) data)[size] == 0 && ((uint8_t *) data)[size+1] == 0) {
-		size -= 2;
-	}
-
-	src = gnutls_malloc(size+2);
+	src = gnutls_malloc(size);
 	if (src == NULL)
 		return gnutls_assert_val(GNUTLS_E_MEMORY_ERROR);
 
 	/* convert to LE */
 	for (i = 0; i < size; i += 2) {
-		src[i] = ((uint8_t *) data)[1 + i];
-		src[1 + i] = ((uint8_t *) data)[i];
+		src[i] = ((char *) data)[1 + i];
+		src[1 + i] = ((char *) data)[i];
 	}
-	src[size] = 0;
-	src[size+1] = 0;
-
-	src_len = wcslen(src);
 
 	ret =
-	    WideCharToMultiByte(CP_UTF8, flags,
-				(void *) src, src_len, NULL, 0,
-				NULL, NULL);
+	    WideCharToMultiByte(CP_UTF8, MB_ERR_INVALID_CHARS,
+				(void *) src, src_len, NULL, 0, NULL,
+				NULL);
 	if (ret == 0) {
-		_gnutls_debug_log("WideCharToMultiByte: %d\n", (int)GetLastError());
 		ret = gnutls_assert_val(GNUTLS_E_PARSING_ERROR);
 		goto fail;
 	}
@@ -629,21 +603,19 @@ int _gnutls_ucs2_to_utf8(const void *data, size_t size,
 		ret = gnutls_assert_val(GNUTLS_E_MEMORY_ERROR);
 		goto fail;
 	}
-	dst[0] = 0;
 
 	ret =
-	    WideCharToMultiByte(CP_UTF8, flags,
-				(void *) src, src_len, dst, len-1, NULL,
+	    WideCharToMultiByte(CP_UTF8, MB_ERR_INVALID_CHARS,
+				(void *) src, src_len, dst, len, NULL,
 				NULL);
 	if (ret == 0) {
 		ret = gnutls_assert_val(GNUTLS_E_PARSING_ERROR);
 		goto fail;
 	}
-	dst[len - 1] = 0;
 
+	dst[len - 1] = 0;
 	output->data = dst;
 	output->size = ret;
-
 	ret = 0;
 	goto cleanup;
 

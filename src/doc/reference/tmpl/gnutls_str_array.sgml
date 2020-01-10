@@ -20,11 +20,12 @@ gnutls_str_array
 <!-- ##### SECTION Image ##### -->
 
 
-<!-- ##### MACRO gnutls_assert_val ##### -->
+<!-- ##### FUNCTION gnutls_assert_val ##### -->
 <para>
 
 </para>
 
-@x: 
+@Param1: 
+@Returns: 
 
 

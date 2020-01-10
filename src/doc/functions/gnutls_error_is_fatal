@@ -17,5 +17,6 @@ This function is only useful if you are dealing with errors from
 functions that relate to a TLS session (e.g., record layer or handshake 
 layer handling functions).
 
-@strong{Returns:} Non-zero value on fatal errors or zero on non-fatal.
+@strong{Returns:} zero on non fatal errors or positive  @code{error} values. Non-zero
+on fatal error codes.
 @end deftypefun

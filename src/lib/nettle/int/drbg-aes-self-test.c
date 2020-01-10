@@ -104,8 +104,7 @@ int drbg_aes_self_test(void)
 	struct drbg_aes_ctx test_ctx;
 	struct drbg_aes_ctx test_ctx2;
 	struct priv_st priv;
-	int ret, saved;
-	uint8_t *tmp;
+	int ret;
 	unsigned char result[16];
 
 	memset(&priv, 0, sizeof(priv));
@@ -120,32 +119,26 @@ int drbg_aes_self_test(void)
 		return 0;
 	}
 
-	tmp = gnutls_malloc(MAX_DRBG_AES_GENERATE_SIZE+1);
-	if (tmp == NULL) {
-		gnutls_assert();
-		return 0;
-	}
-
 	for (i = 0; i < sizeof(tv) / sizeof(tv[0]); i++) {
 		/* Setup the key.  */
 		ret =
 		    drbg_aes_init(&test_ctx, DRBG_AES_SEED_SIZE, tv[i].entropy,
 				  strlen(tv[i].pstring), (void *)tv[i].pstring);
 		if (ret == 0)
-			goto fail;
+			return 0;
 
 		if (drbg_aes_is_seeded(&test_ctx) == 0)
-			goto fail;
+			return 0;
 
 		/* Get and compare the first three results.  */
 		for (j = 0; j < 3; j++) {
 			/* Compute the next value.  */
 			if (drbg_aes_random(&test_ctx, 16, result) == 0)
-				goto fail;
+				return 0;
 
 			/* Compare it to the known value.  */
 			if (memcmp(result, tv[i].res[j], 16) != 0) {
-				goto fail;
+				return 0;
 			}
 		}
 
@@ -153,72 +146,20 @@ int drbg_aes_self_test(void)
 		    drbg_aes_reseed(&test_ctx, DRBG_AES_SEED_SIZE,
 				    tv[i].entropy, 0, NULL);
 		if (ret == 0)
-			goto fail;
+			return 0;
 
 		if (drbg_aes_random(&test_ctx, 16, result) == 0)
-			goto fail;
+			return 0;
 
 		if (memcmp(result, tv[i].res[3], 16) != 0) {
-			goto fail;
+			return 0;
 		}
 
 		/* test the error handling of drbg_aes_random() */
-		saved = test_ctx.reseed_counter;
 		test_ctx.reseed_counter = DRBG_AES_RESEED_TIME+1;
 		if (drbg_aes_random(&test_ctx, 16, result) != 0) {
 			gnutls_assert();
-			goto fail;
-		}
-		test_ctx.reseed_counter = saved;
-
-		ret = drbg_aes_random(&test_ctx, MAX_DRBG_AES_GENERATE_SIZE+1, tmp);
-		if (ret == 0) {
-			gnutls_assert();
-			goto fail;
-		}
-
-		/* test the low-level function */
-		ret = drbg_aes_generate(&test_ctx, MAX_DRBG_AES_GENERATE_SIZE+1, tmp, 0, NULL);
-		if (ret != 0) {
-			gnutls_assert();
-			goto fail;
-		}
-
-		/* Test of the reseed function for error handling */
-		ret =
-		    drbg_aes_reseed(&test_ctx, DRBG_AES_SEED_SIZE*2,
-				    (uint8_t*)tv, 0, NULL);
-		if (ret != 0)
-			goto fail;
-
-		ret =
-		    drbg_aes_reseed(&test_ctx, DRBG_AES_SEED_SIZE,
-				    tv[i].entropy, DRBG_AES_SEED_SIZE*2, (uint8_t*)tv);
-		if (ret != 0)
-			goto fail;
-
-		/* check whether reseed detection works */
-		if (i==0) {
-			ret =
-			    drbg_aes_reseed(&test_ctx, DRBG_AES_SEED_SIZE,
-					    tv[i].entropy, 0, NULL);
-			if (ret == 0)
-				goto fail;
-
-			saved = test_ctx.reseed_counter;
-			test_ctx.reseed_counter = DRBG_AES_RESEED_TIME-4;
-			for (j=0;j<5;j++) {
-				if (drbg_aes_random(&test_ctx, 1, result) == 0) {
-					gnutls_assert();
-					goto fail;
-				}
-			}
-			/* that should fail */
-			if (drbg_aes_random(&test_ctx, 1, result) != 0) {
-				gnutls_assert();
-				goto fail;
-			}
-			test_ctx.reseed_counter = saved;
+			return 0;
 		}
 
 		/* test deinit, which is zeroize_key() */
@@ -226,15 +167,9 @@ int drbg_aes_self_test(void)
 		zeroize_key(&test_ctx, sizeof(test_ctx));
 		if (memcmp(&test_ctx, &test_ctx2, sizeof(test_ctx)) == 0) {
 			gnutls_assert();
-			goto fail;
+			return 0;
 		}
-
-
 	}
 
-	free(tmp);
 	return 1;
- fail:
- 	free(tmp);
- 	return 0;
 }

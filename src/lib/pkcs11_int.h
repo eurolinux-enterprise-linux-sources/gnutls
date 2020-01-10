@@ -38,7 +38,6 @@ struct pkcs11_session_info {
 	struct ck_function_list *module;
 	struct ck_token_info tinfo;
 	ck_session_handle_t pks;
-	ck_slot_id_t sid;
 	unsigned int init;
 };
 
@@ -57,7 +56,6 @@ struct gnutls_pkcs11_obj_st {
 
 	/* only when pubkey */
 	gnutls_datum_t pubkey[MAX_PUBLIC_PARAMS_SIZE];
-	unsigned pubkey_size;
 	gnutls_pk_algorithm_t pk_algorithm;
 	unsigned int key_usage;
 
@@ -87,14 +85,14 @@ typedef int (*find_func_t) (struct pkcs11_session_info *,
 			    void *input);
 
 int pkcs11_rv_to_err(ck_rv_t rv);
-int pkcs11_url_to_info(const char *url, struct p11_kit_uri **info, unsigned flags);
+int pkcs11_url_to_info(const char *url, struct p11_kit_uri **info);
 int
 pkcs11_find_slot(struct ck_function_list **module, ck_slot_id_t * slot,
 		 struct p11_kit_uri *info, struct token_info *_tinfo);
 
 int pkcs11_read_pubkey(struct ck_function_list *module,
 		       ck_session_handle_t pks, ck_object_handle_t obj,
-		       ck_key_type_t key_type, gnutls_pkcs11_obj_t pobj);
+		       ck_key_type_t key_type, gnutls_datum_t * pubkey);
 
 int pkcs11_override_cert_exts(struct pkcs11_session_info *sinfo, gnutls_datum_t *spki, gnutls_datum_t *der);
 
@@ -103,7 +101,8 @@ int pkcs11_get_info(struct p11_kit_uri *info,
 		    size_t * output_size);
 int pkcs11_login(struct pkcs11_session_info *sinfo,
 		 struct pin_info_st *pin_info,
-		 struct p11_kit_uri *info, unsigned flags);
+		 const struct token_info *tokinfo,
+		 struct p11_kit_uri *info, int so);
 
 int pkcs11_call_token_func(struct p11_kit_uri *info, const unsigned retry);
 
@@ -118,9 +117,6 @@ int pkcs11_info_to_url(struct p11_kit_uri *info,
 #define SESSION_LOGIN (1<<1)
 #define SESSION_SO (1<<2)	/* security officer session */
 #define SESSION_TRUSTED (1<<3) /* session on a marked as trusted (p11-kit) module */
-#define SESSION_FORCE_LOGIN (1<<4) /* force login even when CFK_LOGIN_REQUIRED is not set */
-#define SESSION_CONTEXT_SPECIFIC (1<<5)
-
 int pkcs11_open_session(struct pkcs11_session_info *sinfo,
 			struct pin_info_st *pin_info,
 			struct p11_kit_uri *info, unsigned int flags);
@@ -129,12 +125,6 @@ int _pkcs11_traverse_tokens(find_func_t find_func, void *input,
 			    struct pin_info_st *pin_info,
 			    unsigned int flags);
 ck_object_class_t pkcs11_strtype_to_class(const char *type);
-
-/* Additional internal flags for gnutls_pkcs11_obj_flags */
-/* @GNUTLS_PKCS11_OBJ_FLAG_EXPECT_CERT: When importing an object, provide a hint on the type, to allow incomplete URLs
- * @GNUTLS_PKCS11_OBJ_FLAG_EXPECT_PRIVKEY: Hint for private key */
-#define GNUTLS_PKCS11_OBJ_FLAG_EXPECT_CERT (1<<29)
-#define GNUTLS_PKCS11_OBJ_FLAG_EXPECT_PRIVKEY (1<<30)
 
 int pkcs11_token_matches_info(struct p11_kit_uri *info,
 			      struct ck_token_info *tinfo,
@@ -193,14 +183,6 @@ static inline int pk_to_genmech(gnutls_pk_algorithm_t pk, ck_key_type_t *type)
 }
 
 ck_rv_t
-pkcs11_generate_key(struct ck_function_list * module,
-		    ck_session_handle_t sess,
-		    struct ck_mechanism * mechanism,
-		    struct ck_attribute * templ,
-		    unsigned long count,
-		    ck_object_handle_t * key);
-
-ck_rv_t
 pkcs11_generate_key_pair(struct ck_function_list * module,
 			 ck_session_handle_t sess,
 			 struct ck_mechanism * mechanism,
@@ -243,13 +225,6 @@ pkcs11_find_objects(struct ck_function_list *module,
 ck_rv_t pkcs11_find_objects_final(struct pkcs11_session_info *);
 
 ck_rv_t pkcs11_close_session(struct pkcs11_session_info *);
-
-ck_rv_t
-pkcs11_set_attribute_value(struct ck_function_list * module,
-			   ck_session_handle_t sess,
-			   ck_object_handle_t object,
-			   struct ck_attribute * templ,
-			   unsigned long count);
 
 ck_rv_t
 pkcs11_get_attribute_value(struct ck_function_list *module,
@@ -329,13 +304,6 @@ _gnutls_pkcs11_get_random(struct ck_function_list *module,
 
 
 const char *pkcs11_strerror(ck_rv_t rv);
-
-inline static bool is_object_pkcs11_url(const char *url)
-{
-	if (strstr(url, "id=") != 0 || strstr(url, "object=") != 0)
-		return 1;
-	return 0;
-}
 
 #endif				/* ENABLE_PKCS11 */
 

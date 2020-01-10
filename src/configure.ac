@@ -21,12 +21,12 @@ dnl Process this file with autoconf to produce a configure script.
 # USA
 
 AC_PREREQ(2.61)
-AC_INIT([GnuTLS], [3.3.29], [bugs@gnutls.org])
+AC_INIT([GnuTLS], [3.3.8], [bugs@gnutls.org])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE([1.12.2 subdir-objects no-dist-gzip dist-xz -Wall -Wno-override])
+AM_INIT_AUTOMAKE([1.12.2 subdir-objects no-dist-gzip dist-xz dist-lzip -Wall -Wno-override])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_CONFIG_HEADERS([config.h])
 
@@ -46,8 +46,6 @@ AM_PROG_CC_C_O
 AC_PROG_YACC
 AC_PROG_SED
 AC_CHECK_PROG([AUTOGEN], [autogen], [autogen], [/bin/true])
-
-AC_USE_SYSTEM_EXTENSIONS
 
 if test x"$AUTOGEN" = "x/bin/true"; then
   AC_MSG_WARN([[
@@ -81,21 +79,12 @@ AM_CONDITIONAL(ENABLE_CXX, test "$use_cxx" != "no")
 AM_CONDITIONAL(WANT_TEST_SUITE, [test -f tests/suite/mini-eagain2.c])
 
 dnl Detect windows build
-use_accel=yes
 case "$host" in
   *mingw32* | *mingw64*)
     have_win=yes
   ;;
   *darwin*)
     have_macosx=yes
-  ;;
-  *solaris*)
-    use_accel=no
-    AC_MSG_WARN([[
-***
-*** In solaris hardware acceleration is disabled by default due to issues
-*** with the assembler. Use --enable-hardware-acceleration to enable it.
-*** ]])
   ;;
   *)
     have_elf=yes
@@ -109,7 +98,7 @@ AM_CONDITIONAL(ELF, test "$have_elf" = yes)
 dnl Hardware Acceleration
 AC_ARG_ENABLE(hardware-acceleration,
   AS_HELP_STRING([--disable-hardware-acceleration], [unconditionally disable hardware acceleration]),
-    use_accel=$enableval)
+    use_accel=$enableval, use_accel=yes)
 hw_accel=none
 
 
@@ -167,7 +156,7 @@ AC_C_BIGENDIAN
 
 dnl No fork on MinGW, disable some self-tests until we fix them.
 dnl Check clock_gettime and pthread_mutex_lock in libc (avoid linking to other libs)
-AC_CHECK_FUNCS([secure_getenv fork inet_ntop inet_pton getrusage getpwuid_r nanosleep daemon getpid clock_gettime iconv localtime vasprintf],,)
+AC_CHECK_FUNCS([fork inet_ntop inet_pton getrusage getpwuid_r nanosleep daemon getpid clock_gettime iconv localtime vasprintf],,)
 if test "$ac_cv_func_vasprintf" != "yes";then
   AC_MSG_CHECKING([for va_copy])
   AC_LINK_IFELSE([AC_LANG_PROGRAM([
@@ -207,10 +196,6 @@ fi
 if test "$ac_cv_func_nanosleep" != "yes";then
   AC_LIB_HAVE_LINKFLAGS(rt,, [#include <time.h>], [nanosleep (0, 0);])
   gnutls_needs_librt=yes
-fi
-
-if test "$ac_cv_func_inet_pton" != "yes";then
-  AC_LIB_HAVE_LINKFLAGS(nsl,, [#include <arpa/inet.h>], [inet_pton(0,0,0);])
 fi
 
 if test "$ac_cv_func_clock_gettime" != "yes";then
@@ -317,13 +302,12 @@ AC_ARG_ENABLE(self-checks,
   AS_HELP_STRING([--enable-self-checks], [enable self checking functionality]),
     enable_self_checks=$enableval, enable_self_checks=no)
 
-AC_LIB_HAVE_LINKFLAGS(dl,, [#include <dlfcn.h>], [dladdr (0, 0);])
-
 AC_ARG_ENABLE(fips140-mode,
   AS_HELP_STRING([--enable-fips140-mode], [enable FIPS140-2 mode (implies self checks)]),
     enable_fips=$enableval, enable_fips=no)
 AM_CONDITIONAL(ENABLE_FIPS140, test "$enable_fips" = "yes")
 if [ test "$enable_fips" = "yes" ];then
+  AC_LIB_HAVE_LINKFLAGS(dl,, [#include <dlfcn.h>], [dladdr (0, 0);])
   if test "x$HAVE_LIBDL" = "xyes";then
     enable_self_checks=yes
 
@@ -346,28 +330,11 @@ AC_ARG_ENABLE(non-suiteb-curves,
 if [ test "$enable_non_suiteb" = "yes" ];then
   AC_DEFINE([ENABLE_NON_SUITEB_CURVES], 1, [Enable all curves])
 fi
-AM_CONDITIONAL(ENABLE_NON_SUITEB_CURVES, test "$enable_non_suiteb" = "yes")
 
 AM_CONDITIONAL(ENABLE_SELF_CHECKS, test "$enable_self_checks" = "yes")
 if [ test "$enable_self_checks" = "yes" ];then
    AC_DEFINE([ENABLE_SELF_CHECKS], 1, [Self checks are included in the library])
 fi
-
-AC_ARG_WITH(arcfour128,
-  AS_HELP_STRING([--with-arcfour128], [include ARCFOUR128 in priority strings]),
-    enable_arcfour=$withval, enable_arcfour=no)
-if [ test "$enable_arcfour" = "yes" ];then
-  AC_DEFINE([ENABLE_ARCFOUR128], 1, [Enable ARCFOUR128])
-fi
-AM_CONDITIONAL(ENABLE_ARCFOUR128, test "$enable_arcfour" = "yes")
-
-AC_ARG_WITH(ssl3,
-  AS_HELP_STRING([--with-ssl3], [include SSL3.0 in priority strings]),
-    enable_ssl3=$withval, enable_ssl3=no)
-if [ test "$enable_ssl3" = "yes" ];then
-  AC_DEFINE([ENABLE_SSL3], 1, [Enable SSL3.0])
-fi
-AM_CONDITIONAL(ENABLE_SSL3, test "$enable_ssl3" = "yes")
 
 AC_MSG_CHECKING([whether to build libdane])
 AC_ARG_ENABLE(libdane,
@@ -408,11 +375,7 @@ else
     if test -f /var/lib/unbound/root.key;then
     	unbound_root_key_file="/var/lib/unbound/root.key"
     else
-        if test -f /usr/share/dns/root.key;then
-	    unbound_root_key_file="/usr/share/dns/root.key"
-        else
-            unbound_root_key_file="/etc/unbound/root.key"
-        fi
+        unbound_root_key_file="/etc/unbound/root.key"
     fi
 fi
 )
@@ -444,12 +407,6 @@ if test "$with_p11_kit" != "no"; then
 		else
 			GNUTLS_REQUIRES_PRIVATE="${GNUTLS_REQUIRES_PRIVATE}, p11-kit-1"
 		fi
-		if ! $PKG_CONFIG --atleast-version=0.22.0 p11-kit-1; then
-			with_buggy_p11_kit=yes
-		fi
-		if $PKG_CONFIG --atleast-version=0.23.1 p11-kit-1; then
-			AC_DEFINE([P11_KIT_HAS_PIN_VALUE], 1, [p11-kit supports p11_kit_uri_get_pin_value()])
-		fi
 	else
 	        with_p11_kit=no
 	        AC_MSG_WARN([[
@@ -461,7 +418,6 @@ if test "$with_p11_kit" != "no"; then
 fi
 
 AM_CONDITIONAL(ENABLE_PKCS11, test "$with_p11_kit" != "no")
-AM_CONDITIONAL(HAVE_BUGGY_P11_KIT, test "$with_buggy_p11_kit" = "yes")
 
 AC_ARG_WITH(tpm,
 	AS_HELP_STRING([--without-tpm],
@@ -490,28 +446,6 @@ if test "$with_tpm" != "no"; then
 fi
 
 AM_CONDITIONAL(ENABLE_TROUSERS, test "$with_tpm" != "no")
-
-for l in /usr/lib64 /usr/lib /lib64 /lib /usr/lib/x86_64-linux-gnu/; do
-    if test -f "${l}/libtspi.so.1";then
-        default_trousers_lib="${l}/libtspi.so.1"
-        break
-    fi
-done
-
-AC_ARG_WITH(trousers-lib, AS_HELP_STRING([--with-trousers-lib=LIB],
-                                 [set the location of the trousers library]),
-            ac_trousers_lib=$withval, ac_trousers_lib=$default_trousers_lib)
-
-if test "$with_tpm" != "no" && test -z "$ac_trousers_lib"; then
-    AC_MSG_ERROR([[
-  ***
-  *** unable to find trousers library, please specify with --with-trousers-lib=<lib file>
-  ***
-  ]])
-fi
-
-AC_DEFINE_UNQUOTED(TROUSERS_LIB, ["$ac_trousers_lib"], [the location of the trousers library])
-AC_SUBST(TROUSERS_LIB)
 
 LIBOPTS_CHECK([src/libopts])
 if test "$NEED_LIBOPTS_DIR" = "true";then
@@ -885,7 +819,6 @@ AC_MSG_NOTICE([summary of build options:
   Local libopts:        ${enable_local_libopts}
   Local libtasn1:       ${included_libtasn1}
   Use nettle-mini:      ${mini_nettle}
-  nettle-version:       ${nettle_version}
 ])
 
 AC_MSG_NOTICE([External hardware support:
@@ -896,11 +829,6 @@ AC_MSG_NOTICE([External hardware support:
   PKCS#11 support:      $with_p11_kit
   TPM support:          $with_tpm
 ])
-if test -n "$ac_trousers_lib";then
-AC_MSG_NOTICE([
-  TPM library:          $ac_trousers_lib
-])
-fi
 
 AC_MSG_NOTICE([Optional features:
 (note that included applications might not compile properly
