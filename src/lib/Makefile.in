@@ -122,18 +122,19 @@ host_triplet = @host@
 @WINDOWS_FALSE@am__append_10 = $(LTLIBPTHREAD)
 @NEEDS_LIBRT_TRUE@am__append_11 = $(LTLIBRT)
 @ENABLE_FIPS140_TRUE@am__append_12 = $(FIPS140_LIBS)
-@ENABLE_OPENPGP_TRUE@am__append_13 = openpgp/libgnutls_openpgp.la \
+@ENABLE_TROUSERS_TRUE@am__append_13 = $(LIBDL)
+@ENABLE_OPENPGP_TRUE@am__append_14 = openpgp/libgnutls_openpgp.la \
 @ENABLE_OPENPGP_TRUE@	opencdk/libminiopencdk.la
-@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_14 = -Wl,--version-script=$(srcdir)/libgnutls.map
-@HAVE_LD_VERSION_SCRIPT_FALSE@am__append_15 = -export-symbols-regex '^(gnutls|_gnutls).*'
-@ENABLE_MINITASN1_TRUE@am__append_16 = minitasn1/libminitasn1.la
-@ENABLE_MINITASN1_FALSE@am__append_17 = $(LIBTASN1_LIBS)
-@ENABLE_NETTLE_TRUE@am__append_18 = $(NETTLE_LIBS) $(HOGWEED_LIBS) $(GMP_LIBS)
-@ENABLE_NETTLE_TRUE@am__append_19 = nettle/libcrypto.la
-@HAVE_LD_OUTPUT_DEF_TRUE@am__append_20 = -Wl,--output-def,libgnutls-$(DLL_VERSION).def
-@HAVE_LD_OUTPUT_DEF_TRUE@am__append_21 = $(defexec_DATA)
-@WINDOWS_TRUE@am__append_22 = -lcrypt32
-@ENABLE_CXX_TRUE@am__append_23 = libgnutlsxx.la
+@HAVE_LD_VERSION_SCRIPT_TRUE@am__append_15 = -Wl,--version-script=$(srcdir)/libgnutls.map
+@HAVE_LD_VERSION_SCRIPT_FALSE@am__append_16 = -export-symbols-regex '^(gnutls|_gnutls).*'
+@ENABLE_MINITASN1_TRUE@am__append_17 = minitasn1/libminitasn1.la
+@ENABLE_MINITASN1_FALSE@am__append_18 = $(LIBTASN1_LIBS)
+@ENABLE_NETTLE_TRUE@am__append_19 = $(NETTLE_LIBS) $(HOGWEED_LIBS) $(GMP_LIBS)
+@ENABLE_NETTLE_TRUE@am__append_20 = nettle/libcrypto.la
+@HAVE_LD_OUTPUT_DEF_TRUE@am__append_21 = -Wl,--output-def,libgnutls-$(DLL_VERSION).def
+@HAVE_LD_OUTPUT_DEF_TRUE@am__append_22 = $(defexec_DATA)
+@WINDOWS_TRUE@am__append_23 = -lcrypt32
+@ENABLE_CXX_TRUE@am__append_24 = libgnutlsxx.la
 subdir = lib
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/src/gl/m4/arpa_inet_h.m4 \
@@ -284,22 +285,23 @@ am__DEPENDENCIES_1 =
 @WINDOWS_FALSE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 @NEEDS_LIBRT_TRUE@am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1)
 @ENABLE_FIPS140_TRUE@am__DEPENDENCIES_4 = $(am__DEPENDENCIES_1)
-@ENABLE_MINITASN1_FALSE@am__DEPENDENCIES_5 = $(am__DEPENDENCIES_1)
-@ENABLE_NETTLE_TRUE@am__DEPENDENCIES_6 = $(am__DEPENDENCIES_1) \
+@ENABLE_TROUSERS_TRUE@am__DEPENDENCIES_5 = $(am__DEPENDENCIES_1)
+@ENABLE_MINITASN1_FALSE@am__DEPENDENCIES_6 = $(am__DEPENDENCIES_1)
+@ENABLE_NETTLE_TRUE@am__DEPENDENCIES_7 = $(am__DEPENDENCIES_1) \
 @ENABLE_NETTLE_TRUE@	$(am__DEPENDENCIES_1) \
 @ENABLE_NETTLE_TRUE@	$(am__DEPENDENCIES_1)
-am__DEPENDENCIES_7 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+am__DEPENDENCIES_8 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3) \
-	$(am__DEPENDENCIES_4) $(am__DEPENDENCIES_5) \
-	$(am__DEPENDENCIES_6) $(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3) $(am__DEPENDENCIES_4) \
+	$(am__DEPENDENCIES_5) $(am__DEPENDENCIES_6) \
+	$(am__DEPENDENCIES_7) $(am__DEPENDENCIES_1)
 libgnutls_la_DEPENDENCIES = ../gl/libgnu.la x509/libgnutls_x509.la \
 	ext/libgnutls_ext.la auth/libgnutls_auth.la \
 	algorithms/libgnutls_alg.la extras/libgnutls_extras.la \
-	$(am__append_9) $(am__append_13) $(am__append_16) \
-	$(am__append_19) $(am__DEPENDENCIES_7)
+	$(am__append_9) $(am__append_14) $(am__append_17) \
+	$(am__append_20) $(am__DEPENDENCIES_8)
 am__libgnutls_la_SOURCES_DIST = abstract_int.h debug.h \
 	gnutls_compress.h gnutls_cipher.h gnutls_buffers.h \
 	gnutls_errors.h gnutls_int.h gnutls_dtls.h gnutls_handshake.h \
@@ -1379,6 +1381,7 @@ STDNORETURN_H = @STDNORETURN_H@
 STRIP = @STRIP@
 SYS_TIME_H_DEFINES_STRUCT_TIMESPEC = @SYS_TIME_H_DEFINES_STRUCT_TIMESPEC@
 TIME_H_DEFINES_STRUCT_TIMESPEC = @TIME_H_DEFINES_STRUCT_TIMESPEC@
+TROUSERS_LIB = @TROUSERS_LIB@
 TSS_CFLAGS = @TSS_CFLAGS@
 TSS_LIBS = @TSS_LIBS@
 UINT32_MAX_LT_UINTMAX_MAX = @UINT32_MAX_LT_UINTMAX_MAX@
@@ -1486,8 +1489,8 @@ AM_CPPFLAGS = -DLOCALEDIR=\"$(localedir)\" -I$(srcdir)/../gl \
 # Pkg-config script.
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gnutls.pc
-DISTCLEANFILES = $(pkgconfig_DATA) $(am__append_21)
-lib_LTLIBRARIES = libgnutls.la $(am__append_23)
+DISTCLEANFILES = $(pkgconfig_DATA) $(am__append_22)
+lib_LTLIBRARIES = libgnutls.la $(am__append_24)
 SRP_COBJECTS = gnutls_srp.c
 PSK_COBJECTS = gnutls_psk.c
 COBJECTS = gnutls_range.c gnutls_record.c gnutls_compress.c debug.c \
@@ -1499,13 +1502,14 @@ COBJECTS = gnutls_range.c gnutls_record.c gnutls_compress.c debug.c \
 	gnutls_datum.c gnutls_session_pack.c gnutls_mpi.c gnutls_pk.c \
 	gnutls_cert.c gnutls_global.c gnutls_constate.c \
 	gnutls_anon_cred.c pkix_asn1_tab.c gnutls_asn1_tab.c \
-	gnutls_mem.c gnutls_ui.c vasprintf.c vasprintf.h gnutls_sig.c \
-	gnutls_ecc.c gnutls_alert.c gnutls_privkey_raw.c system.c \
-	gnutls_str.c gnutls_state.c gnutls_x509.c gnutls_rsa_export.c \
-	gnutls_helper.c gnutls_supplemental.c random.c crypto-api.c \
-	gnutls_privkey.c gnutls_pcert.c gnutls_pubkey.c locks.c \
-	gnutls_dtls.c system_override.c crypto-backend.c verify-tofu.c \
-	pin.c tpm.c fips.c safe-memset.c inet_pton.c $(am__append_5) \
+	abstract_int.h gnutls_mem.c gnutls_ui.c vasprintf.c \
+	vasprintf.h gnutls_sig.c gnutls_ecc.c gnutls_alert.c \
+	gnutls_privkey_raw.c system.c gnutls_str.c gnutls_state.c \
+	gnutls_x509.c gnutls_rsa_export.c gnutls_helper.c \
+	gnutls_supplemental.c random.c crypto-api.c gnutls_privkey.c \
+	gnutls_pcert.c gnutls_pubkey.c locks.c gnutls_dtls.c \
+	system_override.c crypto-backend.c verify-tofu.c pin.c tpm.c \
+	fips.c safe-memset.c inet_pton.c $(am__append_5) \
 	$(am__append_6)
 HFILES = abstract_int.h debug.h gnutls_compress.h gnutls_cipher.h \
 	gnutls_buffers.h gnutls_errors.h gnutls_int.h gnutls_dtls.h \
@@ -1527,17 +1531,17 @@ libgnutls_la_SOURCES = $(HFILES) $(COBJECTS) $(SRP_COBJECTS)	\
 	gnutls.asn pkix.asn libgnutls.map
 
 libgnutls_la_LDFLAGS = -no-undefined -version-info \
-	$(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(am__append_14) \
-	$(am__append_15) $(am__append_20)
+	$(LT_CURRENT):$(LT_REVISION):$(LT_AGE) $(am__append_15) \
+	$(am__append_16) $(am__append_21)
 libgnutls_la_LIBADD = ../gl/libgnu.la x509/libgnutls_x509.la \
 	ext/libgnutls_ext.la auth/libgnutls_auth.la \
 	algorithms/libgnutls_alg.la extras/libgnutls_extras.la \
-	$(am__append_9) $(am__append_13) $(am__append_16) \
-	$(am__append_19) $(thirdparty_libadd)
+	$(am__append_9) $(am__append_14) $(am__append_17) \
+	$(am__append_20) $(thirdparty_libadd)
 thirdparty_libadd = $(LTLIBZ) $(LTLIBINTL) $(LIBSOCKET) $(LTLIBNSL) \
-	$(LTLIBICONV) $(P11_KIT_LIBS) $(LIB_SELECT) $(TSS_LIBS) \
-	$(am__append_10) $(am__append_11) $(am__append_12) \
-	$(am__append_17) $(am__append_18) $(am__append_22)
+	$(LTLIBICONV) $(P11_KIT_LIBS) $(LIB_SELECT) $(am__append_10) \
+	$(am__append_11) $(am__append_12) $(am__append_13) \
+	$(am__append_18) $(am__append_19) $(am__append_23)
 @HAVE_LD_OUTPUT_DEF_TRUE@defexecdir = $(bindir)
 @HAVE_LD_OUTPUT_DEF_TRUE@defexec_DATA = libgnutls-$(DLL_VERSION).def
 

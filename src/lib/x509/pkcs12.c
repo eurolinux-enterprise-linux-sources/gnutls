@@ -861,7 +861,7 @@ int gnutls_pkcs12_generate_mac(gnutls_pkcs12_t pkcs12, const char *pass)
 {
 	uint8_t salt[8], key[20];
 	int result;
-	const int iter = 1;
+	const int iter = 10*1024;
 	mac_hd_st td1;
 	gnutls_datum_t tmp = { NULL, 0 };
 	uint8_t sha_mac[20];
@@ -1022,7 +1022,7 @@ int gnutls_pkcs12_verify_mac(gnutls_pkcs12_t pkcs12, const char *pass)
 		return _gnutls_asn2err(result);
 	}
 
-	algo = _gnutls_x509_oid_to_mac(oid);
+	algo = _gnutls_x509_oid_to_digest(oid);
 	if (algo == GNUTLS_MAC_UNKNOWN) {
  unknown_mac:
 		gnutls_assert();
@@ -1666,27 +1666,22 @@ gnutls_pkcs12_simple_parse(gnutls_pkcs12_t p12,
 				}
 
 				if (memcmp(cert_id, key_id, cert_id_size) != 0) {	/* they don't match - skip the certificate */
-					if (extra_certs) {
-						_extra_certs =
-						    gnutls_realloc_fast
-						    (_extra_certs,
-						     sizeof(_extra_certs
-							    [0]) *
-						     ++_extra_certs_len);
-						if (!_extra_certs) {
-							gnutls_assert();
-							ret =
-							    GNUTLS_E_MEMORY_ERROR;
-							goto done;
-						}
-						_extra_certs
-						    [_extra_certs_len -
-						     1] = this_cert;
-						this_cert = NULL;
-					} else {
-						gnutls_x509_crt_deinit
-						    (this_cert);
+					_extra_certs =
+						gnutls_realloc_fast
+						(_extra_certs,
+						 sizeof(_extra_certs
+							[0]) *
+						 ++_extra_certs_len);
+					if (!_extra_certs) {
+						gnutls_assert();
+						ret =
+							GNUTLS_E_MEMORY_ERROR;
+						goto done;
 					}
+					_extra_certs
+						[_extra_certs_len -
+						 1] = this_cert;
+					this_cert = NULL;
 				} else {
 					if (chain && _chain_len == 0) {
 						_chain =
@@ -1767,8 +1762,10 @@ gnutls_pkcs12_simple_parse(gnutls_pkcs12_t p12,
 		gnutls_pkcs12_bag_deinit(bag);
 
 	if (ret < 0) {
-		if (*key)
+		if (*key) {
 			gnutls_x509_privkey_deinit(*key);
+			*key = NULL;
+		}
 		if (_extra_certs_len && _extra_certs != NULL) {
 			for (i = 0; i < _extra_certs_len; i++)
 				gnutls_x509_crt_deinit(_extra_certs[i]);

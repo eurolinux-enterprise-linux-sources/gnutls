@@ -1,6 +1,6 @@
-This is gnutls.info, produced by makeinfo version 6.1 from gnutls.texi.
+This is gnutls.info, produced by makeinfo version 6.3 from gnutls.texi.
 
-This manual is last updated 23 March 2015 for version 3.3.24 of GnuTLS.
+This manual is last updated 23 March 2015 for version 3.3.26 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -32,7 +32,7 @@ File: gnutls.info,  Node: Top,  Next: Preface,  Up: (dir)
 GnuTLS
 ******
 
-This manual is last updated 23 March 2015 for version 3.3.24 of GnuTLS.
+This manual is last updated 23 March 2015 for version 3.3.26 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -3137,22 +3137,24 @@ the obsolete PBES1 scheme cannot be decrypted.
 
 'GNUTLS_PKCS_PLAIN'
      Unencrypted private key.
-'GNUTLS_PKCS_USE_PKCS12_3DES'
+'GNUTLS_PKCS_PKCS12_3DES'
      PKCS-12 3DES.
-'GNUTLS_PKCS_USE_PKCS12_ARCFOUR'
+'GNUTLS_PKCS_PKCS12_ARCFOUR'
      PKCS-12 ARCFOUR.
-'GNUTLS_PKCS_USE_PKCS12_RC2_40'
+'GNUTLS_PKCS_PKCS12_RC2_40'
      PKCS-12 RC2-40.
-'GNUTLS_PKCS_USE_PBES2_3DES'
+'GNUTLS_PKCS_PBES2_3DES'
      PBES2 3DES.
-'GNUTLS_PKCS_USE_PBES2_AES_128'
+'GNUTLS_PKCS_PBES2_AES_128'
      PBES2 AES-128.
-'GNUTLS_PKCS_USE_PBES2_AES_192'
+'GNUTLS_PKCS_PBES2_AES_192'
      PBES2 AES-192.
-'GNUTLS_PKCS_USE_PBES2_AES_256'
+'GNUTLS_PKCS_PBES2_AES_256'
      PBES2 AES-256.
 'GNUTLS_PKCS_NULL_PASSWORD'
      Some schemas distinguish between an empty and a NULL password.
+'GNUTLS_PKCS_PBES2_DES'
+     PBES2 single DES.
 
 Figure 4.6: Encryption flags
 
@@ -3321,7 +3323,120 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     certtool is unavailable - no --help
+     certtool - GnuTLS certificate tool
+     Usage:  certtool [ -<flag> [<val>] | --<name>[{=| }<val>] ]...
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+        -V, --verbose              More verbose output
+                                     - may appear multiple times
+            --infile=file          Input file
+                                     - file must pre-exist
+            --outfile=str          Output file
+        -s, --generate-self-signed  Generate a self-signed certificate
+        -c, --generate-certificate  Generate a signed certificate
+            --generate-proxy       Generates a proxy certificate
+            --generate-crl         Generate a CRL
+        -u, --update-certificate   Update a signed certificate
+        -p, --generate-privkey     Generate a private key
+            --provable             Generate a private key or parameters from a seed using a provable method
+            --verify-provable-privkey  Verify a private key generated from a seed using a provable method
+            --seed=str             When generating a private key use the given hex-encoded seed
+        -q, --generate-request     Generate a PKCS #10 certificate request
+                                     - prohibits the option 'infile'
+        -e, --verify-chain         Verify a PEM encoded certificate chain
+            --verify               Verify a PEM encoded certificate chain using a trusted list
+            --verify-crl           Verify a CRL using a trusted list
+                                     - requires the option 'load-ca-certificate'
+            --verify-hostname=str  Specify a hostname to be used for certificate chain verification
+            --verify-email=str     Specify a email to be used for certificate chain verification
+                                     - prohibits the option 'verify-hostname'
+            --verify-purpose=str   Specify a purpose OID to be used for certificate chain verification
+            --verify-allow-broken  Allow broken algorithms, such as MD5 for verification
+            --generate-dh-params   Generate PKCS #3 encoded Diffie-Hellman parameters
+            --get-dh-params        Get the included PKCS #3 encoded Diffie-Hellman parameters
+            --dh-info              Print information PKCS #3 encoded Diffie-Hellman parameters
+            --load-privkey=str     Loads a private key file
+            --load-pubkey=str      Loads a public key file
+            --load-request=str     Loads a certificate request file
+            --load-certificate=str Loads a certificate file
+            --load-ca-privkey=str  Loads the certificate authority's private key file
+            --load-ca-certificate=str Loads the certificate authority's certificate file
+            --load-crl=str         Loads the provided CRL
+            --load-data=str        Loads auxiliary data
+            --password=str         Password to use
+            --null-password        Enforce a NULL password
+            --empty-password       Enforce an empty password
+            --hex-numbers          Print big number in an easier format to parse
+            --cprint               In certain operations it prints the information in C-friendly format
+        -i, --certificate-info     Print information on the given certificate
+            --fingerprint          Print the fingerprint of the given certificate
+            --key-id               Print the key ID of the given certificate
+            --certificate-pubkey   Print certificate's public key
+            --pgp-certificate-info  Print information on the given OpenPGP certificate
+            --pgp-ring-info        Print information on the given OpenPGP keyring structure
+        -l, --crl-info             Print information on the given CRL structure
+            --crq-info             Print information on the given certificate request
+            --no-crq-extensions    Do not use extensions in certificate requests
+            --p12-info             Print information on a PKCS #12 structure
+            --p12-name=str         The PKCS #12 friendly name to use
+            --p7-generate          Generate a PKCS #7 structure
+            --p7-sign              Signs using a PKCS #7 structure
+            --p7-detached-sign     Signs using a detached PKCS #7 structure
+            --p7-include-cert      The signer's certificate will be included in the cert list.
+                                     - disabled as '--no-p7-include-cert'
+                                     - enabled by default
+            --p7-time              Will include a timestamp in the PKCS #7 structure
+                                     - disabled as '--no-p7-time'
+            --p7-show-data         Will show the embedded data in the PKCS #7 structure
+                                     - disabled as '--no-p7-show-data'
+            --p7-info              Print information on a PKCS #7 structure
+            --p7-verify            Verify the provided PKCS #7 structure
+            --p8-info              Print information on a PKCS #8 structure
+            --smime-to-p7          Convert S/MIME to PKCS #7 structure
+        -k, --key-info             Print information on a private key
+            --pgp-key-info         Print information on an OpenPGP private key
+            --pubkey-info          Print information on a public key
+            --v1                   Generate an X.509 version 1 certificate (with no extensions)
+            --to-p12               Generate a PKCS #12 structure
+            --to-p8                Generate a PKCS #8 structure
+        -8, --pkcs8                Use PKCS #8 format for private keys
+            --rsa                  Generate RSA key
+            --dsa                  Generate DSA key
+            --ecc                  Generate ECC (ECDSA) key
+            --ecdsa                an alias for the 'ecc' option
+            --hash=str             Hash algorithm to use for signing
+            --inder                Use DER format for input certificates, private keys, and DH parameters
+                                     - disabled as '--no-inder'
+            --inraw                an alias for the 'inder' option
+            --outder               Use DER format for output certificates, private keys, and DH parameters
+                                     - disabled as '--no-outder'
+            --outraw               an alias for the 'outder' option
+            --bits=num             Specify the number of bits for key generate
+            --curve=str            Specify the curve used for EC key generation
+            --sec-param=str        Specify the security level [low, legacy, medium, high, ultra]
+            --disable-quick-random  No effect
+            --template=str         Template file to use for non-interactive operation
+            --stdout-info          Print information to stdout instead of stderr
+            --ask-pass             Enable interaction for entering password when in batch mode.
+            --pkcs-cipher=str      Cipher to use for PKCS #8 and #12 operations
+            --provider=str         Specify the PKCS #11 provider library
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+
+     Tool to parse and generate X.509 certificates, requests and private keys.
+     It can be used interactively or non interactively by specifying the
+     template command line option.
+
+     The tool accepts files or URLs supported by GnuTLS.  In case PIN is
+     required for the URL access you can provide it using the environment
+     variables GNUTLS_PIN and GNUTLS_SO_PIN.
+
 
 debug option (-d)
 .................
@@ -3386,11 +3501,17 @@ load-pubkey option
 This is the "loads a public key file" option.  This option takes a
 string argument.  This can be either a file or a PKCS #11 URL
 
+load-request option
+...................
+
+This is the "loads a certificate request file" option.  This option
+takes a string argument.  This option can be used with a file
+
 load-certificate option
 .......................
 
 This is the "loads a certificate file" option.  This option takes a
-string argument.  This can be either a file or a PKCS #11 URL
+string argument.  This option can be used with a file
 
 load-ca-privkey option
 ......................
@@ -3403,8 +3524,8 @@ load-ca-certificate option
 ..........................
 
 This is the "loads the certificate authority's certificate file" option.
-This option takes a string argument.  This can be either a file or a
-PKCS #11 URL
+This option takes a string argument.  This option can be used with a
+file
 
 password option
 ...............
@@ -3803,6 +3924,12 @@ certificate request or a self signed certificate follows.
      # Whether this is a CA certificate or not
      #ca
 
+     # Subject Unique ID (in hex)
+     #subject_unique_id = 00153224
+
+     # Issuer Unique ID (in hex)
+     #issuer_unique_id = 00153225
+
      # for microsoft smart card logon
      # key_purpose_oid = 1.3.6.1.4.1.311.20.2.2
 
@@ -3925,7 +4052,53 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     ocsptool is unavailable - no --help
+     ocsptool - GnuTLS OCSP tool
+     Usage:  ocsptool [ -<flag> [<val>] | --<name>[{=| }<val>] ]...
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+        -V, --verbose              More verbose output
+                                     - may appear multiple times
+            --infile=file          Input file
+                                     - file must pre-exist
+            --outfile=str          Output file
+            --ask[=arg]            Ask an OCSP/HTTP server on a certificate validity
+                                     - requires these options:
+                                     load-cert
+                                     load-issuer
+        -e, --verify-response      Verify response
+        -i, --request-info         Print information on a OCSP request
+        -j, --response-info        Print information on a OCSP response
+        -q, --generate-request     Generate an OCSP request
+            --nonce                Use (or not) a nonce to OCSP request
+                                     - disabled as '--no-nonce'
+            --load-issuer=file     Read issuer certificate from file
+                                     - file must pre-exist
+            --load-cert=file       Read certificate to check from file
+                                     - file must pre-exist
+            --load-trust=file      Read OCSP trust anchors from file
+                                     - prohibits the option 'load-signer'
+                                     - file must pre-exist
+            --load-signer=file     Read OCSP response signer from file
+                                     - prohibits the option 'load-trust'
+                                     - file must pre-exist
+            --inder                Use DER format for input certificates and private keys
+                                     - disabled as '--no-inder'
+        -Q, --load-request=file    Read DER encoded OCSP request from file
+                                     - file must pre-exist
+        -S, --load-response=file   Read DER encoded OCSP response from file
+                                     - file must pre-exist
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+
+     Ocsptool is a program that can parse and print information about OCSP
+     requests/responses, generate requests and verify responses.
+
 
 debug option (-d)
 .................
@@ -4459,7 +4632,34 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     srptool is unavailable - no --help
+     srptool - GnuTLS SRP tool
+     Usage:  srptool [ -<flag> [<val>] | --<name>[{=| }<val>] ]...
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+        -i, --index=num            specify the index of the group parameters in tpasswd.conf to use
+        -u, --username=str         specify a username
+        -p, --passwd=str           specify a password file
+        -s, --salt=num             specify salt size
+            --verify               just verify the password.
+        -v, --passwd-conf=str      specify a password conf file.
+            --create-conf=str      Generate a password configuration file.
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+
+     Simple program that emulates the programs in the Stanford SRP (Secure
+     Remote Password) libraries using GnuTLS.  It is intended for use in places
+     where you don't expect SRP authentication to be the used for system users.
+
+     In brief, to use SRP you need to create two files.  These are the password
+     file that holds the users and the verifiers associated with them and the
+     configuration file to hold the group parameters (called tpasswd.conf).
+
 
 debug option (-d)
 .................
@@ -4591,7 +4791,27 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     psktool is unavailable - no --help
+     psktool - GnuTLS PSK tool
+     Usage:  psktool [ -<flag> [<val>] | --<name>[{=| }<val>] ]...
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+        -s, --keysize=num          specify the key size in bytes
+                                     - it must be in the range:
+                                       0 to 512
+        -u, --username=str         specify a username
+        -p, --passwd=str           specify a password file
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+
+     Program that generates random keys for use with TLS-PSK.  The keys are
+     stored in hexadecimal format in a key file.
+
 
 debug option (-d)
 .................
@@ -5553,9 +5773,9 @@ before accessing the object (for operations or otherwise).
           gnutls_x509_crt_t CRT, const char * LABEL, unsigned int FLAGS)
      TOKEN_URL: A PKCS '11' URL specifying a token
 
-     CRT: A certificate
+     CRT: The certificate to copy
 
-     LABEL: A name to be used for the stored data
+     LABEL: The name to be used for the stored data
 
      FLAGS: One of GNUTLS_PKCS11_OBJ_FLAG_*
 
@@ -5645,7 +5865,147 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     p11tool is unavailable - no --help
+     p11tool - GnuTLS PKCS #11 tool
+     Usage:  p11tool [ -<flag> [<val>] | --<name>[{=| }<val>] ]... [url]
+
+
+     Tokens:
+
+            --list-tokens          List all available tokens
+            --list-token-urls      List the URLs available tokens
+            --list-mechanisms      List all available mechanisms in a token
+            --initialize           Initializes a PKCS #11 token
+            --set-pin=str          Specify the PIN to use on token initialization
+            --set-so-pin=str       Specify the Security Officer's PIN to use on token initialization
+
+     Object listing:
+
+            --list-all             List all available objects in a token
+            --list-all-certs       List all available certificates in a token
+            --list-certs           List all certificates that have an associated private key
+            --list-all-privkeys    List all available private keys in a token
+            --list-privkeys        an alias for the 'list-all-privkeys' option
+            --list-keys            an alias for the 'list-all-privkeys' option
+            --list-all-trusted     List all available certificates marked as trusted
+            --export               Export the object specified by the URL
+                                     - prohibits these options:
+                                     export-stapled
+                                     export-chain
+                                     export-pubkey
+            --export-stapled       Export the certificate object specified by the URL
+                                     - prohibits these options:
+                                     export
+                                     export-chain
+                                     export-pubkey
+            --export-chain         Export the certificate specified by the URL and its chain of trust
+                                     - prohibits these options:
+                                     export-stapled
+                                     export
+                                     export-pubkey
+            --export-pubkey        Export the public key for a private key
+                                     - prohibits these options:
+                                     export-stapled
+                                     export
+                                     export-chain
+            --info                 List information on an available object in a token
+            --trusted              an alias for the 'mark-trusted' option
+            --distrusted           an alias for the 'mark-distrusted' option
+
+     Key generation:
+
+            --generate-rsa         Generate an RSA private-public key pair
+            --generate-dsa         Generate a DSA private-public key pair
+            --generate-ecc         Generate an ECDSA private-public key pair
+            --bits=num             Specify the number of bits for the key generate
+            --curve=str            Specify the curve used for EC key generation
+            --sec-param=str        Specify the security level
+
+     Writing objects:
+
+            --set-id=str           Set the CKA_ID (in hex) for the specified by the URL object
+                                     - prohibits the option 'write'
+            --set-label=str        Set the CKA_LABEL for the specified by the URL object
+                                     - prohibits these options:
+                                     write
+                                     set-id
+            --write                Writes the loaded objects to a PKCS #11 token
+            --delete               Deletes the objects matching the given PKCS #11 URL
+            --label=str            Sets a label for the write operation
+            --id=str               Sets an ID for the write operation
+            --mark-wrap            Marks the generated key to be a wrapping key
+                                     - disabled as '--no-mark-wrap'
+            --mark-trusted         Marks the object to be written as trusted
+                                     - prohibits the option 'mark-distrusted'
+                                     - disabled as '--no-mark-trusted'
+            --mark-distrusted      When retrieving objects, it requires the objects to be distrusted
+     (blacklisted)
+                                     - prohibits the option 'mark-trusted'
+            --mark-decrypt         Marks the object to be written for decryption
+                                     - disabled as '--no-mark-decrypt'
+            --mark-sign            Marks the object to be written for signature generation
+                                     - disabled as '--no-mark-sign'
+            --mark-ca              Marks the object to be written as a CA
+                                     - disabled as '--no-mark-ca'
+            --mark-private         Marks the object to be written as private
+                                     - disabled as '--no-mark-private'
+            --ca                   an alias for the 'mark-ca' option
+            --private              an alias for the 'mark-private' option
+            --secret-key=str       Provide a hex encoded secret key
+            --load-privkey=file    Private key file to use
+                                     - file must pre-exist
+            --load-pubkey=file     Public key file to use
+                                     - file must pre-exist
+            --load-certificate=file Certificate file to use
+                                     - file must pre-exist
+
+     Other options:
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+            --outfile=str          Output file
+            --login                Force (user) login to token
+                                     - disabled as '--no-login'
+            --so-login             Force security officer login to token
+                                     - disabled as '--no-so-login'
+            --admin-login          an alias for the 'so-login' option
+            --test-sign            Tests the signature operation of the provided object
+            --generate-random=num  Generate random data
+        -8, --pkcs8                Use PKCS #8 format for private keys
+            --inder                Use DER/RAW format for input
+                                     - disabled as '--no-inder'
+            --inraw                an alias for the 'inder' option
+            --outder               Use DER format for output certificates, private keys, and DH parameters
+                                     - disabled as '--no-outder'
+            --outraw               an alias for the 'outder' option
+            --provider=file        Specify the PKCS #11 provider library
+            --detailed-url         Print detailed URLs
+                                     - disabled as '--no-detailed-url'
+            --only-urls            Print a compact listing using only the URLs
+            --batch                Disable all interaction with the tool
+
+     Version, usage and configuration options:
+
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+     Operands and options may be intermixed.  They will be reordered.
+
+     Program that allows operations on PKCS #11 smart cards and security
+     modules.
+
+     To use PKCS #11 tokens with GnuTLS the p11-kit configuration files need to
+     be setup.  That is create a .module file in /etc/pkcs11/modules with the
+     contents 'module: /path/to/pkcs11.so'.  Alternatively the configuration
+     file /etc/gnutls/pkcs11.conf has to exist and contain a number of lines of
+     the form 'load=/usr/lib/opensc-pkcs11.so'.
+
+     You can provide the PIN to be used for the PKCS #11 operations with the
+     environment variables GNUTLS_PIN and GNUTLS_SO_PIN.
+
 
 5.2.8 debug option (-d)
 -----------------------
@@ -5716,7 +6076,30 @@ Generates an ECDSA private-public key pair on the specified token.
 This is the "export the public key for a private key" option.  Exports
 the public key for the specified private key
 
-5.2.19 mark-wrap option
+5.2.19 set-id option
+--------------------
+
+This is the "set the cka_id (in hex) for the specified by the url
+object" option.  This option takes a string argument.  Sets the CKA_ID
+in the specified by the URL object.  The ID should be specified in
+hexadecimal format without a '0x' prefix.
+
+5.2.20 set-label option
+-----------------------
+
+This is the "set the cka_label for the specified by the url object"
+option.  This option takes a string argument.  Sets the CKA_LABEL in the
+specified by the URL object
+
+5.2.21 id option
+----------------
+
+This is the "sets an id for the write operation" option.  This option
+takes a string argument.  Sets the CKA_ID to be set by the write
+operation.  The ID should be specified in hexadecimal format without a
+'0x' prefix.
+
+5.2.22 mark-wrap option
 -----------------------
 
 This is the "marks the generated key to be a wrapping key" option.
@@ -5726,7 +6109,7 @@ This option has some usage constraints.  It:
 
 Marks the generated key with the CKA_WRAP flag.
 
-5.2.20 mark-trusted option
+5.2.23 mark-trusted option
 --------------------------
 
 This is the "marks the object to be written as trusted" option.
@@ -5736,7 +6119,7 @@ This option has some usage constraints.  It:
 
 Marks the object to be generated/copied with the CKA_TRUST flag.
 
-5.2.21 mark-ca option
+5.2.24 mark-ca option
 ---------------------
 
 This is the "marks the object to be written as a ca" option.
@@ -5747,7 +6130,7 @@ This option has some usage constraints.  It:
 Marks the object to be generated/copied with the
 CKA_CERTIFICATE_CATEGORY as CA.
 
-5.2.22 mark-private option
+5.2.25 mark-private option
 --------------------------
 
 This is the "marks the object to be written as private" option.
@@ -5759,25 +6142,25 @@ This option has some usage constraints.  It:
 Marks the object to be generated/copied with the CKA_PRIVATE flag.  The
 written object will require a PIN to be used.
 
-5.2.23 trusted option
+5.2.26 trusted option
 ---------------------
 
 This is an alias for the 'mark-trusted' option, *note the mark-trusted
 option documentation: p11tool mark-trusted.
 
-5.2.24 ca option
+5.2.27 ca option
 ----------------
 
 This is an alias for the 'mark-ca' option, *note the mark-ca option
 documentation: p11tool mark-ca.
 
-5.2.25 private option
+5.2.28 private option
 ---------------------
 
 This is an alias for the 'mark-private' option, *note the mark-private
 option documentation: p11tool mark-private.
 
-5.2.26 so-login option
+5.2.29 so-login option
 ----------------------
 
 This is the "force security officer login to token" option.
@@ -5787,27 +6170,27 @@ This option has some usage constraints.  It:
 
 Forces login to the token as security officer (admin).
 
-5.2.27 admin-login option
+5.2.30 admin-login option
 -------------------------
 
 This is an alias for the 'so-login' option, *note the so-login option
 documentation: p11tool so-login.
 
-5.2.28 curve option
+5.2.31 curve option
 -------------------
 
 This is the "specify the curve used for ec key generation" option.  This
 option takes a string argument.  Supported values are secp192r1,
 secp224r1, secp256r1, secp384r1 and secp521r1.
 
-5.2.29 sec-param option
+5.2.32 sec-param option
 -----------------------
 
 This is the "specify the security level" option.  This option takes a
 string argument 'Security parameter'.  This is alternative to the bits
 option.  Available options are [low, legacy, medium, high, ultra].
 
-5.2.30 inder option
+5.2.33 inder option
 -------------------
 
 This is the "use der/raw format for input" option.
@@ -5817,13 +6200,13 @@ This option has some usage constraints.  It:
 
 Use DER/RAW format for input certificates and private keys.
 
-5.2.31 inraw option
+5.2.34 inraw option
 -------------------
 
 This is an alias for the 'inder' option, *note the inder option
 documentation: p11tool inder.
 
-5.2.32 outder option
+5.2.35 outder option
 --------------------
 
 This is the "use der format for output certificates, private keys, and
@@ -5834,34 +6217,34 @@ This option has some usage constraints.  It:
 
 The output will be in DER or RAW format.
 
-5.2.33 outraw option
+5.2.36 outraw option
 --------------------
 
 This is an alias for the 'outder' option, *note the outder option
 documentation: p11tool outder.
 
-5.2.34 set-pin option
+5.2.37 set-pin option
 ---------------------
 
 This is the "specify the pin to use on token initialization" option.
 This option takes a string argument.  Alternatively the GNUTLS_PIN
 environment variable may be used.
 
-5.2.35 set-so-pin option
+5.2.38 set-so-pin option
 ------------------------
 
 This is the "specify the security officer's pin to use on token
 initialization" option.  This option takes a string argument.
 Alternatively the GNUTLS_SO_PIN environment variable may be used.
 
-5.2.36 provider option
+5.2.39 provider option
 ----------------------
 
 This is the "specify the pkcs #11 provider library" option.  This option
 takes a file argument.  This will override the default options in
 /etc/gnutls/pkcs11.conf
 
-5.2.37 p11tool exit status
+5.2.40 p11tool exit status
 --------------------------
 
 One of the following exit values will be returned:
@@ -5870,12 +6253,12 @@ One of the following exit values will be returned:
 '1 (EXIT_FAILURE)'
      The operation failed or the command syntax was not valid.
 
-5.2.38 p11tool See Also
+5.2.41 p11tool See Also
 -----------------------
 
 certtool (1)
 
-5.2.39 p11tool Examples
+5.2.42 p11tool Examples
 -----------------------
 
 To view all tokens in your system use:
@@ -6189,7 +6572,15 @@ This option has some usage constraints.  It:
 
 The generated key will be stored in system persistent storage.
 
-5.3.10 sec-param option
+5.3.10 test-sign option
+-----------------------
+
+This is the "tests the signature operation of the provided object"
+option.  This option takes a string argument 'url'.  It can be used to
+test the correct operation of the signature operation.  This operation
+will sign and verify the signed data.
+
+5.3.11 sec-param option
 -----------------------
 
 This is the "specify the security level [low, legacy, medium, high,
@@ -6198,7 +6589,7 @@ parameter'.  This is alternative to the bits option.  Note however that
 the values allowed by the TPM chip are quantized and given values may be
 rounded up.
 
-5.3.11 inder option
+5.3.12 inder option
 -------------------
 
 This is the "use the der format for keys."  option.
@@ -6209,7 +6600,7 @@ This option has some usage constraints.  It:
 The input files will be assumed to be in the portable DER format of TPM.
 The default format is a custom format used by various TPM tools
 
-5.3.12 outder option
+5.3.13 outder option
 --------------------
 
 This is the "use der format for output keys" option.
@@ -6219,7 +6610,7 @@ This option has some usage constraints.  It:
 
 The output will be in the TPM portable DER format.
 
-5.3.13 tpmtool exit status
+5.3.14 tpmtool exit status
 --------------------------
 
 One of the following exit values will be returned:
@@ -6228,12 +6619,12 @@ One of the following exit values will be returned:
 '1 (EXIT_FAILURE)'
      The operation failed or the command syntax was not valid.
 
-5.3.14 tpmtool See Also
+5.3.15 tpmtool See Also
 -----------------------
 
 p11tool (1), certtool (1)
 
-5.3.15 tpmtool Examples
+5.3.16 tpmtool Examples
 -----------------------
 
 To generate a key that is to be stored in filesystem use:
@@ -7101,202 +7492,4 @@ functions discussed in *note X.509 certificates::.
      or non-zero to terminate.
 
      *Since:* 2.10.0
-
-
-File: gnutls.info,  Node: SRP credentials,  Next: PSK credentials,  Prev: Certificate credentials,  Up: Associating the credentials
-
-6.4.2 SRP
----------
-
-The initialization functions in SRP credentials differ between client
-and server.  Clients supporting SRP should set the username and password
-prior to connection, to the credentials structure.  Alternatively *note
-gnutls_srp_set_client_credentials_function:: may be used instead, to
-specify a callback function that should return the SRP username and
-password.  The callback is called once during the TLS handshake.
-
-'INT *note gnutls_srp_allocate_server_credentials:: (gnutls_srp_server_credentials_t * SC)'
-'INT *note gnutls_srp_allocate_client_credentials:: (gnutls_srp_client_credentials_t * SC)'
-'VOID *note gnutls_srp_free_server_credentials:: (gnutls_srp_server_credentials_t SC)'
-'VOID *note gnutls_srp_free_client_credentials:: (gnutls_srp_client_credentials_t SC)'
-'INT *note gnutls_srp_set_client_credentials:: (gnutls_srp_client_credentials_t RES, const char * USERNAME, const char * PASSWORD)'
-
- -- Function: void gnutls_srp_set_client_credentials_function
-          (gnutls_srp_client_credentials_t CRED,
-          gnutls_srp_client_credentials_function * FUNC)
-     CRED: is a 'gnutls_srp_server_credentials_t' structure.
-
-     FUNC: is the callback function
-
-     This function can be used to set a callback to retrieve the
-     username and password for client SRP authentication.  The
-     callback's function form is:
-
-     int (*callback)(gnutls_session_t, char** username, char**password);
-
-     The 'username' and 'password' must be allocated using
-     'gnutls_malloc()' .  'username' and 'password' should be ASCII
-     strings or UTF-8 strings prepared using the "SASLprep" profile of
-     "stringprep".
-
-     The callback function will be called once per handshake before the
-     initial hello message is sent.
-
-     The callback should not return a negative error code the second
-     time called, since the handshake procedure will be aborted.
-
-     The callback function should return 0 on success.  -1 indicates an
-     error.
-
-In server side the default behavior of GnuTLS is to read the usernames
-and SRP verifiers from password files.  These password file format is
-compatible the with the _Stanford srp libraries_ format.  If a different
-password file format is to be used, then *note
-gnutls_srp_set_server_credentials_function:: should be called, to set an
-appropriate callback.
-
- -- Function: int gnutls_srp_set_server_credentials_file
-          (gnutls_srp_server_credentials_t RES, const char *
-          PASSWORD_FILE, const char * PASSWORD_CONF_FILE)
-     RES: is a 'gnutls_srp_server_credentials_t' structure.
-
-     PASSWORD_FILE: is the SRP password file (tpasswd)
-
-     PASSWORD_CONF_FILE: is the SRP password conf file (tpasswd.conf)
-
-     This function sets the password files, in a
-     'gnutls_srp_server_credentials_t' structure.  Those password files
-     hold usernames and verifiers and will be used for SRP
-     authentication.
-
-     *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned, or an
-     error code.
-
- -- Function: void gnutls_srp_set_server_credentials_function
-          (gnutls_srp_server_credentials_t CRED,
-          gnutls_srp_server_credentials_function * FUNC)
-     CRED: is a 'gnutls_srp_server_credentials_t' structure.
-
-     FUNC: is the callback function
-
-     This function can be used to set a callback to retrieve the user's
-     SRP credentials.  The callback's function form is:
-
-     int (*callback)(gnutls_session_t, const char* username,
-     gnutls_datum_t *salt, gnutls_datum_t *verifier, gnutls_datum_t
-     *generator, gnutls_datum_t *prime);
-
-     'username' contains the actual username.  The 'salt' , 'verifier' ,
-     'generator' and 'prime' must be filled in using the
-     'gnutls_malloc()' .  For convenience 'prime' and 'generator' may
-     also be one of the static parameters defined in gnutls.h.
-
-     Initially, the data field is NULL in every 'gnutls_datum_t'
-     structure that the callback has to fill in.  When the callback is
-     done GnuTLS deallocates all of those buffers which are non-NULL,
-     regardless of the return value.
-
-     In order to prevent attackers from guessing valid usernames, if a
-     user does not exist, g and n values should be filled in using a
-     random user's parameters.  In that case the callback must return
-     the special value (1).  See 'gnutls_srp_set_server_fake_salt_seed'
-     too.  If this is not required for your application, return a
-     negative number from the callback to abort the handshake.
-
-     The callback function will only be called once per handshake.  The
-     callback function should return 0 on success, while -1 indicates an
-     error.
-
-
-File: gnutls.info,  Node: PSK credentials,  Next: Anonymous credentials,  Prev: SRP credentials,  Up: Associating the credentials
-
-6.4.3 PSK
----------
-
-The initialization functions in PSK credentials differ between client
-and server.
-
-'INT *note gnutls_psk_allocate_server_credentials:: (gnutls_psk_server_credentials_t * SC)'
-'INT *note gnutls_psk_allocate_client_credentials:: (gnutls_psk_client_credentials_t * SC)'
-'VOID *note gnutls_psk_free_server_credentials:: (gnutls_psk_server_credentials_t SC)'
-'VOID *note gnutls_psk_free_client_credentials:: (gnutls_psk_client_credentials_t SC)'
-
-Clients supporting PSK should supply the username and key before a TLS
-session is established.  Alternatively *note
-gnutls_psk_set_client_credentials_function:: can be used to specify a
-callback function.  This has the advantage that the callback will be
-called only if PSK has been negotiated.
-
-'INT *note gnutls_psk_set_client_credentials:: (gnutls_psk_client_credentials_t RES, const char * USERNAME, const gnutls_datum_t * KEY, gnutls_psk_key_flags FLAGS)'
-
- -- Function: void gnutls_psk_set_client_credentials_function
-          (gnutls_psk_client_credentials_t CRED,
-          gnutls_psk_client_credentials_function * FUNC)
-     CRED: is a 'gnutls_psk_server_credentials_t' structure.
-
-     FUNC: is the callback function
-
-     This function can be used to set a callback to retrieve the
-     username and password for client PSK authentication.  The
-     callback's function form is: int (*callback)(gnutls_session_t,
-     char** username, gnutls_datum_t* key);
-
-     The 'username' and 'key' ->data must be allocated using
-     'gnutls_malloc()' .  'username' should be ASCII strings or UTF-8
-     strings prepared using the "SASLprep" profile of "stringprep".
-
-     The callback function will be called once per handshake.
-
-     The callback function should return 0 on success.  -1 indicates an
-     error.
-
-In server side the default behavior of GnuTLS is to read the usernames
-and PSK keys from a password file.  The password file should contain
-usernames and keys in hexadecimal format.  The name of the password file
-can be stored to the credentials structure by calling *note
-gnutls_psk_set_server_credentials_file::.  If a different password file
-format is to be used, then a callback should be set instead by *note
-gnutls_psk_set_server_credentials_function::.
-
-The server can help the client chose a suitable username and password,
-by sending a hint.  Note that there is no common profile for the PSK
-hint and applications are discouraged to use it.  A server, may specify
-the hint by calling *note gnutls_psk_set_server_credentials_hint::.  The
-client can retrieve the hint, for example in the callback function,
-using *note gnutls_psk_client_get_hint::.
-
- -- Function: int gnutls_psk_set_server_credentials_file
-          (gnutls_psk_server_credentials_t RES, const char *
-          PASSWORD_FILE)
-     RES: is a 'gnutls_psk_server_credentials_t' structure.
-
-     PASSWORD_FILE: is the PSK password file (passwd.psk)
-
-     This function sets the password file, in a
-     'gnutls_psk_server_credentials_t' structure.  This password file
-     holds usernames and keys and will be used for PSK authentication.
-
-     *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
-     otherwise an error code is returned.
-
-'VOID *note gnutls_psk_set_server_credentials_function:: (gnutls_psk_server_credentials_t CRED, gnutls_psk_server_credentials_function * FUNC)'
-'INT *note gnutls_psk_set_server_credentials_hint:: (gnutls_psk_server_credentials_t RES, const char * HINT)'
-'CONST CHAR * *note gnutls_psk_client_get_hint:: (gnutls_session_t SESSION)'
-
-
-File: gnutls.info,  Node: Anonymous credentials,  Prev: PSK credentials,  Up: Associating the credentials
-
-6.4.4 Anonymous
----------------
-
-The key exchange methods for anonymous authentication might require
-Diffie-Hellman parameters to be generated by the server and associated
-with an anonymous credentials structure.  Check *note Parameter
-generation:: for more information.  The initialization functions for the
-credentials are shown below.
-
-'INT *note gnutls_anon_allocate_server_credentials:: (gnutls_anon_server_credentials_t * SC)'
-'INT *note gnutls_anon_allocate_client_credentials:: (gnutls_anon_client_credentials_t * SC)'
-'VOID *note gnutls_anon_free_server_credentials:: (gnutls_anon_server_credentials_t SC)'
-'VOID *note gnutls_anon_free_client_credentials:: (gnutls_anon_client_credentials_t SC)'
 

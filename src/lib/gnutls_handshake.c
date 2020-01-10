@@ -2616,12 +2616,17 @@ gnutls_handshake_set_timeout(gnutls_session_t session, unsigned int ms)
 			return ret; \
 		if (ret == GNUTLS_E_GOT_APPLICATION_DATA && session->internals.initial_negotiation_completed != 0) \
 			return ret; \
-		if (ret == GNUTLS_E_LARGE_PACKET && session->internals.handshake_large_loops < 16) { \
-			session->internals.handshake_large_loops++; \
-			return ret; \
+		if (session->internals.handshake_suspicious_loops < 16) { \
+			if (ret == GNUTLS_E_LARGE_PACKET) { \
+				session->internals.handshake_suspicious_loops++; \
+				return ret; \
+			} \
+			/* a warning alert might interrupt handshake */ \
+			if (allow_alert != 0 && ret==GNUTLS_E_WARNING_ALERT_RECEIVED) { \
+				session->internals.handshake_suspicious_loops++; \
+				return ret; \
+			} \
 		} \
-                /* a warning alert might interrupt handshake */ \
-		if (allow_alert != 0 && ret==GNUTLS_E_WARNING_ALERT_RECEIVED) return ret; \
 		gnutls_assert(); \
 		ERR( str, ret); \
 		/* do not allow non-fatal errors at this point */ \
@@ -3518,11 +3523,14 @@ remove_unwanted_ciphersuites(gnutls_session_t session,
  * This function will set the maximum size of all handshake messages.
  * Handshakes over this size are rejected with
  * %GNUTLS_E_HANDSHAKE_TOO_LARGE error code.  The default value is
- * 48kb which is typically large enough.  Set this to 0 if you do not
+ * 128kb which is typically large enough.  Set this to 0 if you do not
  * want to set an upper limit.
  *
  * The reason for restricting the handshake message sizes are to
  * limit Denial of Service attacks.
+ *
+ * Note that the maximum handshake size was increased to 128kb
+ * from 48kb in GnuTLS 3.3.25.
  **/
 void
 gnutls_handshake_set_max_packet_length(gnutls_session_t session,

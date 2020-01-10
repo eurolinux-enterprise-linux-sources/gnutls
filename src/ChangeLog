@@ -1,3 +1,557 @@
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/cert-tests/Makefile.am, tests/key-tests/Makefile.am: tests:
+	do not run key-tests and cert-tests under leak sanitizer The reason is that we cannot distinguish between a memory leak on
+	application failure (which is followed by exit- thus should be
+	ignored) and an address sanitizer issue (which should never be
+	ignored).  As such we disable leak detection with asan and rely on
+	valgrind.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/key-tests/Makefile.am: tests: added missing file
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* .gitlab-ci.yml: .gitlab-ci.yml: Build and Check - separate build
+	dir (x86): force build in gitlab shared runners In the Centos7 based runners there is an issue running autogen.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* .gitignore, src/Makefile.am: tools: use stamp files to allow
+	parallel build of autogen files Autogen seems to output on the creates files gradually, something
+	that makes 'make' believe that the command is complete prior to the
+	output file being fully populated. The current approach uses stamp
+	files to ensure that no incomplete files are used for compilation.
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update [ci skip]
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS, doc/Makefile.am, doc/manpages/Makefile.am, symbols.last: 
+	updated auto-generated files
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* configure.ac, m4/hooks.m4: bumped version
+
+2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update [ci skip]
+
+2017-01-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/read-packet.c: opencdk: added error checking in the
+	stream reading functions This addresses an out of memory error. Issue found using oss-fuzz:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=337 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-01-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/pubkey.c: opencdk: cdk_pk_get_keyid: fix stack
+	overflow Issue found using oss-fuzz:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=340 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-01-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/read-packet.c: opencdk: read_attribute: added more
+	precise checks when reading stream That addresses heap read overflows found using oss-fuzz:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=338   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=346 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-01-01  Alex Gaynor <alex.gaynor@gmail.com>
+
+	* lib/opencdk/read-packet.c: Corrected a leak in OpenPGP sub-packet
+	parsing.  Signed-off-by: Alex Gaynor <alex.gaynor@gmail.com>
+
+2016-12-30  Alex Gaynor <alex.gaynor@gmail.com>
+
+	* lib/opencdk/read-packet.c: Attempt to fix a leak in OpenPGP cert
+	parsing.
+
+2016-12-26  Alex Gaynor <alex.gaynor@gmail.com>
+
+	* lib/opencdk/read-packet.c: Do not infinite loop if an EOF occurs
+	while skipping a PGP packet Signed-off-by: Alex Gaynor <alex.gaynor@gmail.com>
+
+2016-02-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/misc.c: opencdk: Fixes to prevent undefined behavior
+	(found with libubsan)
+
+2017-01-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2017-01-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/auth/rsa.c: auth rsa: eliminated memory leak on pkcs-1
+	formatting attack path Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-01-02  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update [ci skip]
+
+2016-12-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/verify.c: pkcs11 verification: ensure that an issuer we
+	retrieve is not blacklist It may happen in p11-kit trust module that a trusted certificate is
+	both in the trusted set, and the blacklisted set. To avoid accepting
+	a certificate when in both sets, we always check whether a trusted
+	issuer certificate is in the blacklisted set.
+
+2016-12-31  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* src/certtool.c: certtool: improved error reporting on file error
+
+2016-12-20  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update [ci skip]
+
+2016-12-15  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/x509_ext.c: gnutls_x509_ext_import_proxy: fix issue
+	reading the policy language If the language was set but the policy wasn't, that could lead to a
+	double free, as the value returned to the user was freed.
+
+2016-12-16  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* : commit 5ca126e1a5daf071ce690f28823fa97de6a7ae68 Author: Nikos
+	Mavrogiannopoulos <nmav@redhat.com> Date:   Thu Dec 15 17:05:59 2016
+	+0100
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-12-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/pkcs8-key-decode-encrypted.c,
+	tests/pkcs8-key-decode.c: tests: added test for PKCS#8 encrypted key
+	decoding This also verifies that the return value when attempting to decrypt
+	without a password is GNUTLS_E_DECRYPTION_FAILED.
+
+2016-11-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/key-tests/Makefile.am, tests/key-tests/pkcs8-invalid: tests:
+	added test suite with PKCS#8 files that have invalid encryption
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c: PKCS#7 decrypt_data: merge all errors
+	during decryption to GNUTLS_E_DECRYPTION_FAILED
+
+2016-12-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c: pkcs8: ensure that the correct error
+	code is returned on decryption failure
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c: PKCS#5,7 decryption: added sanity check
+	on padding size Relates #148
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c: PKCS#5,7 decryption: fail without leak
+	on unknown MAC
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c: PKCS#5,7 decryption: fail early on
+	invalid block sizes
+
+2016-12-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/privkey_pkcs8.c, lib/x509/x509_int.h: PKCS#5,7
+	decryption: enforce limits in the support parameter sizes This allows to detect invalid parameters early rather than later.
+	Relates #148
+
+2016-12-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2015-07-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/tpmtool-args.def, src/tpmtool.c: tpmtool: Added --test-sign
+	parameter
+
+2016-12-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/tpmtool.c: compiler warnings elimination and other bug fixes
+
+2015-06-05  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/tpmtool.c: tpmtool: added newline in error messages
+
+2016-12-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* configure.ac, lib/Makefile.am, lib/abstract_int.h,
+	lib/gnutls_errors.c, lib/gnutls_global.c, lib/gnutls_global.h,
+	lib/gnutls_privkey.c, lib/includes/gnutls/gnutls.h.in, lib/tpm.c: 
+	tpm: backported improvements from master branch  * Load libtspi dynamically using dlopen - prevents direct linking
+	 with openssl * Fix handling of keys requiring authorization  * In import_tpm_key_cb() fix the wrong password loop
+
+2016-12-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool-args.def: doc: updated to documentation of certtool
+	[ci skip] This corrects options which incorrectly mentioned they support URLs.
+
+2016-12-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool.c: Don't trash DER CRQ output with text data Backported patch from master.
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/suite/testpkcs11: tests: backported test suite for p11tool
+	--set-id and --set-label options
+
+2015-03-11  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/p11tool-args.def, src/p11tool.c, src/p11tool.h, src/pkcs11.c: 
+	p11tool: added --set-id and --set-label options
+
+2015-03-11  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/includes/gnutls/pkcs11.h, lib/libgnutls.map, lib/pkcs11.c,
+	lib/pkcs11_int.c, lib/pkcs11_int.h: added
+	gnutls_pkcs11_obj_set_info() This function allows setting information such as the CKA_ID and the
+	CKA_LABEL of an object.
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/suite/testpkcs11: tests: check whether PKCS #11 ID set on
+	copy/generation is correct
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/p11tool-args.def, src/p11tool.c, src/p11tool.h, src/pkcs11.c: 
+	p11tool: allow setting the CKA_ID on object
+	initialization/generation
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/libgnutls.map: exported new functions
+
+2015-03-31  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/includes/gnutls/pkcs11.h, lib/pkcs11_privkey.c: pkcs11:
+	enhanced key generation functions to allow specifying a CKA_ID
+
+2015-03-30  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/includes/gnutls/pkcs11.h, lib/pkcs11_write.c: enhanced copy
+	functions to allow specifying a CKA_ID
+
+2016-11-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/pkcs12_encr.c: pkcs12: fixed the calculation of p_size Include the trailing zero into the size calculation.
+
+2016-11-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-11-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/pkcs12-decode/Makefile.am, tests/pkcs12-decode/pkcs12: 
+	tests: added pkcs12 check with openssl generated structure and long
+	password
+
+2016-11-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/pkcs12_encr.c: pkcs12: fixed the calculation of p_size That affects passwords which exceed 32 characters.
+
+2016-11-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: _wrap_nettle_pk_verify: use FAIL_IF_LIB_ERROR
+	prior to returning success This will prevent verification to succeed if the system is in error
+	state.
+
+2016-11-02  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-10-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/signature.c, lib/gnutls_alert.c: Terminate handshake if
+	only unknown or disabled signatures are advertized by the peer That is, do not attempt to proceed assuming that the peer supports
+	SHA-1.
+
+2016-10-26  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2014-11-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/status_request.c: certificate status requestion response
+	is optional according to RFC6066
+
+2016-10-18  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool.c: certtool: allow setting key purposes for non-CA
+	certificates That is, allow setting code signing, or time stamping key purpose in
+	certificates that are not marked as CA. The previous restriction
+	served no purpose.
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/multi-alerts.c: tests: added check to
+	verify that the server will bail out after many alerts
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/naked-alerts.c: tests: added check to
+	verify that the server will bail out after receiving only alerts
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/cert-common.h: tests: backported the common certs from
+	master
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/gnutls_handshake.c, lib/gnutls_int.h, lib/gnutls_state.c: 
+	handshake: set a maximum number of warning messages that can be
+	received per handshake That is to avoid DoS due to the assymetry of cost of sending an
+	alert vs the cost of processing.
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/gnutls_record.c: record: disallow parsing of alert messages
+	prior to session start
+
+2016-10-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool-common.c: certtool: improve text on missing options
+	for cert generation
+
+2016-10-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/pkcs11.c: p11tool: avoid asking the security officer PIN twice
+	on initialization
+
+2016-10-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/pkcs11.c: p11tool: improved messages on token initialization
+
+2016-10-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/pkcs11.c: p11tool: corrected check of PIN existance in token
+	initialization
+
+2016-10-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/Makefile.am: tests: link tests which utilize nettle with
+	nettle
+
+2016-10-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* doc/Makefile.am, doc/manpages/Makefile.am: updated auto-generated
+	files
+
+2016-10-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update
+
+2016-10-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/gnutls_extensions.c: TLS extensions: only cache the extension
+	IDs from exts that the server supports That avoids imposing any artificial limits on the number of
+	extensions that a server can handle.  Resolves #136
+
+2016-10-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool.c: certtool: added safety net when generating a
+	certificate request That is, do not allow specifying --generate-request --load-pubkey
+	without specifying --load-privkey. Previously if --load-pubkey would
+	have been used, it would have been ignored, causing confusion to the
+	users.
+
+2016-09-19  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-09-16  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/gnutls_handshake.c, lib/gnutls_int.h: Increased the maximum
+	size allowed for handshake messages to 128kb This would allow the library to cope with larger packets, as well as
+	TLS 1.3 hellos. Suggested by Hubert Kario.
+
+2016-09-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-09-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/gnutls_x509.c: gnutls_certificate_set_*key: ensure proper
+	cleanup on key mismatch failures That is, ensure that we keep no local references that are shared
+	with the caller, and that we properly free all initialized values.
+
+2016-09-07  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update
+
+2016-09-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/system.c: _gnutls_ucs2_to_utf8: fixed use of
+	WideCharToMultiByte in windows
+
+2016-09-06  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/ocsptool.c: ocsptool: do not enter a spurious newline to
+	responses.
+
+2015-11-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/cert-tests/Makefile.am, tests/cert-tests/template-test,
+	tests/cert-tests/template-unique.pem,
+	tests/cert-tests/template-unique.tmpl: tests: verify that unique IDs
+	are generated as expected
+
+2015-11-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool-args.def, src/certtool-cfg.c, src/certtool-cfg.h,
+	src/certtool.c: certtool: Allow writing unique IDs in generated
+	certificates
+
+2016-09-05  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-09-05  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* configure.ac, m4/hooks.m4: bumped version
+
+2015-11-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/includes/gnutls/x509.h, lib/libgnutls.map,
+	lib/x509/x509_write.c: Added gnutls_x509_crt_set_issuer_unique_id()
+	and gnutls_x509_crt_set_subject_unique_id()
+
+2016-09-05  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-09-03  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/gnutls_pk.c: _gnutls_encode_ber_rs_raw: zero-pad values when
+	necessary This addresses issue when encoding values obtained via PKCS#11 which
+	may not be necessarily padded.  Resolves #122
+
+2016-09-03  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/cert-tests/template-test: tests: don't run overflow tests on
+	archs which fail This addresses a CI failure on x86.
+
+2016-09-03  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/slow/hash-large.c: tests: backported hash-large from master
+
+2016-09-03  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* .gitlab-ci.yml: .gitlab-ci.yml: use the gitlab.com shared runners Backported from master branch
+
+2016-08-28  David Woodhouse <dwmw2@infradead.org>
+
+	* lib/x509/pkcs12.c: gnutls_pkcs12_simple_parse: set the key value
+	to null on failure
+
+2016-08-27  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/x509/ocsp.c: ocsp: corrected the comparison of the serial size
+	in OCSP response Previously the OCSP certificate check wouldn't verify the serial
+	length and could succeed in cases it shouldn't.  Reported by Stefan Buehler.
+
+2016-08-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/pkcs8-decode/Makefile.am, tests/pkcs8-decode/pkcs8,
+	tests/pkcs8-decode/pkcs8-pbes2-sha256.pem: tests: added decoding of
+	key with pbes2 and SHA256 PRF
+
+2016-08-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS, lib/algorithms.h, lib/algorithms/mac.c, lib/gnutls_int.h,
+	lib/includes/gnutls/x509.h, lib/pkix.asn, lib/pkix_asn1_tab.c,
+	lib/x509/Makefile.am, lib/x509/pbkdf2-sha1.c,
+	lib/x509/pbkdf2-sha1.h, lib/x509/pkcs12.c,
+	lib/x509/privkey_openssl.c, lib/x509/privkey_pkcs8.c,
+	lib/x509/x509_int.h, tests/gc.c: Added support for decrypting PKCS#8
+	files which use HMAC-SHA256 as PRF This backports nettle pbkdf2 support, and improves compatibility
+	with new openssl versions.
+
+2014-08-04  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/pkcs12.c: pkcs12: increased the number of iterations for
+	MAC
+
+2016-08-10  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/crypto-api.c: gnutls_key_generate: fail if the state of the
+	library is invalid Suggested by Stephan Mueller.
+
+2016-08-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-08-08  Stefan Sørensen <stefan.sorensen@spectralink.com>
+
+	* lib/x509/pkcs12.c: Fix gnutls_pkcs12_simple_parse to always
+	extract the complete chain gnutls_pkcs12_simple_parse was only collecting extra certificates
+	that was possible elements of the certificate chain when the
+	extra_certs argument was not NULL. Fix by allways collecting all the
+	certificates, any unneeded certificates are released before
+	returning if extra_certs is NULL anyway.  Signed-off-by: Stefan Sørensen <stefan.sorensen@spectralink.com>
+
+2016-08-07  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/nettle/pk.c: nettle: use rsa_*_key_prepare on key import Previously we calculated the size of the key directly, but by using
+	the rsa_*_key_prepare we benefit from any checks that may be
+	introduced in the future. Specifically any checks for invalid public
+	keys (e.g., keys that may crash the underlying gmp functions).  This patch avoids calling rsa_private_key_prepare every time we
+	construct a nettle private key struct, because this function
+	requires a bigint multiplication. We call that function once on
+	private key import.
+
+2016-08-08  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: Revert "nettle: use rsa_*_key_prepare" This reverts commit a2c3ee54ea8080eeb59fcfeec88a842324982c90.
+
+2016-08-01  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: nettle: use rsa_*_key_prepare Previously we calculated the size of the key directly, but by using
+	the rsa_*_key_prepare we benefit from any checks that may be
+	introduced in the future. Specifically any checks for invalid public
+	keys (e.g., keys that may crash the underlying gmp functions).
+
+2016-07-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2016-07-09  Tim Kosse <tim.kosse@filezilla-project.org>
+
+	* lib/x509/x509.c: gnutls_x509_crt_list_import2 was ignoring the
+	passed flags if all certificates in the list fit within the
+	initially allocated memory.
+
+2016-07-09  Tim Kosse <tim.kosse@filezilla-project.org>
+
+	* lib/x509/crl.c: gnutls_x509_crl_list_import2 was ignoring the
+	passed flags if all CTLs in the list fit within the initially
+	allocated memory.
+
+2016-07-25  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/minitasn1/coding.c, lib/minitasn1/decoding.c,
+	lib/minitasn1/element.c, lib/minitasn1/element.h,
+	lib/minitasn1/int.h, lib/minitasn1/libtasn1.h,
+	lib/minitasn1/parser_aux.c, lib/minitasn1/parser_aux.h,
+	lib/minitasn1/structure.c: minitasn1: updated to libtasn1 4.9
+
+2016-07-08  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: NEWS: corrected release date [ci skip]
+
 2016-07-06  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* NEWS: released 3.3.24
@@ -64,13 +618,12 @@
 
 2016-06-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
-	* tests/Makefile.am, tests/pkcs11/pkcs11-chainverify.c,
-	tests/pkcs11/pkcs11-combo.c, tests/pkcs11/pkcs11-get-issuer.c,
-	tests/pkcs11/pkcs11-is-known.c, tests/pkcs11/softhsm.h,
-	tests/suite/Makefile.am, tests/suite/pkcs11-chainverify.c,
-	tests/suite/pkcs11-combo.c, tests/suite/pkcs11-get-issuer.c,
-	tests/suite/pkcs11-is-known.c, tests/suite/softhsm.h: tests: moved
-	pkcs11 tests to main test suite
+	* tests/Makefile.am, tests/{suite => pkcs11}/pkcs11-chainverify.c,
+	tests/{suite => pkcs11}/pkcs11-combo.c, tests/{suite =>
+	pkcs11}/pkcs11-get-issuer.c, tests/{suite =>
+	pkcs11}/pkcs11-is-known.c, tests/{suite => pkcs11}/softhsm.h,
+	tests/suite/Makefile.am: tests: moved pkcs11 tests to main test
+	suite
 
 2016-06-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -1482,7 +2035,7 @@
 	* tests/Makefile.am, tests/sign-md5-rep.c: tests: added reproducer
 	for the MD5 acceptance issue Reported by Karthikeyan Bhargavan.
 
-	http://lists.gnutls.org/pipermail/gnutls-devel/2015-April/007572.htmlConflicts: 	tests/Makefile.am
+	http://lists.gnutls.org/pipermail/gnutls-devel/2015-April/007572.htmlConflicts:         tests/Makefile.am
 
 2015-04-25  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -1945,7 +2498,7 @@
 
 2015-01-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
-	* lib/pkcs11.c: pkcs11: cleanup the name of types Conflicts: 	lib/pkcs11.c
+	* lib/pkcs11.c: pkcs11: cleanup the name of types Conflicts:         lib/pkcs11.c
 
 2015-01-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -2353,7 +2906,7 @@
 	* tests/suite/pkcs11-chainverify.c, tests/suite/pkcs11-combo.c,
 	tests/suite/pkcs11-get-issuer.c, tests/suite/pkcs11-is-known.c,
 	tests/suite/softhsm.h, tests/suite/testpkcs11.softhsm: Added
-	softhsm.h to share code in softhsm detection Conflicts: 	tests/suite/pkcs11-chainverify.c 	tests/suite/pkcs11-privkey.c
+	softhsm.h to share code in softhsm detection Conflicts:         tests/suite/pkcs11-chainverify.c         tests/suite/pkcs11-privkey.c
 
 2014-12-21  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -2549,7 +3102,7 @@
 2014-11-21  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* tests/Makefile.am, tests/mini-rehandshake-2.c: tests: added test
-	for GNUTLS_E_GOT_APPLICATION_DATA on rehandshake Conflicts: 	tests/Makefile.am
+	for GNUTLS_E_GOT_APPLICATION_DATA on rehandshake Conflicts:         tests/Makefile.am
 
 2014-11-21  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -2610,7 +3163,7 @@
 2014-11-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
 	* lib/x509/ocsp.c: use the original DER/BER data when verifying an
-	OCSP response Conflicts: 	lib/x509/ocsp.c
+	OCSP response Conflicts:         lib/x509/ocsp.c
 
 2014-11-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -2619,7 +3172,7 @@
 2014-11-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* src/cli-debug.c, src/tests.c, src/tests.h: gnutls-cli-debug: check
-	for OCSP status response Conflicts: 	src/tests.c
+	for OCSP status response Conflicts:         src/tests.c
 
 2014-11-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -2781,7 +3334,7 @@
 2014-10-31  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* tests/Makefile.am, tests/init_fds.c: tests: added test for
-	gnutls_global_init after all descriptors are closed Conflicts: 	tests/Makefile.am
+	gnutls_global_init after all descriptors are closed Conflicts:         tests/Makefile.am
 
 2014-10-31  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -2805,7 +3358,7 @@
 
 	* lib/gnutls_state.c, lib/includes/gnutls/gnutls.h.in,
 	lib/libgnutls.map, lib/nettle/rnd-common.c: dropped
-	gnutls_fd_in_use, it is no longer necessary Conflicts: 	lib/libgnutls.map
+	gnutls_fd_in_use, it is no longer necessary Conflicts:         lib/libgnutls.map
 
 2014-10-31  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -2813,7 +3366,7 @@
 	lib/nettle/rnd-common.c, lib/nettle/rnd-common.h, lib/nettle/rnd.c,
 	lib/random.h: When gnutls_global_init() is called manually from the
 	application check the urandom fd for validity That addresses the issue where a server closes all open file
-	descriptors and then calls gnutls_global_init().  Conflicts: 	lib/nettle/rnd-common.c
+	descriptors and then calls gnutls_global_init().  Conflicts:         lib/nettle/rnd-common.c
 
 2014-10-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3107,7 +3660,7 @@
 2014-10-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* lib/gnutls_handshake.c, lib/gnutls_int.h, lib/gnutls_state.c: 
-	added internal variable to track handshake status Conflicts: 	lib/gnutls_handshake.c
+	added internal variable to track handshake status Conflicts:         lib/gnutls_handshake.c
 
 2014-10-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3127,7 +3680,7 @@
 
 	* tests/chainverify.c, tests/suite/pkcs11-chainverify.c,
 	tests/test-chains.h: tests: allow running specific chainverify tests
-	on fixed dates Conflicts: 	tests/chainverify.c 	tests/suite/pkcs11-chainverify.c 	tests/test-chains.h
+	on fixed dates Conflicts:         tests/chainverify.c         tests/suite/pkcs11-chainverify.c         tests/test-chains.h
 
 2014-10-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3158,7 +3711,7 @@
 
 	* lib/x509/verify-high.c: when both a trust module and additional
 	CAs are present account the latter as well That solves an issue in openconnect which used the system trust
-	module, plus additional certificates.  Conflicts: 	lib/x509/verify-high.c
+	module, plus additional certificates.  Conflicts:         lib/x509/verify-high.c
 
 2014-10-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3530,7 +4083,7 @@
 	lib/pkcs11_int.c, lib/pkcs11_int.h, lib/x509/common.h,
 	lib/x509/output.c, lib/x509/x509_ext.c: allow retrieving extensions
 	in a trust module using
-	GNUTLS_PKCS11_OBJ_FLAG_OVERWRITE_TRUSTMOD_EXT Conflicts: 	lib/pkcs11.c
+	GNUTLS_PKCS11_OBJ_FLAG_OVERWRITE_TRUSTMOD_EXT Conflicts:         lib/pkcs11.c
 
 2014-09-10  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3548,7 +4101,7 @@
 	lib/includes/gnutls/x509.h, lib/libgnutls.map,
 	lib/x509/verify-high.c: gnutls_x509_trust_list_verify_crt2 is in par
 	with gnutls_certificate_verify_peers That is, it accepts a list of gnutls_typed_vdata_st and allows for
-	flexibility.  Conflicts: 	lib/libgnutls.map
+	flexibility.  Conflicts:         lib/libgnutls.map
 
 2014-09-08  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -3564,7 +4117,7 @@
 
 	* lib/gnutls_x509.c, lib/includes/gnutls/x509.h, lib/libgnutls.map,
 	lib/x509/verify-high.c: Added
-	gnutls_x509_trust_list_verify_purpose_crt() Conflicts: 	lib/libgnutls.map
+	gnutls_x509_trust_list_verify_purpose_crt() Conflicts:         lib/libgnutls.map
 
 2014-09-13  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -3582,7 +4135,7 @@
 2014-09-13  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* tests/Makefile.am, tests/crlverify.c: tests: Added crlverify to
-	check gnutls_x509_crl_verify and gnutls_x509_trust_list_add_crls Conflicts: 	tests/Makefile.am
+	check gnutls_x509_crl_verify and gnutls_x509_trust_list_add_crls Conflicts:         tests/Makefile.am
 
 2014-09-13  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -3810,7 +4363,7 @@
 	rounds One round is before the AES acceleration is registered, and the
 	second is after. That is to allow testing of the AES implementation
 	used in the DRBG. That is a hack until nettle handles all cipher
-	acceleration.  Conflicts: 	lib/gnutls_global.c
+	acceleration.  Conflicts:         lib/gnutls_global.c
 
 2014-09-01  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -4335,7 +4888,7 @@
 	* lib/includes/gnutls/pkcs11.h, lib/libgnutls.map,
 	lib/pkcs11_privkey.c, src/pkcs11.c: changed semantics of
 	gnutls_pkcs11_privkey_get_pubkey; named
-	gnutls_pkcs11_privkey_export_pubkey Conflicts: 	lib/libgnutls.map
+	gnutls_pkcs11_privkey_export_pubkey Conflicts:         lib/libgnutls.map
 
 2014-08-06  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -4399,7 +4952,7 @@
 2014-07-31  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
 	* lib/nettle/rnd-common.c, lib/system.h, lib/x509/verify-high2.c: 
-	several windows compilation fixes Conflicts: 	lib/atfork.h
+	several windows compilation fixes Conflicts:         lib/atfork.h
 
 2014-07-29  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -6075,9 +6628,9 @@
 	lib/accelerated/x86/aes-padlock.c,
 	lib/accelerated/x86/sha-padlock.c,
 	lib/accelerated/x86/sha-x86-ssse3.c,
-	lib/accelerated/x86/x86-common.c, lib/accelerated/x86/x86-common.h,
-	lib/accelerated/x86/x86.h: x86.h was renamed to x86-common.h to
-	avoid clashes with system headers.
+	lib/accelerated/x86/x86-common.c, lib/accelerated/x86/{x86.h =>
+	x86-common.h}: x86.h was renamed to x86-common.h to avoid clashes
+	with system headers.
 
 2014-04-27  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -6715,18 +7268,16 @@
 
 2014-04-03  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* configure.ac, tests/Makefile.am, tests/key-id/Makefile.am,
-	tests/key-id/README, tests/key-id/ca-gnutls-keyid.pem,
-	tests/key-id/ca-no-keyid.pem, tests/key-id/ca-weird-keyid.pem,
-	tests/key-id/key-ca.pem, tests/key-id/key-id,
-	tests/key-id/key-user.pem, tests/key-tests/Makefile.am,
-	tests/key-tests/README, tests/key-tests/ca-gnutls-keyid.pem,
-	tests/key-tests/ca-no-keyid.pem,
-	tests/key-tests/ca-weird-keyid.pem, tests/key-tests/key-ca-1234.p8,
+	* configure.ac, tests/Makefile.am, tests/{key-id =>
+	key-tests}/Makefile.am, tests/{key-id => key-tests}/README,
+	tests/{key-id => key-tests}/ca-gnutls-keyid.pem, tests/{key-id =>
+	key-tests}/ca-no-keyid.pem, tests/{key-id =>
+	key-tests}/ca-weird-keyid.pem, tests/key-tests/key-ca-1234.p8,
 	tests/key-tests/key-ca-empty.p8, tests/key-tests/key-ca-null.p8,
-	tests/key-tests/key-ca.pem, tests/key-tests/key-id,
-	tests/key-tests/key-user.pem, tests/key-tests/pkcs8: Added self-test
-	for PKCS #8 key conversion and reading
+	tests/{key-id => key-tests}/key-ca.pem, tests/{key-id =>
+	key-tests}/key-id, tests/{key-id => key-tests}/key-user.pem,
+	tests/key-tests/pkcs8: Added self-test for PKCS #8 key conversion
+	and reading
 
 2014-04-03  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -7235,9 +7786,9 @@
 
 2014-03-06  Kevin Cernekee <cernekee@gmail.com>
 
-	* .gitignore, doc/manpages/Makefile.am, src/Makefile.am,
-	src/psk-args.def, src/psk.c, src/psktool-args.def: Rename
-	psk-args.def to psktool-args.def Other utilities generate invoke-%.texi from %-args.def, but
+	* .gitignore, doc/manpages/Makefile.am, src/Makefile.am, src/psk.c,
+	src/{psk-args.def => psktool-args.def}: Rename psk-args.def to
+	psktool-args.def Other utilities generate invoke-%.texi from %-args.def, but
 	currently invoke-psktool.texi is generated from psk-args.def.  If we
 	make psktool conform to the same convention as the other utilities,
 	we can use a generic pattern to handle all of them the same way.  Signed-off-by: Kevin Cernekee <cernekee@gmail.com>
@@ -8486,7 +9037,7 @@
 2014-01-26  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* doc/scripts/getfuncs-map.pl, lib/libgnutls.map: added
-	gnutls_realloc_fast to false positives Conflicts: 	lib/libgnutls.map
+	gnutls_realloc_fast to false positives Conflicts:         lib/libgnutls.map
 
 2014-01-26  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -9392,7 +9943,7 @@
 
 2013-12-20  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* lib/Makefile.am: libtasn1 generated files are set in BUILT_SOURCES Conflicts: 	lib/Makefile.am
+	* lib/Makefile.am: libtasn1 generated files are set in BUILT_SOURCES Conflicts:         lib/Makefile.am
 
 2013-12-18  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -9573,11 +10124,9 @@
 
 2013-12-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* lib/accelerated/x86/Makefile.am,
-	lib/accelerated/x86/hmac-x86-ssse3.c,
-	lib/accelerated/x86/hmac-x86.c,
-	lib/accelerated/x86/sha-x86-ssse3.c, lib/accelerated/x86/sha-x86.c: 
-	use better names for files
+	* lib/accelerated/x86/Makefile.am, lib/accelerated/x86/{hmac-x86.c
+	=> hmac-x86-ssse3.c}, lib/accelerated/x86/{sha-x86.c =>
+	sha-x86-ssse3.c}: use better names for files
 
 2013-12-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -9590,13 +10139,12 @@
 2013-12-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* lib/accelerated/x86/Makefile.am,
-	lib/accelerated/x86/aes-gcm-x86-pclmul.c,
+	lib/accelerated/x86/{aes-gcm-x86.c => aes-gcm-x86-pclmul.c},
 	lib/accelerated/x86/aes-gcm-x86-ssse3.c,
-	lib/accelerated/x86/aes-gcm-x86.c, lib/accelerated/x86/aes-x86.c,
-	lib/accelerated/x86/aes-x86.h, lib/accelerated/x86/hmac-x86.c,
-	lib/accelerated/x86/sha-x86.c, lib/accelerated/x86/sha-x86.h: When
-	PCLMUL isn't available use the SSSE3 implementation of AES to
-	optimize GCM.
+	lib/accelerated/x86/aes-x86.c, lib/accelerated/x86/aes-x86.h,
+	lib/accelerated/x86/hmac-x86.c, lib/accelerated/x86/sha-x86.c,
+	lib/accelerated/x86/sha-x86.h: When PCLMUL isn't available use the
+	SSSE3 implementation of AES to optimize GCM.
 
 2013-12-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -9690,40 +10238,28 @@
 	devel/perlasm/sha512-ssse3-x86_64.pl,
 	lib/accelerated/x86/Makefile.am, lib/accelerated/x86/aes-padlock.h,
 	lib/accelerated/x86/aes-x86.c,
-	lib/accelerated/x86/coff/aesni-x86.s,
-	lib/accelerated/x86/coff/aesni-x86_64.s,
-	lib/accelerated/x86/coff/appro-aes-gcm-x86-64-coff.s,
-	lib/accelerated/x86/coff/appro-aes-x86-64-coff.s,
-	lib/accelerated/x86/coff/appro-aes-x86-coff.s,
-	lib/accelerated/x86/coff/cpuid-x86-64-coff.s,
-	lib/accelerated/x86/coff/cpuid-x86-coff.s,
-	lib/accelerated/x86/coff/cpuid-x86.s,
-	lib/accelerated/x86/coff/cpuid-x86_64.s,
-	lib/accelerated/x86/coff/e_padlock-x86.s,
-	lib/accelerated/x86/coff/e_padlock-x86_64.s,
-	lib/accelerated/x86/coff/ghash-x86_64.s,
-	lib/accelerated/x86/coff/openssl-cpuid-x86.s,
+	lib/accelerated/x86/coff/{appro-aes-x86-coff.s => aesni-x86.s},
+	lib/accelerated/x86/coff/{appro-aes-x86-64-coff.s =>
+	aesni-x86_64.s}, lib/accelerated/x86/coff/{cpuid-x86-coff.s =>
+	cpuid-x86.s}, lib/accelerated/x86/coff/{cpuid-x86-64-coff.s =>
+	cpuid-x86_64.s}, lib/accelerated/x86/coff/{padlock-x86-coff.s =>
+	e_padlock-x86.s}, lib/accelerated/x86/coff/{padlock-x86-64-coff.s
+	=> e_padlock-x86_64.s},
+	lib/accelerated/x86/coff/{appro-aes-gcm-x86-64-coff.s =>
+	ghash-x86_64.s}, lib/accelerated/x86/coff/openssl-cpuid-x86.s,
 	lib/accelerated/x86/coff/openssl-cpuid-x86_64.s,
-	lib/accelerated/x86/coff/padlock-x86-64-coff.s,
-	lib/accelerated/x86/coff/padlock-x86-coff.s,
 	lib/accelerated/x86/coff/sha1-ssse3-x86.s,
 	lib/accelerated/x86/coff/sha1-ssse3-x86_64.s,
 	lib/accelerated/x86/coff/sha256-avx-x86_64.s,
 	lib/accelerated/x86/coff/sha256-ssse3-x86.s,
 	lib/accelerated/x86/coff/sha512-ssse3-x86.s,
 	lib/accelerated/x86/coff/sha512-ssse3-x86_64.s,
-	lib/accelerated/x86/elf/aesni-x86.s,
-	lib/accelerated/x86/elf/aesni-x86_64.s,
-	lib/accelerated/x86/elf/appro-aes-gcm-x86-64.s,
-	lib/accelerated/x86/elf/appro-aes-x86-64.s,
-	lib/accelerated/x86/elf/appro-aes-x86.s,
-	lib/accelerated/x86/elf/cpuid-x86-64.s,
-	lib/accelerated/x86/elf/cpuid-x86_64.s,
-	lib/accelerated/x86/elf/e_padlock-x86.s,
-	lib/accelerated/x86/elf/e_padlock-x86_64.s,
-	lib/accelerated/x86/elf/ghash-x86_64.s,
-	lib/accelerated/x86/elf/padlock-x86-64.s,
-	lib/accelerated/x86/elf/padlock-x86.s,
+	lib/accelerated/x86/elf/{appro-aes-x86.s => aesni-x86.s},
+	lib/accelerated/x86/elf/{appro-aes-x86-64.s => aesni-x86_64.s},
+	lib/accelerated/x86/elf/{cpuid-x86-64.s => cpuid-x86_64.s},
+	lib/accelerated/x86/elf/{padlock-x86.s => e_padlock-x86.s},
+	lib/accelerated/x86/elf/{padlock-x86-64.s => e_padlock-x86_64.s},
+	lib/accelerated/x86/elf/{appro-aes-gcm-x86-64.s => ghash-x86_64.s},
 	lib/accelerated/x86/elf/sha1-ssse3-x86.s,
 	lib/accelerated/x86/elf/sha1-ssse3-x86_64.s,
 	lib/accelerated/x86/elf/sha256-avx-x86_64.s,
@@ -9731,22 +10267,19 @@
 	lib/accelerated/x86/elf/sha512-ssse3-x86.s,
 	lib/accelerated/x86/elf/sha512-ssse3-x86_64.s,
 	lib/accelerated/x86/files.mk, lib/accelerated/x86/hmac-x86.c,
-	lib/accelerated/x86/macosx/aesni-x86.s,
-	lib/accelerated/x86/macosx/aesni-x86_64.s,
-	lib/accelerated/x86/macosx/appro-aes-gcm-x86-64-macosx.s,
-	lib/accelerated/x86/macosx/appro-aes-x86-64-macosx.s,
-	lib/accelerated/x86/macosx/appro-aes-x86-macosx.s,
-	lib/accelerated/x86/macosx/cpuid-x86-64-macosx.s,
+	lib/accelerated/x86/macosx/{appro-aes-x86-macosx.s => aesni-x86.s},
+	lib/accelerated/x86/macosx/{appro-aes-x86-64-macosx.s =>
+	aesni-x86_64.s}, lib/accelerated/x86/macosx/cpuid-x86-64-macosx.s,
 	lib/accelerated/x86/macosx/cpuid-x86-macosx.s,
 	lib/accelerated/x86/macosx/cpuid-x86.s,
 	lib/accelerated/x86/macosx/cpuid-x86_64.s,
-	lib/accelerated/x86/macosx/e_padlock-x86.s,
-	lib/accelerated/x86/macosx/e_padlock-x86_64.s,
-	lib/accelerated/x86/macosx/ghash-x86_64.s,
-	lib/accelerated/x86/macosx/openssl-cpuid-x86.s,
+	lib/accelerated/x86/macosx/{padlock-x86-macosx.s =>
+	e_padlock-x86.s},
+	lib/accelerated/x86/macosx/{padlock-x86-64-macosx.s =>
+	e_padlock-x86_64.s},
+	lib/accelerated/x86/macosx/{appro-aes-gcm-x86-64-macosx.s =>
+	ghash-x86_64.s}, lib/accelerated/x86/macosx/openssl-cpuid-x86.s,
 	lib/accelerated/x86/macosx/openssl-cpuid-x86_64.s,
-	lib/accelerated/x86/macosx/padlock-x86-64-macosx.s,
-	lib/accelerated/x86/macosx/padlock-x86-macosx.s,
 	lib/accelerated/x86/macosx/sha1-ssse3-x86.s,
 	lib/accelerated/x86/macosx/sha1-ssse3-x86_64.s,
 	lib/accelerated/x86/macosx/sha256-avx-x86_64.s,
@@ -10032,7 +10565,7 @@
 
 2013-11-30  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* : Merged the FIPS140-2 support code.  Conflicts: 	lib/gnutls_global.c 	tests/mini-overhead.c
+	* : Merged the FIPS140-2 support code.  Conflicts:         lib/gnutls_global.c         tests/mini-overhead.c
 
 2013-11-30  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -10264,11 +10797,11 @@
 
 2013-11-25  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
-	* configure.ac, lib/nettle/Makefile.am, lib/nettle/gcm-camellia.c,
-	lib/nettle/gcm-camellia.h, lib/nettle/int/drbg-aes-self-test.c,
-	lib/nettle/int/drbg-aes.c, lib/nettle/int/drbg-aes.h,
-	lib/nettle/int/gcm-camellia.c, lib/nettle/int/gcm-camellia.h,
-	lib/nettle/rnd-fips.c: Added DRBG submitted to nettle in gnutls.
+	* configure.ac, lib/nettle/Makefile.am,
+	lib/nettle/int/drbg-aes-self-test.c, lib/nettle/int/drbg-aes.c,
+	lib/nettle/int/drbg-aes.h, lib/nettle/{ => int}/gcm-camellia.c,
+	lib/nettle/{ => int}/gcm-camellia.h, lib/nettle/rnd-fips.c: Added
+	DRBG submitted to nettle in gnutls.
 
 2013-11-25  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -10568,7 +11101,7 @@
 	lib/x509/verify-high.c, lib/x509/x509.c, lib/xssl.c: Added support
 	for fips states.  This implies that when in FIPS mode and the library is not in
 	operational state (i.e., all self checks succeeded), crypto
-	functionality of the library will fail.  This includes: 	* API functions of gnutls/crypto.h 	* API functions of gnutls/abstract.h 	* API functions of gnutls/x509.h 	* gnutls_init() 	* API functions of gnutls/xssl.h
+	functionality of the library will fail.  This includes:         * API functions of gnutls/crypto.h         * API functions of gnutls/abstract.h         * API functions of gnutls/x509.h         * gnutls_init()         * API functions of gnutls/xssl.h
 
 2013-11-11  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -10662,7 +11195,7 @@
 2013-11-26  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
 	* configure.ac, lib/Makefile.am: Do not link gnutls against librt
-	unlress it is really necessary.  Conflicts: 	configure.ac 	lib/Makefile.am
+	unlress it is really necessary.  Conflicts:         configure.ac         lib/Makefile.am
 
 2013-11-24  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -10723,10 +11256,9 @@
 2013-11-23  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* gl/Makefile.am, gl/m4/gnulib-cache.m4, gl/m4/gnulib-comp.m4,
-	gl/strerror-override.c, gl/strerror-override.h, gl/strerror.c,
-	gl/tests/Makefile.am, gl/tests/strerror-override.c,
-	gl/tests/strerror-override.h, gl/tests/strerror.c: Added strerror
-	module.
+	gl/{tests => }/strerror-override.c, gl/{tests =>
+	}/strerror-override.h, gl/{tests => }/strerror.c,
+	gl/tests/Makefile.am: Added strerror module.
 
 2013-11-23  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -11031,11 +11563,10 @@
 
 2013-11-13  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
-	* gl/Makefile.am, gl/base64.c, gl/intprops.h,
+	* gl/Makefile.am, gl/base64.c, gl/{tests => }/intprops.h,
 	gl/m4/extern-inline.m4, gl/m4/gnulib-cache.m4,
-	gl/m4/gnulib-comp.m4, gl/tests/Makefile.am, gl/tests/intprops.h,
-	maint.mk: Added intprops module (which is needed by newer libtasn1
-	versions)
+	gl/m4/gnulib-comp.m4, gl/tests/Makefile.am, maint.mk: Added intprops
+	module (which is needed by newer libtasn1 versions)
 
 2013-11-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
 
@@ -12551,19 +13082,18 @@
 	gl/basename-lgpl.c, gl/bind.c, gl/byteswap.in.h, gl/c-ctype.c,
 	gl/c-ctype.h, gl/close.c, gl/closedir.c, gl/connect.c,
 	gl/dirent-private.h, gl/dirent.in.h, gl/dirname-lgpl.c,
-	gl/dirname.h, gl/dosname.h, gl/dup2.c, gl/errno.in.h, gl/error.c,
-	gl/error.h, gl/fd-hook.c, gl/fd-hook.h, gl/filename.h, gl/float+.h,
-	gl/float.c, gl/float.in.h, gl/fpucw.h, gl/frexp.c, gl/frexpl.c,
-	gl/fseek.c, gl/fseeko.c, gl/fseterr.c, gl/fseterr.h, gl/fstat.c,
-	gl/ftell.c, gl/ftello.c, gl/gai_strerror.c, gl/getaddrinfo.c,
-	gl/getdelim.c, gl/getline.c, gl/getopt.c, gl/getopt.in.h,
-	gl/getopt1.c, gl/getopt_int.h, gl/getpass.c, gl/getpass.h,
-	gl/getpeername.c, gl/getsubopt.c, gl/gettext.h, gl/gettimeofday.c,
-	gl/hash-pjw-bare.c, gl/hash-pjw-bare.h, gl/inet_ntop.c,
-	gl/inet_pton.c, gl/intprops.h, gl/isnan.c, gl/isnand-nolibm.h,
-	gl/isnand.c, gl/isnanf-nolibm.h, gl/isnanf.c, gl/isnanl-nolibm.h,
-	gl/isnanl.c, gl/itold.c, gl/listen.c, gl/lseek.c,
-	gl/m4/alphasort.m4, gl/m4/argp.m4, gl/m4/closedir.m4,
+	gl/dirname.h, gl/dup2.c, gl/errno.in.h, gl/error.c, gl/error.h,
+	gl/fd-hook.c, gl/fd-hook.h, gl/filename.h, gl/float+.h, gl/float.c,
+	gl/float.in.h, gl/frexp.c, gl/frexpl.c, gl/fseek.c, gl/fseeko.c,
+	gl/fseterr.c, gl/fseterr.h, gl/fstat.c, gl/ftell.c, gl/ftello.c,
+	gl/gai_strerror.c, gl/getaddrinfo.c, gl/getdelim.c, gl/getline.c,
+	gl/getopt.c, gl/getopt.in.h, gl/getopt1.c, gl/getopt_int.h,
+	gl/getpass.c, gl/getpass.h, gl/getpeername.c, gl/getsubopt.c,
+	gl/gettext.h, gl/gettimeofday.c, gl/hash-pjw-bare.c,
+	gl/hash-pjw-bare.h, gl/inet_ntop.c, gl/inet_pton.c, gl/isnan.c,
+	gl/isnand-nolibm.h, gl/isnand.c, gl/isnanf-nolibm.h, gl/isnanf.c,
+	gl/isnanl-nolibm.h, gl/isnanl.c, gl/itold.c, gl/listen.c,
+	gl/lseek.c, gl/m4/alphasort.m4, gl/m4/argp.m4, gl/m4/closedir.m4,
 	gl/m4/dirent_h.m4, gl/m4/dirname.m4, gl/m4/double-slash-root.m4,
 	gl/m4/eealloc.m4, gl/m4/environ.m4, gl/m4/error.m4,
 	gl/m4/exponentf.m4, gl/m4/exponentl.m4, gl/m4/frexp.m4,
@@ -12592,45 +13122,45 @@
 	gl/stdalign.in.h, gl/stdarg.in.h, gl/stdbool.in.h, gl/stddef.in.h,
 	gl/stdint.in.h, gl/stdio-impl.h, gl/stdio.in.h, gl/stdlib.in.h,
 	gl/str-two-way.h, gl/strcasecmp.c, gl/strchrnul.c,
-	gl/strchrnul.valgrind, gl/strdup.c, gl/strerror-override.c,
-	gl/strerror-override.h, gl/strerror.c, gl/string.in.h,
+	gl/strchrnul.valgrind, gl/strdup.c, gl/string.in.h,
 	gl/strings.in.h, gl/stripslash.c, gl/strncasecmp.c, gl/strndup.c,
 	gl/strnlen.c, gl/strtok_r.c, gl/strverscmp.c, gl/sys_select.in.h,
 	gl/sys_socket.in.h, gl/sys_stat.in.h, gl/sys_time.in.h,
 	gl/sys_types.in.h, gl/sys_uio.in.h, gl/sysexits.in.h,
-	gl/tests/Makefile.am, gl/tests/dosname.h, gl/tests/fpucw.h,
-	gl/tests/infinity.h, gl/tests/intprops.h, gl/tests/malloca.c,
-	gl/tests/malloca.h, gl/tests/malloca.valgrind,
+	gl/tests/Makefile.am, gl/{ => tests}/dosname.h, gl/{ =>
+	tests}/fpucw.h, gl/tests/infinity.h, gl/{ => tests}/intprops.h,
+	gl/tests/malloca.c, gl/tests/malloca.h, gl/tests/malloca.valgrind,
 	gl/tests/minus-zero.h, gl/tests/nan.h, gl/tests/putenv.c,
-	gl/tests/randomd.c, gl/tests/randoml.c, gl/tests/setenv.c,
-	gl/tests/strerror-override.c, gl/tests/strerror-override.h,
-	gl/tests/strerror.c, gl/tests/test-argp-2.sh, gl/tests/test-argp.c,
-	gl/tests/test-dirent.c, gl/tests/test-environ.c,
-	gl/tests/test-fprintf-posix.h, gl/tests/test-frexp.c,
-	gl/tests/test-frexp.h, gl/tests/test-frexpl.c,
-	gl/tests/test-fseterr.c, gl/tests/test-getopt.c,
-	gl/tests/test-getopt.h, gl/tests/test-getopt_long.h,
-	gl/tests/test-isnand-nolibm.c, gl/tests/test-isnand.h,
-	gl/tests/test-isnanf-nolibm.c, gl/tests/test-isnanf.h,
-	gl/tests/test-isnanl-nolibm.c, gl/tests/test-isnanl.h,
-	gl/tests/test-malloc-gnu.c, gl/tests/test-malloca.c,
-	gl/tests/test-math.c, gl/tests/test-printf-frexp.c,
-	gl/tests/test-printf-frexpl.c, gl/tests/test-printf-posix.h,
-	gl/tests/test-printf-posix.output, gl/tests/test-rawmemchr.c,
-	gl/tests/test-setenv.c, gl/tests/test-signbit.c,
-	gl/tests/test-sleep.c, gl/tests/test-strchrnul.c,
-	gl/tests/test-sysexits.c, gl/tests/test-unsetenv.c,
-	gl/tests/test-version-etc.c, gl/tests/test-version-etc.sh,
-	gl/tests/test-vfprintf-posix.c, gl/tests/test-vfprintf-posix.sh,
-	gl/tests/test-vprintf-posix.c, gl/tests/test-vprintf-posix.sh,
-	gl/tests/unsetenv.c, gl/time.in.h, gl/time_r.c, gl/u64.h,
-	gl/unistd.in.h, gl/vasnprintf.c, gl/vasnprintf.h, gl/vasprintf.c,
-	gl/verify.h, gl/version-etc-fsf.c, gl/version-etc.c,
-	gl/version-etc.h, gl/vfprintf.c, gl/vprintf.c, gl/vsnprintf.c,
-	gl/w32sock.h, gl/wchar.in.h, gl/xsize.h, src/certtool.c,
-	src/cli-debug.c, src/cli.c, src/danetool.c, src/ocsptool-common.c,
-	src/ocsptool.c, src/p11tool.c, src/psk.c, src/serv.c,
-	src/srptool.c, src/tpmtool.c: gnulib only contains lgplv2 modules
+	gl/tests/randomd.c, gl/tests/randoml.c, gl/tests/setenv.c, gl/{ =>
+	tests}/strerror-override.c, gl/{ => tests}/strerror-override.h,
+	gl/{ => tests}/strerror.c, gl/tests/test-argp-2.sh,
+	gl/tests/test-argp.c, gl/tests/test-dirent.c,
+	gl/tests/test-environ.c, gl/tests/test-fprintf-posix.h,
+	gl/tests/test-frexp.c, gl/tests/test-frexp.h,
+	gl/tests/test-frexpl.c, gl/tests/test-fseterr.c,
+	gl/tests/test-getopt.c, gl/tests/test-getopt.h,
+	gl/tests/test-getopt_long.h, gl/tests/test-isnand-nolibm.c,
+	gl/tests/test-isnand.h, gl/tests/test-isnanf-nolibm.c,
+	gl/tests/test-isnanf.h, gl/tests/test-isnanl-nolibm.c,
+	gl/tests/test-isnanl.h, gl/tests/test-malloc-gnu.c,
+	gl/tests/test-malloca.c, gl/tests/test-math.c,
+	gl/tests/test-printf-frexp.c, gl/tests/test-printf-frexpl.c,
+	gl/tests/test-printf-posix.h, gl/tests/test-printf-posix.output,
+	gl/tests/test-rawmemchr.c, gl/tests/test-setenv.c,
+	gl/tests/test-signbit.c, gl/tests/test-sleep.c,
+	gl/tests/test-strchrnul.c, gl/tests/test-sysexits.c,
+	gl/tests/test-unsetenv.c, gl/tests/test-version-etc.c,
+	gl/tests/test-version-etc.sh, gl/tests/test-vfprintf-posix.c,
+	gl/tests/test-vfprintf-posix.sh, gl/tests/test-vprintf-posix.c,
+	gl/tests/test-vprintf-posix.sh, gl/tests/unsetenv.c, gl/time.in.h,
+	gl/time_r.c, gl/u64.h, gl/unistd.in.h, gl/vasnprintf.c,
+	gl/vasnprintf.h, gl/vasprintf.c, gl/verify.h, gl/version-etc-fsf.c,
+	gl/version-etc.c, gl/version-etc.h, gl/vfprintf.c, gl/vprintf.c,
+	gl/vsnprintf.c, gl/w32sock.h, gl/wchar.in.h, gl/xsize.h,
+	src/certtool.c, src/cli-debug.c, src/cli.c, src/danetool.c,
+	src/ocsptool-common.c, src/ocsptool.c, src/p11tool.c, src/psk.c,
+	src/serv.c, src/srptool.c, src/tpmtool.c: gnulib only contains
+	lgplv2 modules
 
 2013-08-05  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -12810,8 +13340,8 @@
 
 2013-07-26  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* tests/Makefile.am, tests/mini.c, tests/record-sizes.c: Updated
-	mini test.
+	* tests/Makefile.am, tests/{mini.c => record-sizes.c}: Updated mini
+	test.
 
 2013-07-25  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -14545,8 +15075,8 @@
 	* configure.ac, lib/algorithms/ciphersuites.c, lib/algorithms/kx.c,
 	lib/auth/Makefile.am, lib/auth/anon_ecdh.c, lib/auth/cert.c,
 	lib/auth/cert.h, lib/auth/dh_common.c, lib/auth/dhe.c,
-	lib/auth/dhe_psk.c, lib/auth/ecdh_common.c, lib/auth/ecdh_common.h,
-	lib/auth/ecdhe.c, lib/auth/ecdhe.h, lib/auth/rsa_export.c,
+	lib/auth/dhe_psk.c, lib/auth/{ecdh_common.c => ecdhe.c},
+	lib/auth/{ecdh_common.h => ecdhe.h}, lib/auth/rsa_export.c,
 	lib/gnutls_handshake.c, lib/gnutls_kx.c, lib/gnutls_priority.c,
 	lib/gnutls_rsa_export.c, lib/gnutls_state.c, lib/gnutls_ui.c,
 	m4/hooks.m4: Added options to disable more key exchange mechanisms.  In that DHE was separated from ECDHE.
@@ -15646,10 +16176,10 @@
 
 	* NEWS, lib/Makefile.am, lib/gnutls_cert.c, lib/gnutls_errors.c,
 	lib/includes/Makefile.am, lib/includes/gnutls/gnutls.h.in,
-	lib/includes/gnutls/sbuf.h, lib/includes/gnutls/xssl.h,
-	lib/libgnutls.map, lib/sbuf.c, lib/sbuf.h, lib/sbuf_getline.c,
-	lib/xssl.c, lib/xssl.h, lib/xssl_getline.c, tests/Makefile.am,
-	tests/mini-sbuf.c, tests/mini-xssl.c: Added new interface.
+	lib/includes/gnutls/{sbuf.h => xssl.h}, lib/libgnutls.map,
+	lib/{sbuf.c => xssl.c}, lib/{sbuf.h => xssl.h}, lib/{sbuf_getline.c
+	=> xssl_getline.c}, tests/Makefile.am, tests/mini-sbuf.c,
+	tests/mini-xssl.c: Added new interface.
 
 2013-01-27  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
@@ -16689,14 +17219,14 @@
 
 2012-11-20  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
-	* build-aux/gendocs.sh, configure.ac, gl/Makefile.am, gl/dup2.c,
-	gl/errno.in.h, gl/m4/errno_h.m4, gl/m4/gnulib-cache.m4,
+	* build-aux/gendocs.sh, configure.ac, gl/Makefile.am, gl/{tests =>
+	}/dup2.c, gl/errno.in.h, gl/m4/errno_h.m4, gl/m4/gnulib-cache.m4,
 	gl/m4/gnulib-comp.m4, gl/m4/select.m4, gl/m4/stdlib_h.m4,
 	gl/select.c, gl/stdlib.in.h, gl/strerror-override.c,
-	gl/strerror-override.h, gl/tests/Makefile.am, gl/tests/dup2.c,
-	gl/tests/fcntl.in.h, gl/tests/test-fcntl-h.c,
-	gl/tests/test-iconv.c, gl/tests/test-select.h, lib/system.c,
-	m4/hooks.m4, maint.mk: use gnulib to detect iconv.
+	gl/strerror-override.h, gl/tests/Makefile.am, gl/tests/fcntl.in.h,
+	gl/tests/test-fcntl-h.c, gl/tests/test-iconv.c,
+	gl/tests/test-select.h, lib/system.c, m4/hooks.m4, maint.mk: use
+	gnulib to detect iconv.
 
 2012-11-20  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 

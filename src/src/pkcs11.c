@@ -522,13 +522,16 @@ pkcs11_token_list(FILE * outfile, unsigned int detailed,
 
 void
 pkcs11_write(FILE * outfile, const char *url, const char *label,
-	     unsigned flags, common_info_st * info)
+	     const char *id, unsigned flags, common_info_st * info)
 {
 	gnutls_x509_crt_t xcrt;
 	gnutls_x509_privkey_t xkey;
 	int ret;
 	unsigned int key_usage = 0;
 	gnutls_datum_t *secret_key;
+	unsigned char raw_id[128];
+	size_t raw_id_size;
+	gnutls_datum_t cid = {NULL, 0};
 
 	pkcs11_common(info);
 
@@ -537,6 +540,17 @@ pkcs11_write(FILE * outfile, const char *url, const char *label,
 
 	if (label == NULL && info->batch == 0) {
 		label = read_str("warning: The object's label was not specified.\nLabel: ");
+	}
+
+	if (id != NULL) {
+		raw_id_size = sizeof(raw_id);
+		ret = gnutls_hex2bin(id, strlen(id), raw_id, &raw_id_size);
+		if (ret < 0) {
+			fprintf(stderr, "Error converting hex: %s\n", gnutls_strerror(ret));
+			exit(1);
+		}
+		cid.data = raw_id;
+		cid.size = raw_id_size;
 	}
 
 	secret_key = load_secret_key(0, info);
@@ -555,7 +569,7 @@ pkcs11_write(FILE * outfile, const char *url, const char *label,
 
 	xcrt = load_cert(0, info);
 	if (xcrt != NULL) {
-		ret = gnutls_pkcs11_copy_x509_crt(url, xcrt, label, flags);
+		ret = gnutls_pkcs11_copy_x509_crt2(url, xcrt, label, &cid, flags);
 		if (ret < 0) {
 			fprintf(stderr, "Error writing certificate: %s\n", gnutls_strerror(ret));
 			if (((flags & GNUTLS_PKCS11_OBJ_FLAG_MARK_CA) ||
@@ -571,10 +585,10 @@ pkcs11_write(FILE * outfile, const char *url, const char *label,
 	xkey = load_x509_private_key(0, info);
 	if (xkey != NULL) {
 		ret =
-		    gnutls_pkcs11_copy_x509_privkey(url, xkey, label,
-						    key_usage,
-						    flags |
-						    GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE);
+		    gnutls_pkcs11_copy_x509_privkey2(url, xkey, label,
+						     &cid, key_usage,
+						     flags |
+						     GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE);
 		if (ret < 0) {
 			fprintf(stderr, "Error in %s:%d: %s\n", __func__,
 				__LINE__, gnutls_strerror(ret));
@@ -594,16 +608,30 @@ pkcs11_write(FILE * outfile, const char *url, const char *label,
 void
 pkcs11_generate(FILE * outfile, const char *url, gnutls_pk_algorithm_t pk,
 		unsigned int bits,
-		const char *label, int detailed,
+		const char *label, const char *id, int detailed,
 		unsigned int flags, common_info_st * info)
 {
 	int ret;
 	gnutls_datum_t pubkey;
+	unsigned char raw_id[128];
+	size_t raw_id_size;
+	gnutls_datum_t cid = {NULL, 0};
 
 	pkcs11_common(info);
 
 	FIX(url, outfile, detailed, info);
 	CHECK_LOGIN_FLAG(flags);
+
+	if (id != NULL) {
+		raw_id_size = sizeof(raw_id);
+		ret = gnutls_hex2bin(id, strlen(id), raw_id, &raw_id_size);
+		if (ret < 0) {
+			fprintf(stderr, "Error converting hex: %s\n", gnutls_strerror(ret));
+			exit(1);
+		}
+		cid.data = raw_id;
+		cid.size = raw_id_size;
+	}
 
 	if (outfile == stderr || outfile == stdout) {
 		fprintf(stderr, "warning: no --outfile was specified and the generated public key will be printed on screen.\n");
@@ -616,7 +644,7 @@ pkcs11_generate(FILE * outfile, const char *url, gnutls_pk_algorithm_t pk,
 	}
 
 	ret =
-	    gnutls_pkcs11_privkey_generate2(url, pk, bits, label,
+	    gnutls_pkcs11_privkey_generate3(url, pk, bits, label, &cid,
 					    GNUTLS_X509_FMT_PEM, &pubkey,
 					    flags);
 	if (ret < 0) {
@@ -697,6 +725,11 @@ pkcs11_init(FILE * outfile, const char *url, const char *label,
 		exit(1);
 	}
 
+	if (label == NULL) {
+		fprintf(stderr, "error: no label provided for token initialization!\n");
+		exit(1);
+	}
+
 	if (info->so_pin != NULL)
 		pin = info->so_pin;
 	else {
@@ -712,7 +745,17 @@ pkcs11_init(FILE * outfile, const char *url, const char *label,
 
 	strcpy(so_pin, pin);
 
-	if (info->so_pin != NULL) {
+	fprintf(stderr, "Initializing token... ");
+	ret = gnutls_pkcs11_token_init(url, so_pin, label);
+	if (ret < 0) {
+		fprintf(stderr, "\nError in %s:%d: %s\n", __func__, __LINE__,
+			gnutls_strerror(ret));
+		exit(1);
+	}
+	fprintf(stderr, "done\n");
+
+	fprintf(stderr, "Setting token's user PIN...\n");
+	if (info->pin != NULL) {
 		pin = info->pin;
 	} else {
 		pin = getenv("GNUTLS_PIN");
@@ -722,15 +765,11 @@ pkcs11_init(FILE * outfile, const char *url, const char *label,
 			exit(1);
 	}
 
-	if (pin[0] == '\n')
+	if (pin == NULL || pin[0] == '\n')
 		exit(1);
 
-	ret = gnutls_pkcs11_token_init(url, so_pin, label);
-	if (ret < 0) {
-		fprintf(stderr, "Error in %s:%d: %s\n", __func__, __LINE__,
-			gnutls_strerror(ret));
-		exit(1);
-	}
+	/* do not ask the SO PIN twice */
+	setenv("GNUTLS_SO_PIN", so_pin, 0);
 
 	ret = gnutls_pkcs11_token_set_pin(url, NULL, pin, GNUTLS_PIN_USER);
 	if (ret < 0) {
@@ -1017,4 +1056,57 @@ pkcs11_get_random(FILE * outfile, const char *url, unsigned bytes,
 	fwrite(output, 1, bytes, outfile);
 
 	return;
+}
+
+static
+void pkcs11_set_val(FILE * outfile, const char *url, int detailed,
+		   unsigned int flags, common_info_st * info,
+		   gnutls_pkcs11_obj_info_t val_type, const char *val)
+{
+	int ret;
+	gnutls_pkcs11_obj_t obj;
+
+	pkcs11_common(info);
+
+	FIX(url, outfile, detailed, info);
+	CHECK_LOGIN_FLAG(flags);
+
+	ret = gnutls_pkcs11_obj_init(&obj);
+	if (ret < 0) {
+		fprintf(stderr, "Error in %s:%d: %s\n", __func__, __LINE__,
+			gnutls_strerror(ret));
+		exit(1);
+	}
+
+	ret = gnutls_pkcs11_obj_import_url(obj, url, flags);
+	if (ret < 0) {
+		fprintf(stderr, "Error in %s:%d: %s\n", __func__, __LINE__,
+			gnutls_strerror(ret));
+		exit(1);
+	}
+
+	ret =
+	    gnutls_pkcs11_obj_set_info(obj, val_type, val, strlen(val), flags);
+	if (ret < 0) {
+		fprintf(stderr, "Error in %s:%d: %s\n", __func__, __LINE__,
+			gnutls_strerror(ret));
+		exit(1);
+	}
+	gnutls_pkcs11_obj_deinit(obj);
+
+	return;
+}
+
+void pkcs11_set_id(FILE * outfile, const char *url, int detailed,
+		   unsigned int flags, common_info_st * info,
+		   const char *id)
+{
+	return pkcs11_set_val(outfile, url, detailed, flags, info, GNUTLS_PKCS11_OBJ_ID_HEX, id);
+}
+
+void pkcs11_set_label(FILE * outfile, const char *url, int detailed,
+		   unsigned int flags, common_info_st * info,
+		   const char *label)
+{
+	return pkcs11_set_val(outfile, url, detailed, flags, info, GNUTLS_PKCS11_OBJ_LABEL, label);
 }

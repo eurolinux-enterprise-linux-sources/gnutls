@@ -1324,6 +1324,7 @@ STDNORETURN_H = @STDNORETURN_H@
 STRIP = @STRIP@
 SYS_TIME_H_DEFINES_STRUCT_TIMESPEC = @SYS_TIME_H_DEFINES_STRUCT_TIMESPEC@
 TIME_H_DEFINES_STRUCT_TIMESPEC = @TIME_H_DEFINES_STRUCT_TIMESPEC@
+TROUSERS_LIB = @TROUSERS_LIB@
 TSS_CFLAGS = @TSS_CFLAGS@
 TSS_LIBS = @TSS_LIBS@
 UINT32_MAX_LT_UINTMAX_MAX = @UINT32_MAX_LT_UINTMAX_MAX@
@@ -1416,7 +1417,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = encpkcs8.pem unencpkcs8.pem enc2pkcs8.pem
+EXTRA_DIST = encpkcs8.pem unencpkcs8.pem enc2pkcs8.pem pkcs8-pbes2-sha256.pem
 dist_check_SCRIPTS = pkcs8
 TESTS = pkcs8
 TESTS_ENVIRONMENT = EXEEXT=$(EXEEXT) \

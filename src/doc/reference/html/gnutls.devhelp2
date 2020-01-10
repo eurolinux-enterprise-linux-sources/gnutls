@@ -1447,14 +1447,15 @@
     <keyword type="constant" name="GNUTLS_IA_OCSP_URI" link="gnutls-x509.html#GNUTLS-IA-OCSP-URI:CAPS"/>
     <keyword type="constant" name="GNUTLS_IA_CAISSUERS_URI" link="gnutls-x509.html#GNUTLS-IA-CAISSUERS-URI:CAPS"/>
     <keyword type="constant" name="GNUTLS_PKCS_PLAIN" link="gnutls-x509.html#GNUTLS-PKCS-PLAIN:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PKCS12_3DES" link="gnutls-x509.html#GNUTLS-PKCS-USE-PKCS12-3DES:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PKCS12_ARCFOUR" link="gnutls-x509.html#GNUTLS-PKCS-USE-PKCS12-ARCFOUR:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PKCS12_RC2_40" link="gnutls-x509.html#GNUTLS-PKCS-USE-PKCS12-RC2-40:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PBES2_3DES" link="gnutls-x509.html#GNUTLS-PKCS-USE-PBES2-3DES:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PBES2_AES_128" link="gnutls-x509.html#GNUTLS-PKCS-USE-PBES2-AES-128:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PBES2_AES_192" link="gnutls-x509.html#GNUTLS-PKCS-USE-PBES2-AES-192:CAPS"/>
-    <keyword type="constant" name="GNUTLS_PKCS_USE_PBES2_AES_256" link="gnutls-x509.html#GNUTLS-PKCS-USE-PBES2-AES-256:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PKCS12_3DES" link="gnutls-x509.html#GNUTLS-PKCS-PKCS12-3DES:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PKCS12_ARCFOUR" link="gnutls-x509.html#GNUTLS-PKCS-PKCS12-ARCFOUR:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PKCS12_RC2_40" link="gnutls-x509.html#GNUTLS-PKCS-PKCS12-RC2-40:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PBES2_3DES" link="gnutls-x509.html#GNUTLS-PKCS-PBES2-3DES:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PBES2_AES_128" link="gnutls-x509.html#GNUTLS-PKCS-PBES2-AES-128:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PBES2_AES_192" link="gnutls-x509.html#GNUTLS-PKCS-PBES2-AES-192:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PBES2_AES_256" link="gnutls-x509.html#GNUTLS-PKCS-PBES2-AES-256:CAPS"/>
     <keyword type="constant" name="GNUTLS_PKCS_NULL_PASSWORD" link="gnutls-x509.html#GNUTLS-PKCS-NULL-PASSWORD:CAPS"/>
+    <keyword type="constant" name="GNUTLS_PKCS_PBES2_DES" link="gnutls-x509.html#GNUTLS-PKCS-PBES2-DES:CAPS"/>
     <keyword type="constant" name="GNUTLS_CRL_REASON_UNSPECIFIED" link="gnutls-x509.html#GNUTLS-CRL-REASON-UNSPECIFIED:CAPS"/>
     <keyword type="constant" name="GNUTLS_CRL_REASON_PRIVILEGE_WITHDRAWN" link="gnutls-x509.html#GNUTLS-CRL-REASON-PRIVILEGE-WITHDRAWN:CAPS"/>
     <keyword type="constant" name="GNUTLS_CRL_REASON_CERTIFICATE_HOLD" link="gnutls-x509.html#GNUTLS-CRL-REASON-CERTIFICATE-HOLD:CAPS"/>

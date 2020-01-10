@@ -1298,6 +1298,7 @@ STDNORETURN_H = @STDNORETURN_H@
 STRIP = @STRIP@
 SYS_TIME_H_DEFINES_STRUCT_TIMESPEC = @SYS_TIME_H_DEFINES_STRUCT_TIMESPEC@
 TIME_H_DEFINES_STRUCT_TIMESPEC = @TIME_H_DEFINES_STRUCT_TIMESPEC@
+TROUSERS_LIB = @TROUSERS_LIB@
 TSS_CFLAGS = @TSS_CFLAGS@
 TSS_LIBS = @TSS_LIBS@
 UINT32_MAX_LT_UINTMAX_MAX = @UINT32_MAX_LT_UINTMAX_MAX@
@@ -2184,8 +2185,12 @@ FUNCS = functions/dane_cert_type_name \
 	functions/gnutls_pkcs11_copy_secret_key.short \
 	functions/gnutls_pkcs11_copy_x509_crt \
 	functions/gnutls_pkcs11_copy_x509_crt.short \
+	functions/gnutls_pkcs11_copy_x509_crt2 \
+	functions/gnutls_pkcs11_copy_x509_crt2.short \
 	functions/gnutls_pkcs11_copy_x509_privkey \
 	functions/gnutls_pkcs11_copy_x509_privkey.short \
+	functions/gnutls_pkcs11_copy_x509_privkey2 \
+	functions/gnutls_pkcs11_copy_x509_privkey2.short \
 	functions/gnutls_pkcs11_crt_is_known \
 	functions/gnutls_pkcs11_crt_is_known.short \
 	functions/gnutls_pkcs11_deinit \
@@ -2226,6 +2231,8 @@ FUNCS = functions/dane_cert_type_name \
 	functions/gnutls_pkcs11_obj_list_import_url.short \
 	functions/gnutls_pkcs11_obj_list_import_url2 \
 	functions/gnutls_pkcs11_obj_list_import_url2.short \
+	functions/gnutls_pkcs11_obj_set_info \
+	functions/gnutls_pkcs11_obj_set_info.short \
 	functions/gnutls_pkcs11_obj_set_pin_function \
 	functions/gnutls_pkcs11_obj_set_pin_function.short \
 	functions/gnutls_pkcs11_privkey_deinit \
@@ -2238,6 +2245,8 @@ FUNCS = functions/dane_cert_type_name \
 	functions/gnutls_pkcs11_privkey_generate.short \
 	functions/gnutls_pkcs11_privkey_generate2 \
 	functions/gnutls_pkcs11_privkey_generate2.short \
+	functions/gnutls_pkcs11_privkey_generate3 \
+	functions/gnutls_pkcs11_privkey_generate3.short \
 	functions/gnutls_pkcs11_privkey_get_info \
 	functions/gnutls_pkcs11_privkey_get_info.short \
 	functions/gnutls_pkcs11_privkey_get_pk_algorithm \
@@ -3182,6 +3191,8 @@ FUNCS = functions/dane_cert_type_name \
 	functions/gnutls_x509_crt_set_issuer_dn.short \
 	functions/gnutls_x509_crt_set_issuer_dn_by_oid \
 	functions/gnutls_x509_crt_set_issuer_dn_by_oid.short \
+	functions/gnutls_x509_crt_set_issuer_unique_id \
+	functions/gnutls_x509_crt_set_issuer_unique_id.short \
 	functions/gnutls_x509_crt_set_key \
 	functions/gnutls_x509_crt_set_key.short \
 	functions/gnutls_x509_crt_set_key_purpose_oid \
@@ -3210,6 +3221,8 @@ FUNCS = functions/dane_cert_type_name \
 	functions/gnutls_x509_crt_set_subject_alt_name.short \
 	functions/gnutls_x509_crt_set_subject_key_id \
 	functions/gnutls_x509_crt_set_subject_key_id.short \
+	functions/gnutls_x509_crt_set_subject_unique_id \
+	functions/gnutls_x509_crt_set_subject_unique_id.short \
 	functions/gnutls_x509_crt_set_version \
 	functions/gnutls_x509_crt_set_version.short \
 	functions/gnutls_x509_crt_sign \

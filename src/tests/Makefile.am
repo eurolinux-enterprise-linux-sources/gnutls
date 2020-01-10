@@ -87,7 +87,8 @@ ctests = mini-record-2 simple gc set_pkcs12_cred certder certuniqueid	\
 	 fips-test mini-global-load name-constraints x509-extensions \
 	 long-session-id mini-x509-callbacks-intr \
 	 crlverify init_fds mini-rehandshake-2 sign-md5-rep global-init-override \
-	 version-checks mini-server-name
+	 version-checks mini-server-name naked-alerts multi-alerts \
+	 pkcs8-key-decode-encrypted pkcs8-key-decode
 
 if ENABLE_PKCS11
 if !HAVE_BUGGY_P11_KIT
@@ -117,6 +118,8 @@ ctests += pkcs11-cert-import-url-exts pkcs11-get-exts pkcs11-get-raw-issuer-exts
 endif
 endif
 endif
+
+gc_LDADD = $(LDADD) -lnettle
 
 if ENABLE_OCSP
 ctests += ocsp

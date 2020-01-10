@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgnutls-3.2.1\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2016-07-05 18:39+0200\n"
+"POT-Creation-Date: 2017-01-09 07:46+0100\n"
 "PO-Revision-Date: 2013-06-07 20:50+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -355,7 +355,7 @@ msgstr "Nieobsługiwane rozszerzenie w certyfikacie X.509."
 msgid "Key usage violation in certificate has been detected."
 msgstr "Wykryto naruszenie użycia klucza w certyfikacie."
 
-#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:385
+#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:387
 msgid "Function was interrupted."
 msgstr "Funkcja została przerwana."
 
@@ -580,114 +580,118 @@ msgid "TPM error."
 msgstr "Błąd TPM."
 
 #: lib/gnutls_errors.c:293
+msgid "The TPM library (trousers) cannot be found."
+msgstr ""
+
+#: lib/gnutls_errors.c:295
 msgid "TPM is not initialized."
 msgstr "TPM nie zainicjowany."
 
-#: lib/gnutls_errors.c:295
+#: lib/gnutls_errors.c:297
 msgid "TPM key was not found in persistent storage."
 msgstr "Nie znaleziono klucza TPM w trwałych danych."
 
-#: lib/gnutls_errors.c:297
+#: lib/gnutls_errors.c:299
 msgid "Cannot initialize a session with the TPM."
 msgstr "Nie można zainicjować sesji z TPM."
 
-#: lib/gnutls_errors.c:299
+#: lib/gnutls_errors.c:301
 msgid "PKCS #11 error."
 msgstr "Błąd PKCS #11."
 
-#: lib/gnutls_errors.c:301
+#: lib/gnutls_errors.c:303
 msgid "PKCS #11 initialization error."
 msgstr "Błąd inicjalizacji PKCS #11."
 
-#: lib/gnutls_errors.c:303
+#: lib/gnutls_errors.c:305
 msgid "Error in parsing."
 msgstr "Błąd w trakcie analizy."
 
-#: lib/gnutls_errors.c:305
+#: lib/gnutls_errors.c:307
 msgid "Error in provided PIN."
 msgstr "Błąd w podanym PIN-ie."
 
-#: lib/gnutls_errors.c:307
+#: lib/gnutls_errors.c:309
 msgid "Error in provided SRK password for TPM."
 msgstr "Błąd w podanym haśle SRK dla TPM."
 
-#: lib/gnutls_errors.c:310
+#: lib/gnutls_errors.c:312
 msgid "Error in provided password for key to be loaded in TPM."
 msgstr "Błąd w podanym haśle dla klucza do wczytania w TPM."
 
-#: lib/gnutls_errors.c:312
+#: lib/gnutls_errors.c:314
 msgid "PKCS #11 error in slot"
 msgstr "Błąd PKCS #11 w slocie"
 
-#: lib/gnutls_errors.c:314
+#: lib/gnutls_errors.c:316
 msgid "Thread locking error"
 msgstr "Błąd blokowania wątku"
 
-#: lib/gnutls_errors.c:316
+#: lib/gnutls_errors.c:318
 msgid "PKCS #11 error in attribute"
 msgstr "Błąd PKCS #11 w atrybucie"
 
-#: lib/gnutls_errors.c:318
+#: lib/gnutls_errors.c:320
 msgid "PKCS #11 error in device"
 msgstr "Błąd PKCS #11 w urządzeniu"
 
-#: lib/gnutls_errors.c:320
+#: lib/gnutls_errors.c:322
 msgid "PKCS #11 error in data"
 msgstr "Błąd PKCS #11 w danych"
 
-#: lib/gnutls_errors.c:322
+#: lib/gnutls_errors.c:324
 msgid "PKCS #11 unsupported feature"
 msgstr "Nieobsługiwana właściwość PKCS #11"
 
-#: lib/gnutls_errors.c:324
+#: lib/gnutls_errors.c:326
 msgid "PKCS #11 error in key"
 msgstr "Błąd PKCS #11 w kluczu"
 
-#: lib/gnutls_errors.c:326
+#: lib/gnutls_errors.c:328
 msgid "PKCS #11 PIN expired"
 msgstr "PIN PKCS #11 wygasł"
 
-#: lib/gnutls_errors.c:328
+#: lib/gnutls_errors.c:330
 msgid "PKCS #11 PIN locked"
 msgstr "PIN PKCS #11 zablokowany"
 
-#: lib/gnutls_errors.c:330
+#: lib/gnutls_errors.c:332
 msgid "PKCS #11 error in session"
 msgstr "Błąd PKCS #11 w sesji"
 
-#: lib/gnutls_errors.c:332
+#: lib/gnutls_errors.c:334
 msgid "PKCS #11 error in signature"
 msgstr "Błąd PKCS #11 w podpisie"
 
-#: lib/gnutls_errors.c:334
+#: lib/gnutls_errors.c:336
 msgid "PKCS #11 error in token"
 msgstr "Błąd PKCS #11 w tokenie"
 
-#: lib/gnutls_errors.c:336
+#: lib/gnutls_errors.c:338
 msgid "PKCS #11 user error"
 msgstr "Błąd użytkownika PKCS #11"
 
-#: lib/gnutls_errors.c:338
+#: lib/gnutls_errors.c:340
 msgid "The operation timed out"
 msgstr "Upłynął limit czasu operacji"
 
-#: lib/gnutls_errors.c:340
+#: lib/gnutls_errors.c:342
 msgid "The operation was cancelled due to user error"
 msgstr "Operacja zostałą przerwana z powodu błędu użytkownika"
 
-#: lib/gnutls_errors.c:342
+#: lib/gnutls_errors.c:344
 msgid "No supported ECC curves were found"
 msgstr "Nie znaleziono obsługiwanych krzywych ECC"
 
-#: lib/gnutls_errors.c:344
+#: lib/gnutls_errors.c:346
 msgid "The curve is unsupported"
 msgstr "Ta krzywa nie jest obsługiwana"
 
-#: lib/gnutls_errors.c:346
+#: lib/gnutls_errors.c:348
 msgid "The requested PKCS #11 object is not available"
 msgstr "Żądany obiekt PKCS #11 nie jest dostępny"
 
-#: lib/gnutls_errors.c:349
+#: lib/gnutls_errors.c:351
 msgid ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
@@ -695,75 +699,75 @@ msgstr ""
 "Przekazana lista certyfikatów X.509 nie jest posortowana (w kolejności "
 "wystawcy)"
 
-#: lib/gnutls_errors.c:351
+#: lib/gnutls_errors.c:353
 msgid "The OCSP response is invalid"
 msgstr "Odpowiedź OCSP jest nieprawidłowa."
 
-#: lib/gnutls_errors.c:353
+#: lib/gnutls_errors.c:355
 msgid "There is no certificate status (OCSP)."
 msgstr "Brak statusu certyfikatu (OCSP)."
 
-#: lib/gnutls_errors.c:355
+#: lib/gnutls_errors.c:357
 msgid "Error in the system's randomness device."
 msgstr "Błąd w systemowym urządzeniu danych losowych."
 
-#: lib/gnutls_errors.c:358
+#: lib/gnutls_errors.c:360
 msgid "No common application protocol could be negotiated."
 msgstr "Nie udało się wynegocjować wspólnego protokołu aplikacji."
 
-#: lib/gnutls_errors.c:360
+#: lib/gnutls_errors.c:362
 #, fuzzy
 msgid "Error while performing self checks."
 msgstr "Błąd podczas odczytu pliku."
 
-#: lib/gnutls_errors.c:362
+#: lib/gnutls_errors.c:364
 msgid "There is no self test for this algorithm."
 msgstr ""
 
-#: lib/gnutls_errors.c:364
+#: lib/gnutls_errors.c:366
 msgid ""
 "An error has been detected in the library and cannot continue operations."
 msgstr ""
 
-#: lib/gnutls_errors.c:366
+#: lib/gnutls_errors.c:368
 #, fuzzy
 msgid "Error in sockets initialization."
 msgstr "Błąd w funkcji push."
 
-#: lib/gnutls_errors.c:368
+#: lib/gnutls_errors.c:370
 #, fuzzy
 msgid "Error in public key generation."
 msgstr "Błąd w funkcji pull."
 
-#: lib/gnutls_errors.c:374
+#: lib/gnutls_errors.c:376
 msgid "Success."
 msgstr "Sukces."
 
-#: lib/gnutls_errors.c:375
+#: lib/gnutls_errors.c:377
 msgid "A TLS warning alert has been received."
 msgstr "Odebrano ostrzegawczy alarm TLS."
 
-#: lib/gnutls_errors.c:377
+#: lib/gnutls_errors.c:379
 msgid "A heartbeat pong message was received."
 msgstr "Odebrano komunikat heartbeat pong."
 
-#: lib/gnutls_errors.c:379
+#: lib/gnutls_errors.c:381
 msgid "A heartbeat ping message was received."
 msgstr "Odebrano pakiet heartbeat ping."
 
-#: lib/gnutls_errors.c:381
+#: lib/gnutls_errors.c:383
 msgid "Resource temporarily unavailable, try again."
 msgstr "Zasoby chwilowo niedostępne, proszę spróbować ponownie."
 
-#: lib/gnutls_errors.c:383
+#: lib/gnutls_errors.c:385
 msgid "The transmitted packet is too large (EMSGSIZE)."
 msgstr "Przesyłany pakiet jest zbyt duży (EMSGSIZE)."
 
-#: lib/gnutls_errors.c:386
+#: lib/gnutls_errors.c:388
 msgid "Rehandshake was requested by the peer."
 msgstr "Druga strona zażądała ponownego nawiązania sesji."
 
-#: lib/gnutls_errors.c:477
+#: lib/gnutls_errors.c:479
 msgid "(unknown error code)"
 msgstr "(nieznany kod błędu)"
 

@@ -1152,6 +1152,7 @@ STDNORETURN_H = @STDNORETURN_H@
 STRIP = @STRIP@
 SYS_TIME_H_DEFINES_STRUCT_TIMESPEC = @SYS_TIME_H_DEFINES_STRUCT_TIMESPEC@
 TIME_H_DEFINES_STRUCT_TIMESPEC = @TIME_H_DEFINES_STRUCT_TIMESPEC@
+TROUSERS_LIB = @TROUSERS_LIB@
 TSS_CFLAGS = @TSS_CFLAGS@
 TSS_LIBS = @TSS_LIBS@
 UINT32_MAX_LT_UINTMAX_MAX = @UINT32_MAX_LT_UINTMAX_MAX@
@@ -1480,10 +1481,11 @@ APIMANS = gnutls_alert_get.3 gnutls_alert_get_name.3 \
 	gnutls_pem_base64_encode_alloc.3 gnutls_perror.3 \
 	gnutls_pk_algorithm_get_name.3 gnutls_pk_bits_to_sec_param.3 \
 	gnutls_pkcs11_add_provider.3 gnutls_pkcs11_copy_secret_key.3 \
-	gnutls_pkcs11_copy_x509_crt.3 \
-	gnutls_pkcs11_copy_x509_privkey.3 gnutls_pkcs11_crt_is_known.3 \
-	gnutls_pkcs11_deinit.3 gnutls_pkcs11_delete_url.3 \
-	gnutls_pkcs11_get_pin_function.3 \
+	gnutls_pkcs11_copy_x509_crt.3 gnutls_pkcs11_copy_x509_crt2.3 \
+	gnutls_pkcs11_copy_x509_privkey.3 \
+	gnutls_pkcs11_copy_x509_privkey2.3 \
+	gnutls_pkcs11_crt_is_known.3 gnutls_pkcs11_deinit.3 \
+	gnutls_pkcs11_delete_url.3 gnutls_pkcs11_get_pin_function.3 \
 	gnutls_pkcs11_get_raw_issuer.3 gnutls_pkcs11_init.3 \
 	gnutls_pkcs11_obj_deinit.3 gnutls_pkcs11_obj_export.3 \
 	gnutls_pkcs11_obj_export2.3 gnutls_pkcs11_obj_export3.3 \
@@ -1493,12 +1495,14 @@ APIMANS = gnutls_alert_get.3 gnutls_alert_get_name.3 \
 	gnutls_pkcs11_obj_get_type.3 gnutls_pkcs11_obj_import_url.3 \
 	gnutls_pkcs11_obj_init.3 gnutls_pkcs11_obj_list_import_url.3 \
 	gnutls_pkcs11_obj_list_import_url2.3 \
+	gnutls_pkcs11_obj_set_info.3 \
 	gnutls_pkcs11_obj_set_pin_function.3 \
 	gnutls_pkcs11_privkey_deinit.3 \
 	gnutls_pkcs11_privkey_export_pubkey.3 \
 	gnutls_pkcs11_privkey_export_url.3 \
 	gnutls_pkcs11_privkey_generate.3 \
 	gnutls_pkcs11_privkey_generate2.3 \
+	gnutls_pkcs11_privkey_generate3.3 \
 	gnutls_pkcs11_privkey_get_info.3 \
 	gnutls_pkcs11_privkey_get_pk_algorithm.3 \
 	gnutls_pkcs11_privkey_import_url.3 \
@@ -1828,6 +1832,7 @@ APIMANS = gnutls_alert_get.3 gnutls_alert_get_name.3 \
 	gnutls_x509_crt_set_issuer_alt_name.3 \
 	gnutls_x509_crt_set_issuer_dn.3 \
 	gnutls_x509_crt_set_issuer_dn_by_oid.3 \
+	gnutls_x509_crt_set_issuer_unique_id.3 \
 	gnutls_x509_crt_set_key.3 \
 	gnutls_x509_crt_set_key_purpose_oid.3 \
 	gnutls_x509_crt_set_key_usage.3 \
@@ -1840,6 +1845,7 @@ APIMANS = gnutls_alert_get.3 gnutls_alert_get_name.3 \
 	gnutls_x509_crt_set_subject_alternative_name.3 \
 	gnutls_x509_crt_set_subject_alt_name.3 \
 	gnutls_x509_crt_set_subject_key_id.3 \
+	gnutls_x509_crt_set_subject_unique_id.3 \
 	gnutls_x509_crt_set_version.3 gnutls_x509_crt_sign.3 \
 	gnutls_x509_crt_sign2.3 gnutls_x509_crt_verify.3 \
 	gnutls_x509_crt_verify_data.3 gnutls_x509_crt_verify_hash.3 \

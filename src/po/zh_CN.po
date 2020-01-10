@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgnutls 2.8.1\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2016-07-05 18:39+0200\n"
+"POT-Creation-Date: 2017-01-09 07:46+0100\n"
 "PO-Revision-Date: 2009-11-09 19:16+0800\n"
 "Last-Translator: Aron Xu <happyaron.xu@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -357,7 +357,7 @@ msgstr "X.509 证书中含有不支持的关键性扩展。"
 msgid "Key usage violation in certificate has been detected."
 msgstr "在证书中检测到违规的密钥用法。"
 
-#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:385
+#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:387
 msgid "Function was interrupted."
 msgstr "函数被中断。"
 
@@ -590,197 +590,201 @@ msgid "TPM error."
 msgstr ""
 
 #: lib/gnutls_errors.c:293
-msgid "TPM is not initialized."
+msgid "The TPM library (trousers) cannot be found."
 msgstr ""
 
 #: lib/gnutls_errors.c:295
-msgid "TPM key was not found in persistent storage."
+msgid "TPM is not initialized."
 msgstr ""
 
 #: lib/gnutls_errors.c:297
-msgid "Cannot initialize a session with the TPM."
+msgid "TPM key was not found in persistent storage."
 msgstr ""
 
 #: lib/gnutls_errors.c:299
-msgid "PKCS #11 error."
+msgid "Cannot initialize a session with the TPM."
 msgstr ""
 
 #: lib/gnutls_errors.c:301
-msgid "PKCS #11 initialization error."
+msgid "PKCS #11 error."
 msgstr ""
 
 #: lib/gnutls_errors.c:303
+msgid "PKCS #11 initialization error."
+msgstr ""
+
+#: lib/gnutls_errors.c:305
 #, fuzzy
 msgid "Error in parsing."
 msgstr "密码文件错误。"
 
-#: lib/gnutls_errors.c:305
+#: lib/gnutls_errors.c:307
 #, fuzzy
 msgid "Error in provided PIN."
 msgstr "密码文件错误。"
 
-#: lib/gnutls_errors.c:307
+#: lib/gnutls_errors.c:309
 #, fuzzy
 msgid "Error in provided SRK password for TPM."
 msgstr "密码文件错误。"
 
-#: lib/gnutls_errors.c:310
+#: lib/gnutls_errors.c:312
 msgid "Error in provided password for key to be loaded in TPM."
 msgstr ""
 
-#: lib/gnutls_errors.c:312
+#: lib/gnutls_errors.c:314
 msgid "PKCS #11 error in slot"
 msgstr ""
 
-#: lib/gnutls_errors.c:314
+#: lib/gnutls_errors.c:316
 msgid "Thread locking error"
 msgstr ""
 
-#: lib/gnutls_errors.c:316
+#: lib/gnutls_errors.c:318
 msgid "PKCS #11 error in attribute"
 msgstr ""
 
-#: lib/gnutls_errors.c:318
+#: lib/gnutls_errors.c:320
 msgid "PKCS #11 error in device"
 msgstr ""
 
-#: lib/gnutls_errors.c:320
+#: lib/gnutls_errors.c:322
 msgid "PKCS #11 error in data"
 msgstr ""
 
-#: lib/gnutls_errors.c:322
+#: lib/gnutls_errors.c:324
 msgid "PKCS #11 unsupported feature"
 msgstr ""
 
-#: lib/gnutls_errors.c:324
+#: lib/gnutls_errors.c:326
 msgid "PKCS #11 error in key"
 msgstr ""
 
-#: lib/gnutls_errors.c:326
+#: lib/gnutls_errors.c:328
 msgid "PKCS #11 PIN expired"
 msgstr ""
 
-#: lib/gnutls_errors.c:328
+#: lib/gnutls_errors.c:330
 msgid "PKCS #11 PIN locked"
 msgstr ""
 
-#: lib/gnutls_errors.c:330
+#: lib/gnutls_errors.c:332
 msgid "PKCS #11 error in session"
 msgstr ""
 
-#: lib/gnutls_errors.c:332
+#: lib/gnutls_errors.c:334
 msgid "PKCS #11 error in signature"
 msgstr ""
 
-#: lib/gnutls_errors.c:334
+#: lib/gnutls_errors.c:336
 msgid "PKCS #11 error in token"
 msgstr ""
 
-#: lib/gnutls_errors.c:336
+#: lib/gnutls_errors.c:338
 msgid "PKCS #11 user error"
 msgstr ""
 
-#: lib/gnutls_errors.c:338
+#: lib/gnutls_errors.c:340
 msgid "The operation timed out"
 msgstr ""
 
-#: lib/gnutls_errors.c:340
+#: lib/gnutls_errors.c:342
 msgid "The operation was cancelled due to user error"
 msgstr ""
 
-#: lib/gnutls_errors.c:342
+#: lib/gnutls_errors.c:344
 #, fuzzy
 msgid "No supported ECC curves were found"
 msgstr "找不到支持的密码机制。"
 
-#: lib/gnutls_errors.c:344
+#: lib/gnutls_errors.c:346
 #, fuzzy
 msgid "The curve is unsupported"
 msgstr "密码类型不支持。"
 
-#: lib/gnutls_errors.c:346
+#: lib/gnutls_errors.c:348
 #, fuzzy
 msgid "The requested PKCS #11 object is not available"
 msgstr "请求的数据不可用。"
 
-#: lib/gnutls_errors.c:349
+#: lib/gnutls_errors.c:351
 msgid ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
 msgstr ""
 
-#: lib/gnutls_errors.c:351
+#: lib/gnutls_errors.c:353
 #, fuzzy
 msgid "The OCSP response is invalid"
 msgstr "请求无效。"
 
-#: lib/gnutls_errors.c:353
+#: lib/gnutls_errors.c:355
 msgid "There is no certificate status (OCSP)."
 msgstr ""
 
-#: lib/gnutls_errors.c:355
+#: lib/gnutls_errors.c:357
 msgid "Error in the system's randomness device."
 msgstr ""
 
-#: lib/gnutls_errors.c:358
+#: lib/gnutls_errors.c:360
 msgid "No common application protocol could be negotiated."
 msgstr ""
 
-#: lib/gnutls_errors.c:360
+#: lib/gnutls_errors.c:362
 #, fuzzy
 msgid "Error while performing self checks."
 msgstr "读取文件时出错。"
 
-#: lib/gnutls_errors.c:362
+#: lib/gnutls_errors.c:364
 msgid "There is no self test for this algorithm."
 msgstr ""
 
-#: lib/gnutls_errors.c:364
+#: lib/gnutls_errors.c:366
 msgid ""
 "An error has been detected in the library and cannot continue operations."
 msgstr ""
 
-#: lib/gnutls_errors.c:366
+#: lib/gnutls_errors.c:368
 #, fuzzy
 msgid "Error in sockets initialization."
 msgstr "在 push 函数中出错。"
 
-#: lib/gnutls_errors.c:368
+#: lib/gnutls_errors.c:370
 #, fuzzy
 msgid "Error in public key generation."
 msgstr "在 pull 函数中出错。"
 
-#: lib/gnutls_errors.c:374
+#: lib/gnutls_errors.c:376
 msgid "Success."
 msgstr "成功。"
 
-#: lib/gnutls_errors.c:375
+#: lib/gnutls_errors.c:377
 msgid "A TLS warning alert has been received."
 msgstr "收到一个 TLS 警告信息。"
 
-#: lib/gnutls_errors.c:377
+#: lib/gnutls_errors.c:379
 #, fuzzy
 msgid "A heartbeat pong message was received."
 msgstr "收到大 TLS 记录数据包。"
 
-#: lib/gnutls_errors.c:379
+#: lib/gnutls_errors.c:381
 #, fuzzy
 msgid "A heartbeat ping message was received."
 msgstr "收到大 TLS 记录数据包。"
 
-#: lib/gnutls_errors.c:381
+#: lib/gnutls_errors.c:383
 msgid "Resource temporarily unavailable, try again."
 msgstr "资源临时不可用，请重试。"
 
-#: lib/gnutls_errors.c:383
+#: lib/gnutls_errors.c:385
 msgid "The transmitted packet is too large (EMSGSIZE)."
 msgstr ""
 
-#: lib/gnutls_errors.c:386
+#: lib/gnutls_errors.c:388
 msgid "Rehandshake was requested by the peer."
 msgstr "按对方请求重新握手。"
 
-#: lib/gnutls_errors.c:477
+#: lib/gnutls_errors.c:479
 msgid "(unknown error code)"
 msgstr "(未知错误代码)"
 

@@ -111,7 +111,7 @@ typedef struct {
 /* The size of a handshake message should not
  * be larger than this value.
  */
-#define MAX_HANDSHAKE_PACKET_SIZE 48*1024
+#define MAX_HANDSHAKE_PACKET_SIZE 128*1024
 
 #define TLS_MAX_SESSION_ID_SIZE 32
 
@@ -476,6 +476,7 @@ typedef struct cipher_entry_st {
 typedef struct mac_entry_st {
 	const char *name;
 	const char *oid;	/* OID of the hash - if it is a hash */
+	const char *mac_oid;    /* OID of the MAC algorithm - if it is a MAC */
 	gnutls_mac_algorithm_t id;
 	unsigned output_size;
 	unsigned key_size;
@@ -965,9 +966,9 @@ typedef struct {
 
 	/* DTLS session state */
 	dtls_st dtls;
-	/* In case of clients that don't handle GNUTLS_E_LARGE_PACKET, don't
-	 * force them into an infinite loop */
-	unsigned handshake_large_loops;
+	/* Protect from infinite loops due to GNUTLS_E_LARGE_PACKET non-handling
+	 * or due to multiple alerts being received. */
+	unsigned handshake_suspicious_loops;
 	/* should be non-zero when a handshake is in progress */
 	bool handshake_in_progress;
 

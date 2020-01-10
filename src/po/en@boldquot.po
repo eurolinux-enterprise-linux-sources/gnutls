@@ -1,7 +1,7 @@
 # English translations for gnutls package.
-# Copyright (C) 2016 Free Software Foundation, Inc.
+# Copyright (C) 2017 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gnutls package.
-# Automatically generated, 2016.
+# Automatically generated, 2017.
 #
 # All this catalog "translates" are quotation characters.
 # The msgids must be ASCII and therefore cannot contain real quotation
@@ -30,10 +30,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gnutls 3.3.24\n"
+"Project-Id-Version: gnutls 3.3.26\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2016-07-05 18:39+0200\n"
-"PO-Revision-Date: 2016-07-05 18:39+0200\n"
+"POT-Creation-Date: 2017-01-09 07:46+0100\n"
+"PO-Revision-Date: 2017-01-09 07:46+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en@boldquot\n"
@@ -380,7 +380,7 @@ msgstr "Unsupported extension in X.509 certificate."
 msgid "Key usage violation in certificate has been detected."
 msgstr "Key usage violation in certificate has been detected."
 
-#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:385
+#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:387
 msgid "Function was interrupted."
 msgstr "Function was interrupted."
 
@@ -605,114 +605,118 @@ msgid "TPM error."
 msgstr "TPM error."
 
 #: lib/gnutls_errors.c:293
+msgid "The TPM library (trousers) cannot be found."
+msgstr "The TPM library (trousers) cannot be found."
+
+#: lib/gnutls_errors.c:295
 msgid "TPM is not initialized."
 msgstr "TPM is not initialized."
 
-#: lib/gnutls_errors.c:295
+#: lib/gnutls_errors.c:297
 msgid "TPM key was not found in persistent storage."
 msgstr "TPM key was not found in persistent storage."
 
-#: lib/gnutls_errors.c:297
+#: lib/gnutls_errors.c:299
 msgid "Cannot initialize a session with the TPM."
 msgstr "Cannot initialize a session with the TPM."
 
-#: lib/gnutls_errors.c:299
+#: lib/gnutls_errors.c:301
 msgid "PKCS #11 error."
 msgstr "PKCS #11 error."
 
-#: lib/gnutls_errors.c:301
+#: lib/gnutls_errors.c:303
 msgid "PKCS #11 initialization error."
 msgstr "PKCS #11 initialization error."
 
-#: lib/gnutls_errors.c:303
+#: lib/gnutls_errors.c:305
 msgid "Error in parsing."
 msgstr "Error in parsing."
 
-#: lib/gnutls_errors.c:305
+#: lib/gnutls_errors.c:307
 msgid "Error in provided PIN."
 msgstr "Error in provided PIN."
 
-#: lib/gnutls_errors.c:307
+#: lib/gnutls_errors.c:309
 msgid "Error in provided SRK password for TPM."
 msgstr "Error in provided SRK password for TPM."
 
-#: lib/gnutls_errors.c:310
+#: lib/gnutls_errors.c:312
 msgid "Error in provided password for key to be loaded in TPM."
 msgstr "Error in provided password for key to be loaded in TPM."
 
-#: lib/gnutls_errors.c:312
+#: lib/gnutls_errors.c:314
 msgid "PKCS #11 error in slot"
 msgstr "PKCS #11 error in slot"
 
-#: lib/gnutls_errors.c:314
+#: lib/gnutls_errors.c:316
 msgid "Thread locking error"
 msgstr "Thread locking error"
 
-#: lib/gnutls_errors.c:316
+#: lib/gnutls_errors.c:318
 msgid "PKCS #11 error in attribute"
 msgstr "PKCS #11 error in attribute"
 
-#: lib/gnutls_errors.c:318
+#: lib/gnutls_errors.c:320
 msgid "PKCS #11 error in device"
 msgstr "PKCS #11 error in device"
 
-#: lib/gnutls_errors.c:320
+#: lib/gnutls_errors.c:322
 msgid "PKCS #11 error in data"
 msgstr "PKCS #11 error in data"
 
-#: lib/gnutls_errors.c:322
+#: lib/gnutls_errors.c:324
 msgid "PKCS #11 unsupported feature"
 msgstr "PKCS #11 unsupported feature"
 
-#: lib/gnutls_errors.c:324
+#: lib/gnutls_errors.c:326
 msgid "PKCS #11 error in key"
 msgstr "PKCS #11 error in key"
 
-#: lib/gnutls_errors.c:326
+#: lib/gnutls_errors.c:328
 msgid "PKCS #11 PIN expired"
 msgstr "PKCS #11 PIN expired"
 
-#: lib/gnutls_errors.c:328
+#: lib/gnutls_errors.c:330
 msgid "PKCS #11 PIN locked"
 msgstr "PKCS #11 PIN locked"
 
-#: lib/gnutls_errors.c:330
+#: lib/gnutls_errors.c:332
 msgid "PKCS #11 error in session"
 msgstr "PKCS #11 error in session"
 
-#: lib/gnutls_errors.c:332
+#: lib/gnutls_errors.c:334
 msgid "PKCS #11 error in signature"
 msgstr "PKCS #11 error in signature"
 
-#: lib/gnutls_errors.c:334
+#: lib/gnutls_errors.c:336
 msgid "PKCS #11 error in token"
 msgstr "PKCS #11 error in token"
 
-#: lib/gnutls_errors.c:336
+#: lib/gnutls_errors.c:338
 msgid "PKCS #11 user error"
 msgstr "PKCS #11 user error"
 
-#: lib/gnutls_errors.c:338
+#: lib/gnutls_errors.c:340
 msgid "The operation timed out"
 msgstr "The operation timed out"
 
-#: lib/gnutls_errors.c:340
+#: lib/gnutls_errors.c:342
 msgid "The operation was cancelled due to user error"
 msgstr "The operation was cancelled due to user error"
 
-#: lib/gnutls_errors.c:342
+#: lib/gnutls_errors.c:344
 msgid "No supported ECC curves were found"
 msgstr "No supported ECC curves were found"
 
-#: lib/gnutls_errors.c:344
+#: lib/gnutls_errors.c:346
 msgid "The curve is unsupported"
 msgstr "The curve is unsupported"
 
-#: lib/gnutls_errors.c:346
+#: lib/gnutls_errors.c:348
 msgid "The requested PKCS #11 object is not available"
 msgstr "The requested PKCS #11 object is not available"
 
-#: lib/gnutls_errors.c:349
+#: lib/gnutls_errors.c:351
 msgid ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
@@ -720,73 +724,73 @@ msgstr ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
 
-#: lib/gnutls_errors.c:351
+#: lib/gnutls_errors.c:353
 msgid "The OCSP response is invalid"
 msgstr "The OCSP response is invalid"
 
-#: lib/gnutls_errors.c:353
+#: lib/gnutls_errors.c:355
 msgid "There is no certificate status (OCSP)."
 msgstr "There is no certificate status (OCSP)."
 
-#: lib/gnutls_errors.c:355
+#: lib/gnutls_errors.c:357
 msgid "Error in the system's randomness device."
 msgstr "Error in the system's randomness device."
 
-#: lib/gnutls_errors.c:358
+#: lib/gnutls_errors.c:360
 msgid "No common application protocol could be negotiated."
 msgstr "No common application protocol could be negotiated."
 
-#: lib/gnutls_errors.c:360
+#: lib/gnutls_errors.c:362
 msgid "Error while performing self checks."
 msgstr "Error while performing self checks."
 
-#: lib/gnutls_errors.c:362
+#: lib/gnutls_errors.c:364
 msgid "There is no self test for this algorithm."
 msgstr "There is no self test for this algorithm."
 
-#: lib/gnutls_errors.c:364
+#: lib/gnutls_errors.c:366
 msgid ""
 "An error has been detected in the library and cannot continue operations."
 msgstr ""
 "An error has been detected in the library and cannot continue operations."
 
-#: lib/gnutls_errors.c:366
+#: lib/gnutls_errors.c:368
 msgid "Error in sockets initialization."
 msgstr "Error in sockets initialization."
 
-#: lib/gnutls_errors.c:368
+#: lib/gnutls_errors.c:370
 msgid "Error in public key generation."
 msgstr "Error in public key generation."
 
-#: lib/gnutls_errors.c:374
+#: lib/gnutls_errors.c:376
 msgid "Success."
 msgstr "Success."
 
-#: lib/gnutls_errors.c:375
+#: lib/gnutls_errors.c:377
 msgid "A TLS warning alert has been received."
 msgstr "A TLS warning alert has been received."
 
-#: lib/gnutls_errors.c:377
+#: lib/gnutls_errors.c:379
 msgid "A heartbeat pong message was received."
 msgstr "A heartbeat pong message was received."
 
-#: lib/gnutls_errors.c:379
+#: lib/gnutls_errors.c:381
 msgid "A heartbeat ping message was received."
 msgstr "A heartbeat ping message was received."
 
-#: lib/gnutls_errors.c:381
+#: lib/gnutls_errors.c:383
 msgid "Resource temporarily unavailable, try again."
 msgstr "Resource temporarily unavailable, try again."
 
-#: lib/gnutls_errors.c:383
+#: lib/gnutls_errors.c:385
 msgid "The transmitted packet is too large (EMSGSIZE)."
 msgstr "The transmitted packet is too large (EMSGSIZE)."
 
-#: lib/gnutls_errors.c:386
+#: lib/gnutls_errors.c:388
 msgid "Rehandshake was requested by the peer."
 msgstr "Rehandshake was requested by the peer."
 
-#: lib/gnutls_errors.c:477
+#: lib/gnutls_errors.c:479
 msgid "(unknown error code)"
 msgstr "(unknown error code)"
 

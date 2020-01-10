@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <!-- This manual is last updated 23 March 2015 for version
-3.3.24 of GnuTLS.
+3.3.26 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\
 Copyright (C) 2001-2013 Nikos Mavrogiannopoulos
@@ -12,12 +12,12 @@ any later version published by the Free Software Foundation; with no
 Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.  A
 copy of the license is included in the section entitled "GNU Free
 Documentation License". -->
-<!-- Created by GNU Texinfo 6.1, http://www.gnu.org/software/texinfo/ -->
+<!-- Created by GNU Texinfo 6.3, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>GnuTLS 3.3.24</title>
+<title>GnuTLS 3.3.26</title>
 
-<meta name="description" content="GnuTLS 3.3.24">
-<meta name="keywords" content="GnuTLS 3.3.24">
+<meta name="description" content="GnuTLS 3.3.26">
+<meta name="keywords" content="GnuTLS 3.3.26">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -153,7 +153,7 @@ dl {
 </head>
 
 <body lang="en">
-<h1 class="settitle" align="center">GnuTLS 3.3.24</h1>
+<h1 class="settitle" align="center">GnuTLS 3.3.26</h1>
 
 
 
@@ -311,27 +311,30 @@ dl {
       <li><a name="toc-generate_002ddsa-option" href="#generate_002ddsa-option">5.2.16 generate-dsa option</a></li>
       <li><a name="toc-generate_002decc-option" href="#generate_002decc-option">5.2.17 generate-ecc option</a></li>
       <li><a name="toc-export_002dpubkey-option" href="#export_002dpubkey-option">5.2.18 export-pubkey option</a></li>
-      <li><a name="toc-mark_002dwrap-option" href="#mark_002dwrap-option">5.2.19 mark-wrap option</a></li>
-      <li><a name="toc-mark_002dtrusted-option" href="#mark_002dtrusted-option">5.2.20 mark-trusted option</a></li>
-      <li><a name="toc-mark_002dca-option" href="#mark_002dca-option">5.2.21 mark-ca option</a></li>
-      <li><a name="toc-mark_002dprivate-option" href="#mark_002dprivate-option">5.2.22 mark-private option</a></li>
-      <li><a name="toc-trusted-option" href="#trusted-option">5.2.23 trusted option</a></li>
-      <li><a name="toc-ca-option" href="#ca-option">5.2.24 ca option</a></li>
-      <li><a name="toc-private-option" href="#private-option">5.2.25 private option</a></li>
-      <li><a name="toc-so_002dlogin-option" href="#so_002dlogin-option">5.2.26 so-login option</a></li>
-      <li><a name="toc-admin_002dlogin-option" href="#admin_002dlogin-option">5.2.27 admin-login option</a></li>
-      <li><a name="toc-curve-option" href="#curve-option">5.2.28 curve option</a></li>
-      <li><a name="toc-sec_002dparam-option" href="#sec_002dparam-option">5.2.29 sec-param option</a></li>
-      <li><a name="toc-inder-option" href="#inder-option">5.2.30 inder option</a></li>
-      <li><a name="toc-inraw-option" href="#inraw-option">5.2.31 inraw option</a></li>
-      <li><a name="toc-outder-option" href="#outder-option">5.2.32 outder option</a></li>
-      <li><a name="toc-outraw-option" href="#outraw-option">5.2.33 outraw option</a></li>
-      <li><a name="toc-set_002dpin-option" href="#set_002dpin-option">5.2.34 set-pin option</a></li>
-      <li><a name="toc-set_002dso_002dpin-option" href="#set_002dso_002dpin-option">5.2.35 set-so-pin option</a></li>
-      <li><a name="toc-provider-option" href="#provider-option">5.2.36 provider option</a></li>
-      <li><a name="toc-p11tool-exit-status-1" href="#p11tool-exit-status-1">5.2.37 p11tool exit status</a></li>
-      <li><a name="toc-p11tool-See-Also-1" href="#p11tool-See-Also-1">5.2.38 p11tool See Also</a></li>
-      <li><a name="toc-p11tool-Examples-1" href="#p11tool-Examples-1">5.2.39 p11tool Examples</a></li>
+      <li><a name="toc-set_002did-option" href="#set_002did-option">5.2.19 set-id option</a></li>
+      <li><a name="toc-set_002dlabel-option" href="#set_002dlabel-option">5.2.20 set-label option</a></li>
+      <li><a name="toc-id-option" href="#id-option">5.2.21 id option</a></li>
+      <li><a name="toc-mark_002dwrap-option" href="#mark_002dwrap-option">5.2.22 mark-wrap option</a></li>
+      <li><a name="toc-mark_002dtrusted-option" href="#mark_002dtrusted-option">5.2.23 mark-trusted option</a></li>
+      <li><a name="toc-mark_002dca-option" href="#mark_002dca-option">5.2.24 mark-ca option</a></li>
+      <li><a name="toc-mark_002dprivate-option" href="#mark_002dprivate-option">5.2.25 mark-private option</a></li>
+      <li><a name="toc-trusted-option" href="#trusted-option">5.2.26 trusted option</a></li>
+      <li><a name="toc-ca-option" href="#ca-option">5.2.27 ca option</a></li>
+      <li><a name="toc-private-option" href="#private-option">5.2.28 private option</a></li>
+      <li><a name="toc-so_002dlogin-option" href="#so_002dlogin-option">5.2.29 so-login option</a></li>
+      <li><a name="toc-admin_002dlogin-option" href="#admin_002dlogin-option">5.2.30 admin-login option</a></li>
+      <li><a name="toc-curve-option" href="#curve-option">5.2.31 curve option</a></li>
+      <li><a name="toc-sec_002dparam-option" href="#sec_002dparam-option">5.2.32 sec-param option</a></li>
+      <li><a name="toc-inder-option" href="#inder-option">5.2.33 inder option</a></li>
+      <li><a name="toc-inraw-option" href="#inraw-option">5.2.34 inraw option</a></li>
+      <li><a name="toc-outder-option" href="#outder-option">5.2.35 outder option</a></li>
+      <li><a name="toc-outraw-option" href="#outraw-option">5.2.36 outraw option</a></li>
+      <li><a name="toc-set_002dpin-option" href="#set_002dpin-option">5.2.37 set-pin option</a></li>
+      <li><a name="toc-set_002dso_002dpin-option" href="#set_002dso_002dpin-option">5.2.38 set-so-pin option</a></li>
+      <li><a name="toc-provider-option" href="#provider-option">5.2.39 provider option</a></li>
+      <li><a name="toc-p11tool-exit-status-1" href="#p11tool-exit-status-1">5.2.40 p11tool exit status</a></li>
+      <li><a name="toc-p11tool-See-Also-1" href="#p11tool-See-Also-1">5.2.41 p11tool See Also</a></li>
+      <li><a name="toc-p11tool-Examples-1" href="#p11tool-Examples-1">5.2.42 p11tool Examples</a></li>
     </ul></li>
     <li><a name="toc-Trusted-Platform-Module-_0028TPM_0029" href="#Trusted-Platform-Module">5.3 Trusted Platform Module (TPM)</a>
     <ul class="no-bullet">
@@ -344,12 +347,13 @@ dl {
       <li><a name="toc-generate_002drsa-option-1" href="#generate_002drsa-option-1">5.3.7 generate-rsa option</a></li>
       <li><a name="toc-user-option" href="#user-option">5.3.8 user option</a></li>
       <li><a name="toc-system-option" href="#system-option">5.3.9 system option</a></li>
-      <li><a name="toc-sec_002dparam-option-1" href="#sec_002dparam-option-1">5.3.10 sec-param option</a></li>
-      <li><a name="toc-inder-option-1" href="#inder-option-1">5.3.11 inder option</a></li>
-      <li><a name="toc-outder-option-1" href="#outder-option-1">5.3.12 outder option</a></li>
-      <li><a name="toc-tpmtool-exit-status-1" href="#tpmtool-exit-status-1">5.3.13 tpmtool exit status</a></li>
-      <li><a name="toc-tpmtool-See-Also-1" href="#tpmtool-See-Also-1">5.3.14 tpmtool See Also</a></li>
-      <li><a name="toc-tpmtool-Examples-1" href="#tpmtool-Examples-1">5.3.15 tpmtool Examples</a></li>
+      <li><a name="toc-test_002dsign-option" href="#test_002dsign-option">5.3.10 test-sign option</a></li>
+      <li><a name="toc-sec_002dparam-option-1" href="#sec_002dparam-option-1">5.3.11 sec-param option</a></li>
+      <li><a name="toc-inder-option-1" href="#inder-option-1">5.3.12 inder option</a></li>
+      <li><a name="toc-outder-option-1" href="#outder-option-1">5.3.13 outder option</a></li>
+      <li><a name="toc-tpmtool-exit-status-1" href="#tpmtool-exit-status-1">5.3.14 tpmtool exit status</a></li>
+      <li><a name="toc-tpmtool-See-Also-1" href="#tpmtool-See-Also-1">5.3.15 tpmtool See Also</a></li>
+      <li><a name="toc-tpmtool-Examples-1" href="#tpmtool-Examples-1">5.3.16 tpmtool Examples</a></li>
     </ul></li>
   </ul></li>
   <li><a name="toc-How-to-use-GnuTLS-in-applications-1" href="#How-to-use-GnuTLS-in-applications">6 How to use <acronym>GnuTLS</acronym> in applications</a>
@@ -504,7 +508,7 @@ Next: <a href="#Preface" accesskey="n" rel="next">Preface</a>, Up: <a href="dir.
 <h1 class="top">GnuTLS</h1>
 
 <p>This manual is last updated 23 March 2015 for version
-3.3.24 of GnuTLS.
+3.3.26 of GnuTLS.
 </p>
 <p>Copyright &copy; 2001-2013 Free Software Foundation, Inc.\\
 Copyright &copy; 2001-2013 Nikos Mavrogiannopoulos
@@ -3941,29 +3945,32 @@ be decrypted.
 <dt><code>GNUTLS_PKCS_PLAIN</code></dt>
 <dd><p>Unencrypted private key.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PKCS12_3DES</code></dt>
+<dt><code>GNUTLS_PKCS_PKCS12_3DES</code></dt>
 <dd><p>PKCS-12 3DES.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PKCS12_ARCFOUR</code></dt>
+<dt><code>GNUTLS_PKCS_PKCS12_ARCFOUR</code></dt>
 <dd><p>PKCS-12 ARCFOUR.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PKCS12_RC2_40</code></dt>
+<dt><code>GNUTLS_PKCS_PKCS12_RC2_40</code></dt>
 <dd><p>PKCS-12 RC2-40.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PBES2_3DES</code></dt>
+<dt><code>GNUTLS_PKCS_PBES2_3DES</code></dt>
 <dd><p>PBES2 3DES.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PBES2_AES_128</code></dt>
+<dt><code>GNUTLS_PKCS_PBES2_AES_128</code></dt>
 <dd><p>PBES2 AES-128.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PBES2_AES_192</code></dt>
+<dt><code>GNUTLS_PKCS_PBES2_AES_192</code></dt>
 <dd><p>PBES2 AES-192.
 </p></dd>
-<dt><code>GNUTLS_PKCS_USE_PBES2_AES_256</code></dt>
+<dt><code>GNUTLS_PKCS_PBES2_AES_256</code></dt>
 <dd><p>PBES2 AES-256.
 </p></dd>
 <dt><code>GNUTLS_PKCS_NULL_PASSWORD</code></dt>
 <dd><p>Some schemas distinguish between an empty and a NULL password.
+</p></dd>
+<dt><code>GNUTLS_PKCS_PBES2_DES</code></dt>
+<dd><p>PBES2 single DES.
 </p></dd>
 </dl>
 
@@ -4152,7 +4159,120 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">certtool is unavailable - no --help
+<pre class="example">certtool - GnuTLS certificate tool
+Usage:  certtool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -V, --verbose              More verbose output
+                                - may appear multiple times
+       --infile=file          Input file
+                                - file must pre-exist
+       --outfile=str          Output file
+   -s, --generate-self-signed  Generate a self-signed certificate
+   -c, --generate-certificate  Generate a signed certificate
+       --generate-proxy       Generates a proxy certificate
+       --generate-crl         Generate a CRL
+   -u, --update-certificate   Update a signed certificate
+   -p, --generate-privkey     Generate a private key
+       --provable             Generate a private key or parameters from a seed using a provable method
+       --verify-provable-privkey  Verify a private key generated from a seed using a provable method
+       --seed=str             When generating a private key use the given hex-encoded seed
+   -q, --generate-request     Generate a PKCS #10 certificate request
+                                - prohibits the option 'infile'
+   -e, --verify-chain         Verify a PEM encoded certificate chain
+       --verify               Verify a PEM encoded certificate chain using a trusted list
+       --verify-crl           Verify a CRL using a trusted list
+                                - requires the option 'load-ca-certificate'
+       --verify-hostname=str  Specify a hostname to be used for certificate chain verification
+       --verify-email=str     Specify a email to be used for certificate chain verification
+                                - prohibits the option 'verify-hostname'
+       --verify-purpose=str   Specify a purpose OID to be used for certificate chain verification
+       --verify-allow-broken  Allow broken algorithms, such as MD5 for verification
+       --generate-dh-params   Generate PKCS #3 encoded Diffie-Hellman parameters
+       --get-dh-params        Get the included PKCS #3 encoded Diffie-Hellman parameters
+       --dh-info              Print information PKCS #3 encoded Diffie-Hellman parameters
+       --load-privkey=str     Loads a private key file
+       --load-pubkey=str      Loads a public key file
+       --load-request=str     Loads a certificate request file
+       --load-certificate=str Loads a certificate file
+       --load-ca-privkey=str  Loads the certificate authority's private key file
+       --load-ca-certificate=str Loads the certificate authority's certificate file
+       --load-crl=str         Loads the provided CRL
+       --load-data=str        Loads auxiliary data
+       --password=str         Password to use
+       --null-password        Enforce a NULL password
+       --empty-password       Enforce an empty password
+       --hex-numbers          Print big number in an easier format to parse
+       --cprint               In certain operations it prints the information in C-friendly format
+   -i, --certificate-info     Print information on the given certificate
+       --fingerprint          Print the fingerprint of the given certificate
+       --key-id               Print the key ID of the given certificate
+       --certificate-pubkey   Print certificate's public key
+       --pgp-certificate-info  Print information on the given OpenPGP certificate
+       --pgp-ring-info        Print information on the given OpenPGP keyring structure
+   -l, --crl-info             Print information on the given CRL structure
+       --crq-info             Print information on the given certificate request
+       --no-crq-extensions    Do not use extensions in certificate requests
+       --p12-info             Print information on a PKCS #12 structure
+       --p12-name=str         The PKCS #12 friendly name to use
+       --p7-generate          Generate a PKCS #7 structure
+       --p7-sign              Signs using a PKCS #7 structure
+       --p7-detached-sign     Signs using a detached PKCS #7 structure
+       --p7-include-cert      The signer's certificate will be included in the cert list.
+                                - disabled as '--no-p7-include-cert'
+                                - enabled by default
+       --p7-time              Will include a timestamp in the PKCS #7 structure
+                                - disabled as '--no-p7-time'
+       --p7-show-data         Will show the embedded data in the PKCS #7 structure
+                                - disabled as '--no-p7-show-data'
+       --p7-info              Print information on a PKCS #7 structure
+       --p7-verify            Verify the provided PKCS #7 structure
+       --p8-info              Print information on a PKCS #8 structure
+       --smime-to-p7          Convert S/MIME to PKCS #7 structure
+   -k, --key-info             Print information on a private key
+       --pgp-key-info         Print information on an OpenPGP private key
+       --pubkey-info          Print information on a public key
+       --v1                   Generate an X.509 version 1 certificate (with no extensions)
+       --to-p12               Generate a PKCS #12 structure
+       --to-p8                Generate a PKCS #8 structure
+   -8, --pkcs8                Use PKCS #8 format for private keys
+       --rsa                  Generate RSA key
+       --dsa                  Generate DSA key
+       --ecc                  Generate ECC (ECDSA) key
+       --ecdsa                an alias for the 'ecc' option
+       --hash=str             Hash algorithm to use for signing
+       --inder                Use DER format for input certificates, private keys, and DH parameters
+                                - disabled as '--no-inder'
+       --inraw                an alias for the 'inder' option
+       --outder               Use DER format for output certificates, private keys, and DH parameters
+                                - disabled as '--no-outder'
+       --outraw               an alias for the 'outder' option
+       --bits=num             Specify the number of bits for key generate
+       --curve=str            Specify the curve used for EC key generation
+       --sec-param=str        Specify the security level [low, legacy, medium, high, ultra]
+       --disable-quick-random  No effect
+       --template=str         Template file to use for non-interactive operation
+       --stdout-info          Print information to stdout instead of stderr
+       --ask-pass             Enable interaction for entering password when in batch mode.
+       --pkcs-cipher=str      Cipher to use for PKCS #8 and #12 operations
+       --provider=str         Specify the PKCS #11 provider library
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Tool to parse and generate X.509 certificates, requests and private keys.
+It can be used interactively or non interactively by specifying the
+template command line option.
+
+The tool accepts files or URLs supported by GnuTLS.  In case PIN is
+required for the URL access you can provide it using the environment
+variables GNUTLS_PIN and GNUTLS_SO_PIN.
+
 </pre></div>
 
 <a name="certtool-debug"></a><a name="debug-option-_0028_002dd_0029-2"></a>
@@ -4214,12 +4334,18 @@ This can be either a file or a PKCS #11 URL
 <p>This is the &ldquo;loads a public key file&rdquo; option.
 This option takes a string argument.
 This can be either a file or a PKCS #11 URL
+<a name="certtool-load_002drequest"></a></p><a name="load_002drequest-option"></a>
+<h4 class="subsubheading">load-request option</h4>
+
+<p>This is the &ldquo;loads a certificate request file&rdquo; option.
+This option takes a string argument.
+This option can be used with a file
 <a name="certtool-load_002dcertificate"></a></p><a name="load_002dcertificate-option"></a>
 <h4 class="subsubheading">load-certificate option</h4>
 
 <p>This is the &ldquo;loads a certificate file&rdquo; option.
 This option takes a string argument.
-This can be either a file or a PKCS #11 URL
+This option can be used with a file
 <a name="certtool-load_002dca_002dprivkey"></a></p><a name="load_002dca_002dprivkey-option"></a>
 <h4 class="subsubheading">load-ca-privkey option</h4>
 
@@ -4231,7 +4357,7 @@ This can be either a file or a PKCS #11 URL
 
 <p>This is the &ldquo;loads the certificate authority&rsquo;s certificate file&rdquo; option.
 This option takes a string argument.
-This can be either a file or a PKCS #11 URL
+This option can be used with a file
 <a name="certtool-password"></a></p><a name="password-option"></a>
 <h4 class="subsubheading">password option</h4>
 
@@ -4623,6 +4749,12 @@ challenge_password = 123456
 # Whether this is a CA certificate or not
 #ca
 
+# Subject Unique ID (in hex)
+#subject_unique_id = 00153224
+
+# Issuer Unique ID (in hex)
+#issuer_unique_id = 00153225
+
 # for microsoft smart card logon
 # key_purpose_oid = 1.3.6.1.4.1.311.20.2.2
 
@@ -4756,7 +4888,53 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">ocsptool is unavailable - no --help
+<pre class="example">ocsptool - GnuTLS OCSP tool
+Usage:  ocsptool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -V, --verbose              More verbose output
+                                - may appear multiple times
+       --infile=file          Input file
+                                - file must pre-exist
+       --outfile=str          Output file
+       --ask[=arg]            Ask an OCSP/HTTP server on a certificate validity
+                                - requires these options:
+                                load-cert
+                                load-issuer
+   -e, --verify-response      Verify response
+   -i, --request-info         Print information on a OCSP request
+   -j, --response-info        Print information on a OCSP response
+   -q, --generate-request     Generate an OCSP request
+       --nonce                Use (or not) a nonce to OCSP request
+                                - disabled as '--no-nonce'
+       --load-issuer=file     Read issuer certificate from file
+                                - file must pre-exist
+       --load-cert=file       Read certificate to check from file
+                                - file must pre-exist
+       --load-trust=file      Read OCSP trust anchors from file
+                                - prohibits the option 'load-signer'
+                                - file must pre-exist
+       --load-signer=file     Read OCSP response signer from file
+                                - prohibits the option 'load-trust'
+                                - file must pre-exist
+       --inder                Use DER format for input certificates and private keys
+                                - disabled as '--no-inder'
+   -Q, --load-request=file    Read DER encoded OCSP request from file
+                                - file must pre-exist
+   -S, --load-response=file   Read DER encoded OCSP response from file
+                                - file must pre-exist
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Ocsptool is a program that can parse and print information about OCSP
+requests/responses, generate requests and verify responses.
+
 </pre></div>
 
 <a name="ocsptool-debug"></a><a name="debug-option-_0028_002dd_0029-3"></a>
@@ -5342,7 +5520,34 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">srptool is unavailable - no --help
+<pre class="example">srptool - GnuTLS SRP tool
+Usage:  srptool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -i, --index=num            specify the index of the group parameters in tpasswd.conf to use
+   -u, --username=str         specify a username
+   -p, --passwd=str           specify a password file
+   -s, --salt=num             specify salt size
+       --verify               just verify the password.
+   -v, --passwd-conf=str      specify a password conf file.
+       --create-conf=str      Generate a password configuration file.
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Simple program that emulates the programs in the Stanford SRP (Secure
+Remote Password) libraries using GnuTLS.  It is intended for use in places
+where you don't expect SRP authentication to be the used for system users.
+
+In brief, to use SRP you need to create two files.  These are the password
+file that holds the users and the verifiers associated with them and the
+configuration file to hold the group parameters (called tpasswd.conf).
+
 </pre></div>
 
 <a name="srptool-debug"></a><a name="debug-option-_0028_002dd_0029-5"></a>
@@ -5506,7 +5711,27 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">psktool is unavailable - no --help
+<pre class="example">psktool - GnuTLS PSK tool
+Usage:  psktool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -s, --keysize=num          specify the key size in bytes
+                                - it must be in the range:
+                                  0 to 512
+   -u, --username=str         specify a username
+   -p, --passwd=str           specify a password file
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Program that generates random keys for use with TLS-PSK.  The keys are
+stored in hexadecimal format in a key file.
+
 </pre></div>
 
 <a name="psktool-debug"></a><a name="debug-option-_0028_002dd_0029-6"></a>
@@ -6612,9 +6837,9 @@ negative error value.
 <dt><a name="index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt"></a>Function: <em>int</em> <strong>gnutls_pkcs11_copy_x509_crt</strong> <em>(const char * <var>token_url</var>, gnutls_x509_crt_t <var>crt</var>, const char * <var>label</var>, unsigned int <var>flags</var>)</em></dt>
 <dd><p><var>token_url</var>: A PKCS <code>11</code>  URL specifying a token
 </p>
-<p><var>crt</var>: A certificate
+<p><var>crt</var>: The certificate to copy
 </p>
-<p><var>label</var>: A name to be used for the stored data
+<p><var>label</var>: The name to be used for the stored data
 </p>
 <p><var>flags</var>: One of GNUTLS_PKCS11_OBJ_FLAG_*
 </p>
@@ -6727,7 +6952,147 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">p11tool is unavailable - no --help
+<pre class="example">p11tool - GnuTLS PKCS #11 tool
+Usage:  p11tool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]... [url]
+
+
+Tokens:
+
+       --list-tokens          List all available tokens
+       --list-token-urls      List the URLs available tokens
+       --list-mechanisms      List all available mechanisms in a token
+       --initialize           Initializes a PKCS #11 token
+       --set-pin=str          Specify the PIN to use on token initialization
+       --set-so-pin=str       Specify the Security Officer's PIN to use on token initialization
+
+Object listing:
+
+       --list-all             List all available objects in a token
+       --list-all-certs       List all available certificates in a token
+       --list-certs           List all certificates that have an associated private key
+       --list-all-privkeys    List all available private keys in a token
+       --list-privkeys        an alias for the 'list-all-privkeys' option
+       --list-keys            an alias for the 'list-all-privkeys' option
+       --list-all-trusted     List all available certificates marked as trusted
+       --export               Export the object specified by the URL
+                                - prohibits these options:
+                                export-stapled
+                                export-chain
+                                export-pubkey
+       --export-stapled       Export the certificate object specified by the URL
+                                - prohibits these options:
+                                export
+                                export-chain
+                                export-pubkey
+       --export-chain         Export the certificate specified by the URL and its chain of trust
+                                - prohibits these options:
+                                export-stapled
+                                export
+                                export-pubkey
+       --export-pubkey        Export the public key for a private key
+                                - prohibits these options:
+                                export-stapled
+                                export
+                                export-chain
+       --info                 List information on an available object in a token
+       --trusted              an alias for the 'mark-trusted' option
+       --distrusted           an alias for the 'mark-distrusted' option
+
+Key generation:
+
+       --generate-rsa         Generate an RSA private-public key pair
+       --generate-dsa         Generate a DSA private-public key pair
+       --generate-ecc         Generate an ECDSA private-public key pair
+       --bits=num             Specify the number of bits for the key generate
+       --curve=str            Specify the curve used for EC key generation
+       --sec-param=str        Specify the security level
+
+Writing objects:
+
+       --set-id=str           Set the CKA_ID (in hex) for the specified by the URL object
+                                - prohibits the option 'write'
+       --set-label=str        Set the CKA_LABEL for the specified by the URL object
+                                - prohibits these options:
+                                write
+                                set-id
+       --write                Writes the loaded objects to a PKCS #11 token
+       --delete               Deletes the objects matching the given PKCS #11 URL
+       --label=str            Sets a label for the write operation
+       --id=str               Sets an ID for the write operation
+       --mark-wrap            Marks the generated key to be a wrapping key
+                                - disabled as '--no-mark-wrap'
+       --mark-trusted         Marks the object to be written as trusted
+                                - prohibits the option 'mark-distrusted'
+                                - disabled as '--no-mark-trusted'
+       --mark-distrusted      When retrieving objects, it requires the objects to be distrusted
+(blacklisted)
+                                - prohibits the option 'mark-trusted'
+       --mark-decrypt         Marks the object to be written for decryption
+                                - disabled as '--no-mark-decrypt'
+       --mark-sign            Marks the object to be written for signature generation
+                                - disabled as '--no-mark-sign'
+       --mark-ca              Marks the object to be written as a CA
+                                - disabled as '--no-mark-ca'
+       --mark-private         Marks the object to be written as private
+                                - disabled as '--no-mark-private'
+       --ca                   an alias for the 'mark-ca' option
+       --private              an alias for the 'mark-private' option
+       --secret-key=str       Provide a hex encoded secret key
+       --load-privkey=file    Private key file to use
+                                - file must pre-exist
+       --load-pubkey=file     Public key file to use
+                                - file must pre-exist
+       --load-certificate=file Certificate file to use
+                                - file must pre-exist
+
+Other options:
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+       --outfile=str          Output file
+       --login                Force (user) login to token
+                                - disabled as '--no-login'
+       --so-login             Force security officer login to token
+                                - disabled as '--no-so-login'
+       --admin-login          an alias for the 'so-login' option
+       --test-sign            Tests the signature operation of the provided object
+       --generate-random=num  Generate random data
+   -8, --pkcs8                Use PKCS #8 format for private keys
+       --inder                Use DER/RAW format for input
+                                - disabled as '--no-inder'
+       --inraw                an alias for the 'inder' option
+       --outder               Use DER format for output certificates, private keys, and DH parameters
+                                - disabled as '--no-outder'
+       --outraw               an alias for the 'outder' option
+       --provider=file        Specify the PKCS #11 provider library
+       --detailed-url         Print detailed URLs
+                                - disabled as '--no-detailed-url'
+       --only-urls            Print a compact listing using only the URLs
+       --batch                Disable all interaction with the tool
+
+Version, usage and configuration options:
+
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+Operands and options may be intermixed.  They will be reordered.
+
+Program that allows operations on PKCS #11 smart cards and security
+modules.
+
+To use PKCS #11 tokens with GnuTLS the p11-kit configuration files need to
+be setup.  That is create a .module file in /etc/pkcs11/modules with the
+contents 'module: /path/to/pkcs11.so'.  Alternatively the configuration
+file /etc/gnutls/pkcs11.conf has to exist and contain a number of lines of
+the form 'load=/usr/lib/opensc-pkcs11.so'.
+
+You can provide the PIN to be used for the PKCS #11 operations with the
+environment variables GNUTLS_PIN and GNUTLS_SO_PIN.
+
 </pre></div>
 
 <a name="p11tool-debug"></a><a name="debug-option-_0028_002dd_0029"></a>
@@ -6789,8 +7154,26 @@ Generates an ECDSA private-public key pair on the specified token.
 
 <p>This is the &ldquo;export the public key for a private key&rdquo; option.
 Exports the public key for the specified private key
+<a name="p11tool-set_002did"></a></p><a name="set_002did-option"></a>
+<h4 class="subsection">5.2.19 set-id option</h4>
+
+<p>This is the &ldquo;set the cka_id (in hex) for the specified by the url object&rdquo; option.
+This option takes a string argument.
+Sets the CKA_ID in the specified by the URL object. The ID should be specified in hexadecimal format without a &rsquo;0x&rsquo; prefix.
+<a name="p11tool-set_002dlabel"></a></p><a name="set_002dlabel-option"></a>
+<h4 class="subsection">5.2.20 set-label option</h4>
+
+<p>This is the &ldquo;set the cka_label for the specified by the url object&rdquo; option.
+This option takes a string argument.
+Sets the CKA_LABEL in the specified by the URL object
+<a name="p11tool-id"></a></p><a name="id-option"></a>
+<h4 class="subsection">5.2.21 id option</h4>
+
+<p>This is the &ldquo;sets an id for the write operation&rdquo; option.
+This option takes a string argument.
+Sets the CKA_ID to be set by the write operation. The ID should be specified in hexadecimal format without a &rsquo;0x&rsquo; prefix.
 <a name="p11tool-mark_002dwrap"></a></p><a name="mark_002dwrap-option"></a>
-<h4 class="subsection">5.2.19 mark-wrap option</h4>
+<h4 class="subsection">5.2.22 mark-wrap option</h4>
 
 <p>This is the &ldquo;marks the generated key to be a wrapping key&rdquo; option.
 </p>
@@ -6801,7 +7184,7 @@ Exports the public key for the specified private key
 
 <p>Marks the generated key with the CKA_WRAP flag.
 <a name="p11tool-mark_002dtrusted"></a></p><a name="mark_002dtrusted-option"></a>
-<h4 class="subsection">5.2.20 mark-trusted option</h4>
+<h4 class="subsection">5.2.23 mark-trusted option</h4>
 
 <p>This is the &ldquo;marks the object to be written as trusted&rdquo; option.
 </p>
@@ -6812,7 +7195,7 @@ Exports the public key for the specified private key
 
 <p>Marks the object to be generated/copied with the CKA_TRUST flag.
 <a name="p11tool-mark_002dca"></a></p><a name="mark_002dca-option"></a>
-<h4 class="subsection">5.2.21 mark-ca option</h4>
+<h4 class="subsection">5.2.24 mark-ca option</h4>
 
 <p>This is the &ldquo;marks the object to be written as a ca&rdquo; option.
 </p>
@@ -6823,7 +7206,7 @@ Exports the public key for the specified private key
 
 <p>Marks the object to be generated/copied with the CKA_CERTIFICATE_CATEGORY as CA.
 <a name="p11tool-mark_002dprivate"></a></p><a name="mark_002dprivate-option"></a>
-<h4 class="subsection">5.2.22 mark-private option</h4>
+<h4 class="subsection">5.2.25 mark-private option</h4>
 
 <p>This is the &ldquo;marks the object to be written as private&rdquo; option.
 </p>
@@ -6835,25 +7218,25 @@ Exports the public key for the specified private key
 
 <p>Marks the object to be generated/copied with the CKA_PRIVATE flag. The written object will require a PIN to be used.
 <a name="p11tool-trusted"></a></p><a name="trusted-option"></a>
-<h4 class="subsection">5.2.23 trusted option</h4>
+<h4 class="subsection">5.2.26 trusted option</h4>
 
 <p>This is an alias for the <code>mark-trusted</code> option,
 see <a href="#p11tool-mark_002dtrusted">the mark-trusted option documentation</a>.
 </p>
 <a name="p11tool-ca"></a><a name="ca-option"></a>
-<h4 class="subsection">5.2.24 ca option</h4>
+<h4 class="subsection">5.2.27 ca option</h4>
 
 <p>This is an alias for the <code>mark-ca</code> option,
 see <a href="#p11tool-mark_002dca">the mark-ca option documentation</a>.
 </p>
 <a name="p11tool-private"></a><a name="private-option"></a>
-<h4 class="subsection">5.2.25 private option</h4>
+<h4 class="subsection">5.2.28 private option</h4>
 
 <p>This is an alias for the <code>mark-private</code> option,
 see <a href="#p11tool-mark_002dprivate">the mark-private option documentation</a>.
 </p>
 <a name="p11tool-so_002dlogin"></a><a name="so_002dlogin-option"></a>
-<h4 class="subsection">5.2.26 so-login option</h4>
+<h4 class="subsection">5.2.29 so-login option</h4>
 
 <p>This is the &ldquo;force security officer login to token&rdquo; option.
 </p>
@@ -6864,25 +7247,25 @@ see <a href="#p11tool-mark_002dprivate">the mark-private option documentation</a
 
 <p>Forces login to the token as security officer (admin).
 <a name="p11tool-admin_002dlogin"></a></p><a name="admin_002dlogin-option"></a>
-<h4 class="subsection">5.2.27 admin-login option</h4>
+<h4 class="subsection">5.2.30 admin-login option</h4>
 
 <p>This is an alias for the <code>so-login</code> option,
 see <a href="#p11tool-so_002dlogin">the so-login option documentation</a>.
 </p>
 <a name="p11tool-curve"></a><a name="curve-option"></a>
-<h4 class="subsection">5.2.28 curve option</h4>
+<h4 class="subsection">5.2.31 curve option</h4>
 
 <p>This is the &ldquo;specify the curve used for ec key generation&rdquo; option.
 This option takes a string argument.
 Supported values are secp192r1, secp224r1, secp256r1, secp384r1 and secp521r1.
 <a name="p11tool-sec_002dparam"></a></p><a name="sec_002dparam-option"></a>
-<h4 class="subsection">5.2.29 sec-param option</h4>
+<h4 class="subsection">5.2.32 sec-param option</h4>
 
 <p>This is the &ldquo;specify the security level&rdquo; option.
 This option takes a string argument <samp>Security parameter</samp>.
 This is alternative to the bits option. Available options are [low, legacy, medium, high, ultra].
 <a name="p11tool-inder"></a></p><a name="inder-option"></a>
-<h4 class="subsection">5.2.30 inder option</h4>
+<h4 class="subsection">5.2.33 inder option</h4>
 
 <p>This is the &ldquo;use der/raw format for input&rdquo; option.
 </p>
@@ -6893,13 +7276,13 @@ This is alternative to the bits option. Available options are [low, legacy, medi
 
 <p>Use DER/RAW format for input certificates and private keys.
 <a name="p11tool-inraw"></a></p><a name="inraw-option"></a>
-<h4 class="subsection">5.2.31 inraw option</h4>
+<h4 class="subsection">5.2.34 inraw option</h4>
 
 <p>This is an alias for the <code>inder</code> option,
 see <a href="#p11tool-inder">the inder option documentation</a>.
 </p>
 <a name="p11tool-outder"></a><a name="outder-option"></a>
-<h4 class="subsection">5.2.32 outder option</h4>
+<h4 class="subsection">5.2.35 outder option</h4>
 
 <p>This is the &ldquo;use der format for output certificates, private keys, and dh parameters&rdquo; option.
 </p>
@@ -6910,31 +7293,31 @@ see <a href="#p11tool-inder">the inder option documentation</a>.
 
 <p>The output will be in DER or RAW format.
 <a name="p11tool-outraw"></a></p><a name="outraw-option"></a>
-<h4 class="subsection">5.2.33 outraw option</h4>
+<h4 class="subsection">5.2.36 outraw option</h4>
 
 <p>This is an alias for the <code>outder</code> option,
 see <a href="#p11tool-outder">the outder option documentation</a>.
 </p>
 <a name="p11tool-set_002dpin"></a><a name="set_002dpin-option"></a>
-<h4 class="subsection">5.2.34 set-pin option</h4>
+<h4 class="subsection">5.2.37 set-pin option</h4>
 
 <p>This is the &ldquo;specify the pin to use on token initialization&rdquo; option.
 This option takes a string argument.
 Alternatively the GNUTLS_PIN environment variable may be used.
 <a name="p11tool-set_002dso_002dpin"></a></p><a name="set_002dso_002dpin-option"></a>
-<h4 class="subsection">5.2.35 set-so-pin option</h4>
+<h4 class="subsection">5.2.38 set-so-pin option</h4>
 
 <p>This is the &ldquo;specify the security officer&rsquo;s pin to use on token initialization&rdquo; option.
 This option takes a string argument.
 Alternatively the GNUTLS_SO_PIN environment variable may be used.
 <a name="p11tool-provider"></a></p><a name="provider-option"></a>
-<h4 class="subsection">5.2.36 provider option</h4>
+<h4 class="subsection">5.2.39 provider option</h4>
 
 <p>This is the &ldquo;specify the pkcs #11 provider library&rdquo; option.
 This option takes a file argument.
 This will override the default options in /etc/gnutls/pkcs11.conf
 <a name="p11tool-exit-status"></a></p><a name="p11tool-exit-status-1"></a>
-<h4 class="subsection">5.2.37 p11tool exit status</h4>
+<h4 class="subsection">5.2.40 p11tool exit status</h4>
 
 <p>One of the following exit values will be returned:
 </p><dl compact="compact">
@@ -6946,10 +7329,10 @@ This will override the default options in /etc/gnutls/pkcs11.conf
 </p></dd>
 </dl>
 <a name="p11tool-See-Also"></a><a name="p11tool-See-Also-1"></a>
-<h4 class="subsection">5.2.38 p11tool See Also</h4>
+<h4 class="subsection">5.2.41 p11tool See Also</h4>
 <p>certtool (1)
 <a name="p11tool-Examples"></a></p><a name="p11tool-Examples-1"></a>
-<h4 class="subsection">5.2.39 p11tool Examples</h4>
+<h4 class="subsection">5.2.42 p11tool Examples</h4>
 <p>To view all tokens in your system use:
 </p><div class="example">
 <pre class="example">$ p11tool --list-tokens
@@ -7329,15 +7712,22 @@ user.
 </li></ul>
 
 <p>The generated key will be stored in system persistent storage.
+<a name="tpmtool-test_002dsign"></a></p><a name="test_002dsign-option"></a>
+<h4 class="subsection">5.3.10 test-sign option</h4>
+
+<p>This is the &ldquo;tests the signature operation of the provided object&rdquo; option.
+This option takes a string argument <samp>url</samp>.
+It can be used to test the correct operation of the signature operation.
+This operation will sign and verify the signed data.
 <a name="tpmtool-sec_002dparam"></a></p><a name="sec_002dparam-option-1"></a>
-<h4 class="subsection">5.3.10 sec-param option</h4>
+<h4 class="subsection">5.3.11 sec-param option</h4>
 
 <p>This is the &ldquo;specify the security level [low, legacy, medium, high, ultra].&rdquo; option.
 This option takes a string argument <samp>Security parameter</samp>.
 This is alternative to the bits option. Note however that the
 values allowed by the TPM chip are quantized and given values may be rounded up.
 <a name="tpmtool-inder"></a></p><a name="inder-option-1"></a>
-<h4 class="subsection">5.3.11 inder option</h4>
+<h4 class="subsection">5.3.12 inder option</h4>
 
 <p>This is the &ldquo;use the der format for keys.&rdquo; option.
 </p>
@@ -7350,7 +7740,7 @@ values allowed by the TPM chip are quantized and given values may be rounded up.
 DER format of TPM. The default format is a custom format used by various
 TPM tools
 <a name="tpmtool-outder"></a></p><a name="outder-option-1"></a>
-<h4 class="subsection">5.3.12 outder option</h4>
+<h4 class="subsection">5.3.13 outder option</h4>
 
 <p>This is the &ldquo;use der format for output keys&rdquo; option.
 </p>
@@ -7361,7 +7751,7 @@ TPM tools
 
 <p>The output will be in the TPM portable DER format.
 <a name="tpmtool-exit-status"></a></p><a name="tpmtool-exit-status-1"></a>
-<h4 class="subsection">5.3.13 tpmtool exit status</h4>
+<h4 class="subsection">5.3.14 tpmtool exit status</h4>
 
 <p>One of the following exit values will be returned:
 </p><dl compact="compact">
@@ -7373,10 +7763,10 @@ TPM tools
 </p></dd>
 </dl>
 <a name="tpmtool-See-Also"></a><a name="tpmtool-See-Also-1"></a>
-<h4 class="subsection">5.3.14 tpmtool See Also</h4>
+<h4 class="subsection">5.3.15 tpmtool See Also</h4>
 <p>p11tool (1), certtool (1)
 <a name="tpmtool-Examples"></a></p><a name="tpmtool-Examples-1"></a>
-<h4 class="subsection">5.3.15 tpmtool Examples</h4>
+<h4 class="subsection">5.3.16 tpmtool Examples</h4>
 <p>To generate a key that is to be stored in filesystem use:
 </p><div class="example">
 <pre class="example">$ tpmtool --generate-rsa --bits 2048 --outfile tpmkey.pem
@@ -16377,6 +16767,7 @@ expressions.
 <tr><td width="15%">-332</td><td width="40%">GNUTLS_E_TPM_SESSION_ERROR</td><td width="37%">Cannot initialize a session with the TPM.</td></tr>
 <tr><td width="15%">-333</td><td width="40%">GNUTLS_E_TPM_KEY_NOT_FOUND</td><td width="37%">TPM key was not found in persistent storage.</td></tr>
 <tr><td width="15%">-334</td><td width="40%">GNUTLS_E_TPM_UNINITIALIZED</td><td width="37%">TPM is not initialized.</td></tr>
+<tr><td width="15%">-335</td><td width="40%">GNUTLS_E_TPM_NO_LIB</td><td width="37%">The TPM library (trousers) cannot be found.</td></tr>
 <tr><td width="15%">-340</td><td width="40%">GNUTLS_E_NO_CERTIFICATE_STATUS</td><td width="37%">There is no certificate status (OCSP).</td></tr>
 <tr><td width="15%">-341</td><td width="40%">GNUTLS_E_OCSP_RESPONSE_ERROR</td><td width="37%">The OCSP response is invalid</td></tr>
 <tr><td width="15%">-342</td><td width="40%">GNUTLS_E_RANDOM_DEVICE_ERROR</td><td width="37%">Error in the system&rsquo;s randomness device.</td></tr>
@@ -19205,11 +19596,14 @@ there is a man-in-the-middle attack being performed.
 <p>This function will set the maximum size of all handshake messages.
 Handshakes over this size are rejected with
 <code>GNUTLS_E_HANDSHAKE_TOO_LARGE</code>  error code.  The default value is
-48kb which is typically large enough.  Set this to 0 if you do not
+128kb which is typically large enough.  Set this to 0 if you do not
 want to set an upper limit.
 </p>
 <p>The reason for restricting the handshake message sizes are to
 limit Denial of Service attacks.
+</p>
+<p>Note that the maximum handshake size was increased to 128kb
+from 48kb in GnuTLS 3.3.25.
 </p></dd></dl>
 
 <a name="gnutls_005fhandshake_005fset_005fpost_005fclient_005fhello_005ffunction-1"></a>
@@ -27043,6 +27437,22 @@ certificate.
 negative error value.
 </p></dd></dl>
 
+<a name="gnutls_005fx509_005fcrt_005fset_005fissuer_005funique_005fid-1"></a>
+<h4 class="subheading">gnutls_x509_crt_set_issuer_unique_id</h4>
+<a name="gnutls_005fx509_005fcrt_005fset_005fissuer_005funique_005fid"></a><dl>
+<dt><a name="index-gnutls_005fx509_005fcrt_005fset_005fissuer_005funique_005fid"></a>Function: <em>int</em> <strong>gnutls_x509_crt_set_issuer_unique_id</strong> <em>(gnutls_x509_crt_t <var>cert</var>, const void * <var>id</var>, size_t <var>id_size</var>)</em></dt>
+<dd><p><var>cert</var>: a certificate of type <code>gnutls_x509_crt_t</code> 
+</p>
+<p><var>id</var>: The unique ID
+</p>
+<p><var>id_size</var>: Holds the size of the unique ID.
+</p>
+<p>This function will set the X.509 certificate&rsquo;s issuer unique ID field.
+</p>
+<p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
+negative error value.
+</p></dd></dl>
+
 <a name="gnutls_005fx509_005fcrt_005fset_005fkey-1"></a>
 <h4 class="subheading">gnutls_x509_crt_set_key</h4>
 <a name="gnutls_005fx509_005fcrt_005fset_005fkey"></a><dl>
@@ -27293,6 +27703,22 @@ negative error value.
 </p>
 <p>This function will set the X.509 certificate&rsquo;s subject key ID
 extension.
+</p>
+<p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
+negative error value.
+</p></dd></dl>
+
+<a name="gnutls_005fx509_005fcrt_005fset_005fsubject_005funique_005fid-1"></a>
+<h4 class="subheading">gnutls_x509_crt_set_subject_unique_id</h4>
+<a name="gnutls_005fx509_005fcrt_005fset_005fsubject_005funique_005fid"></a><dl>
+<dt><a name="index-gnutls_005fx509_005fcrt_005fset_005fsubject_005funique_005fid"></a>Function: <em>int</em> <strong>gnutls_x509_crt_set_subject_unique_id</strong> <em>(gnutls_x509_crt_t <var>cert</var>, const void * <var>id</var>, size_t <var>id_size</var>)</em></dt>
+<dd><p><var>cert</var>: a certificate of type <code>gnutls_x509_crt_t</code> 
+</p>
+<p><var>id</var>: The unique ID
+</p>
+<p><var>id_size</var>: Holds the size of the unique ID.
+</p>
+<p>This function will set the X.509 certificate&rsquo;s subject unique ID field.
 </p>
 <p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
 negative error value.
@@ -28130,7 +28556,11 @@ purposes structure.
 <p><var>name</var>: The data of the constraints
 </p>
 <p>This function will add a name constraint to the list of excluded
-constraints.
+constraints. The constraints  <code>type</code> can be any of the following types:
+<code>GNUTLS_SAN_DNSNAME</code> , <code>GNUTLS_SAN_RFC822NAME</code> , <code>GNUTLS_SAN_DN</code> ,
+<code>GNUTLS_SAN_URI</code> , <code>GNUTLS_SAN_IPADDRESS</code> . For the latter, an IP address
+in network byte order is expected, followed by its network mask (which is
+4 bytes in IPv4 or 16-bytes in IPv6).
 </p>
 <p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a negative error value.
 </p>
@@ -28148,7 +28578,10 @@ constraints.
 <p><var>name</var>: The data of the constraints
 </p>
 <p>This function will add a name constraint to the list of permitted
-constraints.
+constraints. The constraints  <code>type</code> can be any of the following types:
+<code>GNUTLS_SAN_DNSNAME</code> , <code>GNUTLS_SAN_RFC822NAME</code> , <code>GNUTLS_SAN_DN</code> ,
+<code>GNUTLS_SAN_URI</code> , <code>GNUTLS_SAN_IPADDRESS</code> . For the latter, an IP address
+in network byte order is expected, followed by its network mask.
 </p>
 <p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a negative error value.
 </p>
@@ -31954,9 +32387,9 @@ negative error value.
 <dt><a name="index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt-1"></a>Function: <em>int</em> <strong>gnutls_pkcs11_copy_x509_crt</strong> <em>(const char * <var>token_url</var>, gnutls_x509_crt_t <var>crt</var>, const char * <var>label</var>, unsigned int <var>flags</var>)</em></dt>
 <dd><p><var>token_url</var>: A PKCS <code>11</code>  URL specifying a token
 </p>
-<p><var>crt</var>: A certificate
+<p><var>crt</var>: The certificate to copy
 </p>
-<p><var>label</var>: A name to be used for the stored data
+<p><var>label</var>: The name to be used for the stored data
 </p>
 <p><var>flags</var>: One of GNUTLS_PKCS11_OBJ_FLAG_*
 </p>
@@ -31967,6 +32400,29 @@ a URL. The certificate can be marked as trusted or not.
 negative error value.
 </p>
 <p><strong>Since:</strong> 2.12.0
+</p></dd></dl>
+
+<a name="gnutls_005fpkcs11_005fcopy_005fx509_005fcrt2-1"></a>
+<h4 class="subheading">gnutls_pkcs11_copy_x509_crt2</h4>
+<a name="gnutls_005fpkcs11_005fcopy_005fx509_005fcrt2"></a><dl>
+<dt><a name="index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt2"></a>Function: <em>int</em> <strong>gnutls_pkcs11_copy_x509_crt2</strong> <em>(const char * <var>token_url</var>, gnutls_x509_crt_t <var>crt</var>, const char * <var>label</var>, const gnutls_datum_t * <var>cid</var>, unsigned int <var>flags</var>)</em></dt>
+<dd><p><var>token_url</var>: A PKCS <code>11</code>  URL specifying a token
+</p>
+<p><var>crt</var>: The certificate to copy
+</p>
+<p><var>label</var>: The name to be used for the stored data
+</p>
+<p><var>cid</var>: The CKA_ID to set for the object -if NULL, the ID will be derived from the public key
+</p>
+<p><var>flags</var>: One of GNUTLS_PKCS11_OBJ_FLAG_*
+</p>
+<p>This function will copy a certificate into a PKCS <code>11</code>  token specified by
+a URL. The certificate can be marked as trusted or not.
+</p>
+<p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
+negative error value.
+</p>
+<p><strong>Since:</strong> 3.3.26
 </p></dd></dl>
 
 <a name="gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey-1"></a>
@@ -31991,6 +32447,32 @@ unless there is a strong reason not to.
 negative error value.
 </p>
 <p><strong>Since:</strong> 2.12.0
+</p></dd></dl>
+
+<a name="gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey2-1"></a>
+<h4 class="subheading">gnutls_pkcs11_copy_x509_privkey2</h4>
+<a name="gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey2"></a><dl>
+<dt><a name="index-gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey2"></a>Function: <em>int</em> <strong>gnutls_pkcs11_copy_x509_privkey2</strong> <em>(const char * <var>token_url</var>, gnutls_x509_privkey_t <var>key</var>, const char * <var>label</var>, const gnutls_datum_t * <var>cid</var>, unsigned int <var>key_usage</var>, unsigned int <var>flags</var>)</em></dt>
+<dd><p><var>token_url</var>: A PKCS <code>11</code>  URL specifying a token
+</p>
+<p><var>key</var>: A private key
+</p>
+<p><var>label</var>: A name to be used for the stored data
+</p>
+<p><var>cid</var>: The CKA_ID to set for the object -if NULL, the ID will be derived from the public key
+</p>
+<p><var>key_usage</var>: One of GNUTLS_KEY_*
+</p>
+<p><var>flags</var>: One of GNUTLS_PKCS11_OBJ_* flags
+</p>
+<p>This function will copy a private key into a PKCS <code>11</code>  token specified by
+a URL. It is highly recommended flags to contain <code>GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE</code> 
+unless there is a strong reason not to.
+</p>
+<p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
+negative error value.
+</p>
+<p><strong>Since:</strong> 3.3.26
 </p></dd></dl>
 
 <a name="gnutls_005fpkcs11_005fcrt_005fis_005fknown-1"></a>
@@ -32230,17 +32712,20 @@ needs to be deallocated using <code>gnutls_free()</code> .
 <h4 class="subheading">gnutls_pkcs11_obj_get_exts</h4>
 <a name="gnutls_005fpkcs11_005fobj_005fget_005fexts"></a><dl>
 <dt><a name="index-gnutls_005fpkcs11_005fobj_005fget_005fexts"></a>Function: <em>int</em> <strong>gnutls_pkcs11_obj_get_exts</strong> <em>(gnutls_pkcs11_obj_t <var>obj</var>, gnutls_x509_ext_st ** <var>exts</var>, unsigned int * <var>exts_size</var>, unsigned int <var>flags</var>)</em></dt>
-<dd><p><var>obj</var>: should contain a <code>gnutls_pkcs11_obj_t</code>  structure
+<dd><p><var>obj</var>: should contain a <code>gnutls_pkcs11_obj_t</code>  type
 </p>
-<p><var>exts</var>: an allocated list of pointers to <code>gnutls_x509_ext_st</code> 
+<p><var>exts</var>: a pointer to a <code>gnutls_x509_ext_st</code>  pointer
 </p>
-<p><var>exts_size</var>: the number of  <code>exts</code> 
+<p><var>exts_size</var>: will be updated with the number of  <code>exts</code> 
 </p>
 <p><var>flags</var>: Or sequence of <code>GNUTLS_PKCS11_OBJ_</code> * flags 
 </p>
 <p>This function will return information about attached extensions
 that associate to the provided object (which should be a certificate).
 The extensions are the attached p11-kit trust module extensions.
+</p>
+<p>Each element of  <code>exts</code> must be deinitialized using <code>gnutls_x509_ext_deinit()</code> 
+while  <code>exts</code> should be deallocated using <code>gnutls_free()</code> .
 </p>
 <p><strong>Returns:</strong> <code>GNUTLS_E_SUCCESS</code>  (0) on success or a negative error code on error.
 </p>
@@ -32386,6 +32871,29 @@ negative error value.
 <p><strong>Since:</strong> 3.1.0
 </p></dd></dl>
 
+<a name="gnutls_005fpkcs11_005fobj_005fset_005finfo-1"></a>
+<h4 class="subheading">gnutls_pkcs11_obj_set_info</h4>
+<a name="gnutls_005fpkcs11_005fobj_005fset_005finfo"></a><dl>
+<dt><a name="index-gnutls_005fpkcs11_005fobj_005fset_005finfo"></a>Function: <em>int</em> <strong>gnutls_pkcs11_obj_set_info</strong> <em>(gnutls_pkcs11_obj_t <var>obj</var>, gnutls_pkcs11_obj_info_t <var>itype</var>, const void * <var>data</var>, size_t <var>data_size</var>, unsigned <var>flags</var>)</em></dt>
+<dd><p><var>obj</var>: should contain a <code>gnutls_pkcs11_obj_t</code>  structure
+</p>
+<p><var>itype</var>: Denotes the type of information to be set
+</p>
+<p><var>data</var>: the data to set
+</p>
+<p><var>data_size</var>: the size of data
+</p>
+<p><var>flags</var>: Or sequence of GNUTLS_PKCS11_OBJ_* flags
+</p>
+<p>This function will set attributes on the provided object.
+Available options for  <code>itype</code> are <code>GNUTLS_PKCS11_OBJ_LABEL</code> ,
+<code>GNUTLS_PKCS11_OBJ_ID_HEX</code> , and <code>GNUTLS_PKCS11_OBJ_ID</code> .
+</p>
+<p><strong>Returns:</strong> <code>GNUTLS_E_SUCCESS</code>  (0) on success or a negative error code on error.
+</p>
+<p><strong>Since:</strong> 3.3.26
+</p></dd></dl>
+
 <a name="gnutls_005fpkcs11_005fobj_005fset_005fpin_005ffunction-1"></a>
 <h4 class="subheading">gnutls_pkcs11_obj_set_pin_function</h4>
 <a name="gnutls_005fpkcs11_005fobj_005fset_005fpin_005ffunction"></a><dl>
@@ -32487,7 +32995,7 @@ negative error value.
 </p>
 <p><var>label</var>: a label
 </p>
-<p><var>fmt</var>: the format of output params. PEM or DER.
+<p><var>fmt</var>: the format of output params. PEM or DER
 </p>
 <p><var>pubkey</var>: will hold the public key (may be <code>NULL</code> )
 </p>
@@ -32507,6 +33015,42 @@ can be substituted in the place of the bits parameter using the
 negative error value.
 </p>
 <p><strong>Since:</strong> 3.1.5
+</p></dd></dl>
+
+<a name="gnutls_005fpkcs11_005fprivkey_005fgenerate3-1"></a>
+<h4 class="subheading">gnutls_pkcs11_privkey_generate3</h4>
+<a name="gnutls_005fpkcs11_005fprivkey_005fgenerate3"></a><dl>
+<dt><a name="index-gnutls_005fpkcs11_005fprivkey_005fgenerate3"></a>Function: <em>int</em> <strong>gnutls_pkcs11_privkey_generate3</strong> <em>(const char * <var>url</var>, gnutls_pk_algorithm_t <var>pk</var>, unsigned int <var>bits</var>, const char * <var>label</var>, const gnutls_datum_t * <var>cid</var>, gnutls_x509_crt_fmt_t <var>fmt</var>, gnutls_datum_t * <var>pubkey</var>, unsigned int <var>flags</var>)</em></dt>
+<dd><p><var>url</var>: a token URL
+</p>
+<p><var>pk</var>: the public key algorithm
+</p>
+<p><var>bits</var>: the security bits
+</p>
+<p><var>label</var>: a label
+</p>
+<p><var>cid</var>: The CKA_ID to use for the new object
+</p>
+<p><var>fmt</var>: the format of output params. PEM or DER
+</p>
+<p><var>pubkey</var>: will hold the public key (may be <code>NULL</code> )
+</p>
+<p><var>flags</var>: zero or an OR&rsquo;ed sequence of <code>GNUTLS_PKCS11_OBJ_FLAGs</code> 
+</p>
+<p>This function will generate a private key in the specified
+by the  <code>url</code> token. The private key will be generate within
+the token and will not be exportable. This function will
+store the DER-encoded public key in the SubjectPublicKeyInfo format 
+in  <code>pubkey</code> . The  <code>pubkey</code> should be deinitialized using <code>gnutls_free()</code> .
+</p>
+<p>Note that when generating an elliptic curve key, the curve
+can be substituted in the place of the bits parameter using the
+<code>GNUTLS_CURVE_TO_BITS()</code>  macro.
+</p>
+<p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned, otherwise a
+negative error value.
+</p>
+<p><strong>Since:</strong> 3.3.26
 </p></dd></dl>
 
 <a name="gnutls_005fpkcs11_005fprivkey_005fget_005finfo-1"></a>
@@ -37531,8 +38075,10 @@ Next: <a href="#Concept-Index" accesskey="n" rel="next">Concept Index</a>, Previ
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fsecret_005fkey"><code>gnutls_pkcs11_copy_secret_key</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt"><code>gnutls_pkcs11_copy_x509_crt</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Writing-objects">Writing objects</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt-1"><code>gnutls_pkcs11_copy_x509_crt</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fcrt2"><code>gnutls_pkcs11_copy_x509_crt2</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey"><code>gnutls_pkcs11_copy_x509_privkey</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Writing-objects">Writing objects</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey-1"><code>gnutls_pkcs11_copy_x509_privkey</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcopy_005fx509_005fprivkey2"><code>gnutls_pkcs11_copy_x509_privkey2</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fcrt_005fis_005fknown"><code>gnutls_pkcs11_crt_is_known</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fdeinit"><code>gnutls_pkcs11_deinit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fdelete_005furl"><code>gnutls_pkcs11_delete_url</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#Writing-objects">Writing objects</a></td></tr>
@@ -37556,12 +38102,14 @@ Next: <a href="#Concept-Index" accesskey="n" rel="next">Concept Index</a>, Previ
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fobj_005finit"><code>gnutls_pkcs11_obj_init</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fobj_005flist_005fimport_005furl"><code>gnutls_pkcs11_obj_list_import_url</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fobj_005flist_005fimport_005furl2"><code>gnutls_pkcs11_obj_list_import_url2</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fobj_005fset_005finfo"><code>gnutls_pkcs11_obj_set_info</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fobj_005fset_005fpin_005ffunction"><code>gnutls_pkcs11_obj_set_pin_function</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fdeinit"><code>gnutls_pkcs11_privkey_deinit</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fexport_005fpubkey"><code>gnutls_pkcs11_privkey_export_pubkey</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fexport_005furl"><code>gnutls_pkcs11_privkey_export_url</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fgenerate"><code>gnutls_pkcs11_privkey_generate</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fgenerate2"><code>gnutls_pkcs11_privkey_generate2</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fgenerate3"><code>gnutls_pkcs11_privkey_generate3</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fget_005finfo"><code>gnutls_pkcs11_privkey_get_info</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fget_005fpk_005falgorithm"><code>gnutls_pkcs11_privkey_get_pk_algorithm</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fpkcs11_005fprivkey_005fimport_005furl"><code>gnutls_pkcs11_privkey_import_url</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#PKCS-11-API">PKCS 11 API</a></td></tr>
@@ -38098,6 +38646,7 @@ Next: <a href="#Concept-Index" accesskey="n" rel="next">Concept Index</a>, Previ
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fissuer_005falt_005fname"><code>gnutls_x509_crt_set_issuer_alt_name</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fissuer_005fdn"><code>gnutls_x509_crt_set_issuer_dn</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fissuer_005fdn_005fby_005foid"><code>gnutls_x509_crt_set_issuer_dn_by_oid</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fissuer_005funique_005fid"><code>gnutls_x509_crt_set_issuer_unique_id</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fkey"><code>gnutls_x509_crt_set_key</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fkey_005fpurpose_005foid"><code>gnutls_x509_crt_set_key_purpose_oid</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fkey_005fusage"><code>gnutls_x509_crt_set_key_usage</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
@@ -38113,6 +38662,7 @@ Next: <a href="#Concept-Index" accesskey="n" rel="next">Concept Index</a>, Previ
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fsubject_005falternative_005fname"><code>gnutls_x509_crt_set_subject_alternative_name</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fsubject_005falt_005fname"><code>gnutls_x509_crt_set_subject_alt_name</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fsubject_005fkey_005fid"><code>gnutls_x509_crt_set_subject_key_id</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fsubject_005funique_005fid"><code>gnutls_x509_crt_set_subject_unique_id</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fset_005fversion"><code>gnutls_x509_crt_set_version</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fsign"><code>gnutls_x509_crt_sign</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-gnutls_005fx509_005fcrt_005fsign2"><code>gnutls_x509_crt_sign2</code></a>:</td><td>&nbsp;</td><td valign="top"><a href="#X509-certificate-API">X509 certificate API</a></td></tr>

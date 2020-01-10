@@ -13295,7 +13295,7 @@ negative error value.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-PKCS8-USE-PKCS12-3DES:CAPS"></a><h3>GNUTLS_PKCS8_USE_PKCS12_3DES</h3>
-<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_3DES GNUTLS_PKCS_USE_PKCS12_3DES
+<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_3DES GNUTLS_PKCS_PKCS12_3DES
 </pre>
 <p>
 </p>
@@ -13303,7 +13303,7 @@ negative error value.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-PKCS8-USE-PKCS12-ARCFOUR:CAPS"></a><h3>GNUTLS_PKCS8_USE_PKCS12_ARCFOUR</h3>
-<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_ARCFOUR GNUTLS_PKCS_USE_PKCS12_ARCFOUR
+<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_ARCFOUR GNUTLS_PKCS_PKCS12_ARCFOUR
 </pre>
 <p>
 </p>
@@ -13311,7 +13311,7 @@ negative error value.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-PKCS8-USE-PKCS12-RC2-40:CAPS"></a><h3>GNUTLS_PKCS8_USE_PKCS12_RC2_40</h3>
-<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_RC2_40 GNUTLS_PKCS_USE_PKCS12_RC2_40
+<pre class="programlisting">#define GNUTLS_PKCS8_USE_PKCS12_RC2_40 GNUTLS_PKCS_PKCS12_RC2_40
 </pre>
 <p>
 </p>
@@ -13588,49 +13588,49 @@ and <code class="literal">gnutls_certificate_verification_profiles_t</code>.</p>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PKCS12-3DES:CAPS"></a>GNUTLS_PKCS_USE_PKCS12_3DES</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PKCS12-3DES:CAPS"></a>GNUTLS_PKCS_PKCS12_3DES</p></td>
 <td class="enum_member_description">
 <p>PKCS-12 3DES.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PKCS12-ARCFOUR:CAPS"></a>GNUTLS_PKCS_USE_PKCS12_ARCFOUR</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PKCS12-ARCFOUR:CAPS"></a>GNUTLS_PKCS_PKCS12_ARCFOUR</p></td>
 <td class="enum_member_description">
 <p>PKCS-12 ARCFOUR.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PKCS12-RC2-40:CAPS"></a>GNUTLS_PKCS_USE_PKCS12_RC2_40</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PKCS12-RC2-40:CAPS"></a>GNUTLS_PKCS_PKCS12_RC2_40</p></td>
 <td class="enum_member_description">
 <p>PKCS-12 RC2-40.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PBES2-3DES:CAPS"></a>GNUTLS_PKCS_USE_PBES2_3DES</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PBES2-3DES:CAPS"></a>GNUTLS_PKCS_PBES2_3DES</p></td>
 <td class="enum_member_description">
 <p>PBES2 3DES.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PBES2-AES-128:CAPS"></a>GNUTLS_PKCS_USE_PBES2_AES_128</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PBES2-AES-128:CAPS"></a>GNUTLS_PKCS_PBES2_AES_128</p></td>
 <td class="enum_member_description">
 <p>PBES2 AES-128.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PBES2-AES-192:CAPS"></a>GNUTLS_PKCS_USE_PBES2_AES_192</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PBES2-AES-192:CAPS"></a>GNUTLS_PKCS_PBES2_AES_192</p></td>
 <td class="enum_member_description">
 <p>PBES2 AES-192.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>
 <tr>
-<td class="enum_member_name"><p><a name="GNUTLS-PKCS-USE-PBES2-AES-256:CAPS"></a>GNUTLS_PKCS_USE_PBES2_AES_256</p></td>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PBES2-AES-256:CAPS"></a>GNUTLS_PKCS_PBES2_AES_256</p></td>
 <td class="enum_member_description">
 <p>PBES2 AES-256.</p>
 </td>
@@ -13640,6 +13640,13 @@ and <code class="literal">gnutls_certificate_verification_profiles_t</code>.</p>
 <td class="enum_member_name"><p><a name="GNUTLS-PKCS-NULL-PASSWORD:CAPS"></a>GNUTLS_PKCS_NULL_PASSWORD</p></td>
 <td class="enum_member_description">
 <p>Some schemas distinguish between an empty and a NULL password.</p>
+</td>
+<td class="enum_member_annotations"> </td>
+</tr>
+<tr>
+<td class="enum_member_name"><p><a name="GNUTLS-PKCS-PBES2-DES:CAPS"></a>GNUTLS_PKCS_PBES2_DES</p></td>
+<td class="enum_member_description">
+<p>PBES2 single DES.</p>
 </td>
 <td class="enum_member_annotations"> </td>
 </tr>

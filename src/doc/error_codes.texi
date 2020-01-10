@@ -142,6 +142,7 @@
 @item -332 @tab GNUTLS_@-E_@-TPM_@-SESSION_@-ERROR @tab Cannot initialize a session with the TPM.
 @item -333 @tab GNUTLS_@-E_@-TPM_@-KEY_@-NOT_@-FOUND @tab TPM key was not found in persistent storage.
 @item -334 @tab GNUTLS_@-E_@-TPM_@-UNINITIALIZED @tab TPM is not initialized.
+@item -335 @tab GNUTLS_@-E_@-TPM_@-NO_@-LIB @tab The TPM library (trousers) cannot be found.
 @item -340 @tab GNUTLS_@-E_@-NO_@-CERTIFICATE_@-STATUS @tab There is no certificate status (OCSP).
 @item -341 @tab GNUTLS_@-E_@-OCSP_@-RESPONSE_@-ERROR @tab The OCSP response is invalid
 @item -342 @tab GNUTLS_@-E_@-RANDOM_@-DEVICE_@-ERROR @tab Error in the system's randomness device.

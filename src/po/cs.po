@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgnutls 3.2.1\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2016-07-05 18:39+0200\n"
+"POT-Creation-Date: 2017-01-09 07:46+0100\n"
 "PO-Revision-Date: 2013-06-16 21:52+0200\n"
 "Last-Translator: Petr Pisar <petr.pisar@atlas.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -357,7 +357,7 @@ msgstr "Nepodporované rozšíření v X.509 certifikátu."
 msgid "Key usage violation in certificate has been detected."
 msgstr "Bylo zaznamenáno použití klíče v rozporu s pravidly."
 
-#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:385
+#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:387
 msgid "Function was interrupted."
 msgstr "Funkce byla přerušena."
 
@@ -585,191 +585,195 @@ msgid "TPM error."
 msgstr "Chyba TPM."
 
 #: lib/gnutls_errors.c:293
+msgid "The TPM library (trousers) cannot be found."
+msgstr ""
+
+#: lib/gnutls_errors.c:295
 msgid "TPM is not initialized."
 msgstr "TPM není inicializován."
 
-#: lib/gnutls_errors.c:295
+#: lib/gnutls_errors.c:297
 msgid "TPM key was not found in persistent storage."
 msgstr "Klíč TPM nebyl v trvalém úložišti nalezen."
 
-#: lib/gnutls_errors.c:297
+#: lib/gnutls_errors.c:299
 msgid "Cannot initialize a session with the TPM."
 msgstr "Nelze zahájit relaci s TPM."
 
-#: lib/gnutls_errors.c:299
+#: lib/gnutls_errors.c:301
 msgid "PKCS #11 error."
 msgstr "Chyba PKCS #11."
 
-#: lib/gnutls_errors.c:301
+#: lib/gnutls_errors.c:303
 msgid "PKCS #11 initialization error."
 msgstr "Chyba inicializace PKCS #11."
 
-#: lib/gnutls_errors.c:303
+#: lib/gnutls_errors.c:305
 msgid "Error in parsing."
 msgstr "Chyba rozboru."
 
-#: lib/gnutls_errors.c:305
+#: lib/gnutls_errors.c:307
 msgid "Error in provided PIN."
 msgstr "Chyba v poskytnutém PIN."
 
-#: lib/gnutls_errors.c:307
+#: lib/gnutls_errors.c:309
 msgid "Error in provided SRK password for TPM."
 msgstr "Chyba v poskytnutém heslu SRK pro TPM."
 
-#: lib/gnutls_errors.c:310
+#: lib/gnutls_errors.c:312
 msgid "Error in provided password for key to be loaded in TPM."
 msgstr "Chyba v poskytnutém heslu pro klíč, který se měl nahrát do TPM."
 
-#: lib/gnutls_errors.c:312
+#: lib/gnutls_errors.c:314
 msgid "PKCS #11 error in slot"
 msgstr "PKCS #11 chyba ve slotu"
 
-#: lib/gnutls_errors.c:314
+#: lib/gnutls_errors.c:316
 msgid "Thread locking error"
 msgstr "Chyba zamykaní vlákna"
 
-#: lib/gnutls_errors.c:316
+#: lib/gnutls_errors.c:318
 msgid "PKCS #11 error in attribute"
 msgstr "PKCS #11 chyba v atributu"
 
-#: lib/gnutls_errors.c:318
+#: lib/gnutls_errors.c:320
 msgid "PKCS #11 error in device"
 msgstr "PKCS #11 chyba v zařízení"
 
-#: lib/gnutls_errors.c:320
+#: lib/gnutls_errors.c:322
 msgid "PKCS #11 error in data"
 msgstr "PKCS #11 chyba v datech"
 
-#: lib/gnutls_errors.c:322
+#: lib/gnutls_errors.c:324
 msgid "PKCS #11 unsupported feature"
 msgstr "Nepodporovaná vlastnost PKCS #11"
 
-#: lib/gnutls_errors.c:324
+#: lib/gnutls_errors.c:326
 msgid "PKCS #11 error in key"
 msgstr "PKCS #11 chyba v klíči"
 
-#: lib/gnutls_errors.c:326
+#: lib/gnutls_errors.c:328
 msgid "PKCS #11 PIN expired"
 msgstr "PKCS #11 PINu vypršela platnost"
 
-#: lib/gnutls_errors.c:328
+#: lib/gnutls_errors.c:330
 msgid "PKCS #11 PIN locked"
 msgstr "PKCS #11 PIN uzamknut"
 
-#: lib/gnutls_errors.c:330
+#: lib/gnutls_errors.c:332
 msgid "PKCS #11 error in session"
 msgstr "PKCS #11 chyba v relaci"
 
-#: lib/gnutls_errors.c:332
+#: lib/gnutls_errors.c:334
 msgid "PKCS #11 error in signature"
 msgstr "PKCS #11 chyba v podpisu"
 
 # XXX: Nepřekládat jako zařízení, hláška „PKCS #11 error in device“ již
 # existuje.
-#: lib/gnutls_errors.c:334
+#: lib/gnutls_errors.c:336
 msgid "PKCS #11 error in token"
 msgstr "PKCS #11 chyba v tokenu"
 
-#: lib/gnutls_errors.c:336
+#: lib/gnutls_errors.c:338
 msgid "PKCS #11 user error"
 msgstr "PKCS #11 chyba uživatele"
 
-#: lib/gnutls_errors.c:338
+#: lib/gnutls_errors.c:340
 msgid "The operation timed out"
 msgstr "Operace neskončila v řádném čase"
 
-#: lib/gnutls_errors.c:340
+#: lib/gnutls_errors.c:342
 msgid "The operation was cancelled due to user error"
 msgstr "Operace byla zrušena kvůli chybě uživatele"
 
-#: lib/gnutls_errors.c:342
+#: lib/gnutls_errors.c:344
 msgid "No supported ECC curves were found"
 msgstr "Nebyly nalezeny žádné podporované křivky ECC"
 
-#: lib/gnutls_errors.c:344
+#: lib/gnutls_errors.c:346
 msgid "The curve is unsupported"
 msgstr "Tato křivka není podporována"
 
-#: lib/gnutls_errors.c:346
+#: lib/gnutls_errors.c:348
 msgid "The requested PKCS #11 object is not available"
 msgstr "Požadovaný PKCS #11 object není dostupný"
 
-#: lib/gnutls_errors.c:349
+#: lib/gnutls_errors.c:351
 msgid ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
 msgstr ""
 "Poskytnutý seznam certifikátů X.509 není seřazen (od předmětu po vydavatele)"
 
-#: lib/gnutls_errors.c:351
+#: lib/gnutls_errors.c:353
 msgid "The OCSP response is invalid"
 msgstr "Odpověď OCSP je neplatná"
 
-#: lib/gnutls_errors.c:353
+#: lib/gnutls_errors.c:355
 msgid "There is no certificate status (OCSP)."
 msgstr "Chybí stav certifikátu (OCSP)."
 
-#: lib/gnutls_errors.c:355
+#: lib/gnutls_errors.c:357
 msgid "Error in the system's randomness device."
 msgstr "Chyba v zařízení se systémovým zdrojem náhody."
 
-#: lib/gnutls_errors.c:358
+#: lib/gnutls_errors.c:360
 msgid "No common application protocol could be negotiated."
 msgstr "Nebylo možné dojednat žádný společný aplikační protokol."
 
-#: lib/gnutls_errors.c:360
+#: lib/gnutls_errors.c:362
 #, fuzzy
 msgid "Error while performing self checks."
 msgstr "Chyba při čtení souboru."
 
-#: lib/gnutls_errors.c:362
+#: lib/gnutls_errors.c:364
 msgid "There is no self test for this algorithm."
 msgstr ""
 
-#: lib/gnutls_errors.c:364
+#: lib/gnutls_errors.c:366
 msgid ""
 "An error has been detected in the library and cannot continue operations."
 msgstr ""
 
-#: lib/gnutls_errors.c:366
+#: lib/gnutls_errors.c:368
 #, fuzzy
 msgid "Error in sockets initialization."
 msgstr "Chyba v push funkci."
 
-#: lib/gnutls_errors.c:368
+#: lib/gnutls_errors.c:370
 #, fuzzy
 msgid "Error in public key generation."
 msgstr "Chyba v pull funkci."
 
-#: lib/gnutls_errors.c:374
+#: lib/gnutls_errors.c:376
 msgid "Success."
 msgstr "Úspěch."
 
-#: lib/gnutls_errors.c:375
+#: lib/gnutls_errors.c:377
 msgid "A TLS warning alert has been received."
 msgstr "Bylo přijato varovné upozornění TLS."
 
-#: lib/gnutls_errors.c:377
+#: lib/gnutls_errors.c:379
 msgid "A heartbeat pong message was received."
 msgstr "Byla přijata odpověď na udržovací zprávu."
 
-#: lib/gnutls_errors.c:379
+#: lib/gnutls_errors.c:381
 msgid "A heartbeat ping message was received."
 msgstr "Byl přijat požadavek na udržovací zprávu."
 
-#: lib/gnutls_errors.c:381
+#: lib/gnutls_errors.c:383
 msgid "Resource temporarily unavailable, try again."
 msgstr "Zdroj je dočasně nedostupný, zkusí se znovu."
 
-#: lib/gnutls_errors.c:383
+#: lib/gnutls_errors.c:385
 msgid "The transmitted packet is too large (EMSGSIZE)."
 msgstr "Přenášený packet je příliš velký (EMSGSIZE)."
 
-#: lib/gnutls_errors.c:386
+#: lib/gnutls_errors.c:388
 msgid "Rehandshake was requested by the peer."
 msgstr "Druhá strana požádala o znovuzahájení relace."
 
-#: lib/gnutls_errors.c:477
+#: lib/gnutls_errors.c:479
 msgid "(unknown error code)"
 msgstr "(neznámý chybový kód)"
 

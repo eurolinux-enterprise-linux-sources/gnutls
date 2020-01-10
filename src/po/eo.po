@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: libgnutls 3.2.1\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2016-07-05 18:39+0200\n"
+"POT-Creation-Date: 2017-01-09 07:46+0100\n"
 "PO-Revision-Date: 2013-06-28 14:49-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -354,7 +354,7 @@ msgstr "Nesubtenata etendo en atestilo X.509."
 msgid "Key usage violation in certificate has been detected."
 msgstr "Malrespekto en ŝlosil-uzmaniero estas detektita."
 
-#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:385
+#: lib/gnutls_errors.c:170 lib/gnutls_errors.c:387
 msgid "Function was interrupted."
 msgstr "Funkcio estis haltigata."
 
@@ -580,114 +580,118 @@ msgid "TPM error."
 msgstr "Eraro TPM."
 
 #: lib/gnutls_errors.c:293
+msgid "The TPM library (trousers) cannot be found."
+msgstr ""
+
+#: lib/gnutls_errors.c:295
 msgid "TPM is not initialized."
 msgstr "TPM ne estas ekigita."
 
-#: lib/gnutls_errors.c:295
+#: lib/gnutls_errors.c:297
 msgid "TPM key was not found in persistent storage."
 msgstr "Ŝlosilo TPM ne estis trovata en persista konsevado."
 
-#: lib/gnutls_errors.c:297
+#: lib/gnutls_errors.c:299
 msgid "Cannot initialize a session with the TPM."
 msgstr "Ne eblis ekiggi seancon kun la TPM."
 
-#: lib/gnutls_errors.c:299
+#: lib/gnutls_errors.c:301
 msgid "PKCS #11 error."
 msgstr "Eraro PKCS #11."
 
-#: lib/gnutls_errors.c:301
+#: lib/gnutls_errors.c:303
 msgid "PKCS #11 initialization error."
 msgstr "Ekiga eraro PKCS #11."
 
-#: lib/gnutls_errors.c:303
+#: lib/gnutls_errors.c:305
 msgid "Error in parsing."
 msgstr "Eraro dum analizo."
 
-#: lib/gnutls_errors.c:305
+#: lib/gnutls_errors.c:307
 msgid "Error in provided PIN."
 msgstr "Eraro en provizita PIN."
 
-#: lib/gnutls_errors.c:307
+#: lib/gnutls_errors.c:309
 msgid "Error in provided SRK password for TPM."
 msgstr "Eraro en provizita pasvorta SRK por TPM."
 
-#: lib/gnutls_errors.c:310
+#: lib/gnutls_errors.c:312
 msgid "Error in provided password for key to be loaded in TPM."
 msgstr "Eraro en provizita pasvorto por ŝlosilo ŝargota en TPM."
 
-#: lib/gnutls_errors.c:312
+#: lib/gnutls_errors.c:314
 msgid "PKCS #11 error in slot"
 msgstr "Eraro PKCS #11 en konektingo"
 
-#: lib/gnutls_errors.c:314
+#: lib/gnutls_errors.c:316
 msgid "Thread locking error"
 msgstr "Eraro de faden-ŝloso"
 
-#: lib/gnutls_errors.c:316
+#: lib/gnutls_errors.c:318
 msgid "PKCS #11 error in attribute"
 msgstr "Eraro PKCS #11 en atributo"
 
-#: lib/gnutls_errors.c:318
+#: lib/gnutls_errors.c:320
 msgid "PKCS #11 error in device"
 msgstr "Eraro PKCS #11 en aparato"
 
-#: lib/gnutls_errors.c:320
+#: lib/gnutls_errors.c:322
 msgid "PKCS #11 error in data"
 msgstr "Eraro PKCS #11 en datumaro"
 
-#: lib/gnutls_errors.c:322
+#: lib/gnutls_errors.c:324
 msgid "PKCS #11 unsupported feature"
 msgstr "PKCS #11 nesubtenata trajto"
 
-#: lib/gnutls_errors.c:324
+#: lib/gnutls_errors.c:326
 msgid "PKCS #11 error in key"
 msgstr "Eraro PKCS #11 en ŝlosilo"
 
-#: lib/gnutls_errors.c:326
+#: lib/gnutls_errors.c:328
 msgid "PKCS #11 PIN expired"
 msgstr "PKCS #11 PIN senvalidiĝis"
 
-#: lib/gnutls_errors.c:328
+#: lib/gnutls_errors.c:330
 msgid "PKCS #11 PIN locked"
 msgstr "PKCS #11 PIN ŝlosita"
 
-#: lib/gnutls_errors.c:330
+#: lib/gnutls_errors.c:332
 msgid "PKCS #11 error in session"
 msgstr "Eraro PKCS #11 en seanco"
 
-#: lib/gnutls_errors.c:332
+#: lib/gnutls_errors.c:334
 msgid "PKCS #11 error in signature"
 msgstr "Eraro PKCS #11 en subskribo"
 
-#: lib/gnutls_errors.c:334
+#: lib/gnutls_errors.c:336
 msgid "PKCS #11 error in token"
 msgstr "Eraro PKCS #11 en ĵetono"
 
-#: lib/gnutls_errors.c:336
+#: lib/gnutls_errors.c:338
 msgid "PKCS #11 user error"
 msgstr "PKCS #11 uzant-eraro"
 
-#: lib/gnutls_errors.c:338
+#: lib/gnutls_errors.c:340
 msgid "The operation timed out"
 msgstr "La tempo por operacio finis"
 
-#: lib/gnutls_errors.c:340
+#: lib/gnutls_errors.c:342
 msgid "The operation was cancelled due to user error"
 msgstr "La operacio estis nuligata pro uzant-eraro"
 
-#: lib/gnutls_errors.c:342
+#: lib/gnutls_errors.c:344
 msgid "No supported ECC curves were found"
 msgstr "Neniu subtenata kurbo ECC estis trovata"
 
-#: lib/gnutls_errors.c:344
+#: lib/gnutls_errors.c:346
 msgid "The curve is unsupported"
 msgstr "La kurbo estas nesubtenata"
 
-#: lib/gnutls_errors.c:346
+#: lib/gnutls_errors.c:348
 msgid "The requested PKCS #11 object is not available"
 msgstr "La petita objekto PKCS #11 ne disponeblas"
 
-#: lib/gnutls_errors.c:349
+#: lib/gnutls_errors.c:351
 msgid ""
 "The provided X.509 certificate list is not sorted (in subject to issuer "
 "order)"
@@ -695,75 +699,75 @@ msgstr ""
 "La provizita atestilo-listo X.509 ne estas ordigita (laŭ ordo de temo al "
 "eldonanto)"
 
-#: lib/gnutls_errors.c:351
+#: lib/gnutls_errors.c:353
 msgid "The OCSP response is invalid"
 msgstr "La respondo OCSP malvalidas."
 
-#: lib/gnutls_errors.c:353
+#: lib/gnutls_errors.c:355
 msgid "There is no certificate status (OCSP)."
 msgstr "Estas neniu atestila stato (OCSP)."
 
-#: lib/gnutls_errors.c:355
+#: lib/gnutls_errors.c:357
 msgid "Error in the system's randomness device."
 msgstr "Eraro en la hazardec-aparato de la sistemo."
 
-#: lib/gnutls_errors.c:358
+#: lib/gnutls_errors.c:360
 msgid "No common application protocol could be negotiated."
 msgstr "Neniu ordinara aplikaĵ-protokolo povis esti negocata."
 
-#: lib/gnutls_errors.c:360
+#: lib/gnutls_errors.c:362
 #, fuzzy
 msgid "Error while performing self checks."
 msgstr "Eraro dum lego de dosiero."
 
-#: lib/gnutls_errors.c:362
+#: lib/gnutls_errors.c:364
 msgid "There is no self test for this algorithm."
 msgstr ""
 
-#: lib/gnutls_errors.c:364
+#: lib/gnutls_errors.c:366
 msgid ""
 "An error has been detected in the library and cannot continue operations."
 msgstr ""
 
-#: lib/gnutls_errors.c:366
+#: lib/gnutls_errors.c:368
 #, fuzzy
 msgid "Error in sockets initialization."
 msgstr "Eraro en puŝa funkcio."
 
-#: lib/gnutls_errors.c:368
+#: lib/gnutls_errors.c:370
 #, fuzzy
 msgid "Error in public key generation."
 msgstr "Eraro en tira funkcio."
 
-#: lib/gnutls_errors.c:374
+#: lib/gnutls_errors.c:376
 msgid "Success."
 msgstr "Sukceso."
 
-#: lib/gnutls_errors.c:375
+#: lib/gnutls_errors.c:377
 msgid "A TLS warning alert has been received."
 msgstr "Averta atentigo TLS estas ricevita."
 
-#: lib/gnutls_errors.c:377
+#: lib/gnutls_errors.c:379
 msgid "A heartbeat pong message was received."
 msgstr "Korbata mesaĝo 'pong' estis ricevata."
 
-#: lib/gnutls_errors.c:379
+#: lib/gnutls_errors.c:381
 msgid "A heartbeat ping message was received."
 msgstr "Korbata mesaĝo 'ping' estis ricevata."
 
-#: lib/gnutls_errors.c:381
+#: lib/gnutls_errors.c:383
 msgid "Resource temporarily unavailable, try again."
 msgstr "La rimedo estas provizore nedisponebla, provu refoje."
 
-#: lib/gnutls_errors.c:383
+#: lib/gnutls_errors.c:385
 msgid "The transmitted packet is too large (EMSGSIZE)."
 msgstr "La transigita pako tro larĝas (EMSGSIZE)."
 
-#: lib/gnutls_errors.c:386
+#: lib/gnutls_errors.c:388
 msgid "Rehandshake was requested by the peer."
 msgstr "Rekvitanco estis petata de la samtavolano."
 
-#: lib/gnutls_errors.c:477
+#: lib/gnutls_errors.c:479
 msgid "(unknown error code)"
 msgstr "(nekonata erar-kodo)"
 

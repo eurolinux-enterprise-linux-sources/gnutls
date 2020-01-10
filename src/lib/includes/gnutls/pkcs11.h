@@ -173,11 +173,28 @@ int gnutls_pkcs11_crt_is_known(const char *url, gnutls_x509_crt_t cert,
 
 int gnutls_pkcs11_copy_x509_crt(const char *token_url,
 				gnutls_x509_crt_t crt,
-				const char *label, unsigned int flags
-				/* GNUTLS_PKCS11_OBJ_FLAG_* */ );
+				const char *label,
+				unsigned int flags /* GNUTLS_PKCS11_OBJ_FLAG_* */);
+
+int gnutls_pkcs11_copy_x509_crt2(const char *token_url,
+				gnutls_x509_crt_t crt,
+				const char *label,
+				const gnutls_datum_t *id,
+				unsigned int flags /* GNUTLS_PKCS11_OBJ_FLAG_* */);
+
 int gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 				    gnutls_x509_privkey_t key,
 				    const char *label,
+				    unsigned int key_usage
+				    /*GNUTLS_KEY_* */ ,
+				    unsigned int flags
+				    /* GNUTLS_PKCS11_OBJ_FLAG_* */
+    );
+
+int gnutls_pkcs11_copy_x509_privkey2(const char *token_url,
+				    gnutls_x509_privkey_t key,
+				    const char *label,
+				    const gnutls_datum_t *cid,
 				    unsigned int key_usage
 				    /*GNUTLS_KEY_* */ ,
 				    unsigned int flags
@@ -225,6 +242,10 @@ typedef enum {
 int gnutls_pkcs11_obj_get_info(gnutls_pkcs11_obj_t crt,
 			       gnutls_pkcs11_obj_info_t itype,
 			       void *output, size_t * output_size);
+int gnutls_pkcs11_obj_set_info(gnutls_pkcs11_obj_t crt,
+			       gnutls_pkcs11_obj_info_t itype,
+			       const void *data, size_t data_size,
+			       unsigned flags);
 
 /**
  * gnutls_pkcs11_obj_attr_t:
@@ -379,12 +400,21 @@ int gnutls_pkcs11_privkey_generate(const char *url,
 				   gnutls_pk_algorithm_t pk,
 				   unsigned int bits,
 				   const char *label, unsigned int flags);
-
 int
 gnutls_pkcs11_privkey_generate2(const char *url,
 				gnutls_pk_algorithm_t pk,
 				unsigned int bits,
 				const char *label,
+				gnutls_x509_crt_fmt_t fmt,
+				gnutls_datum_t * pubkey,
+				unsigned int flags);
+
+int
+gnutls_pkcs11_privkey_generate3(const char *url,
+				gnutls_pk_algorithm_t pk,
+				unsigned int bits,
+				const char *label,
+				const gnutls_datum_t *cid,
 				gnutls_x509_crt_fmt_t fmt,
 				gnutls_datum_t * pubkey,
 				unsigned int flags);

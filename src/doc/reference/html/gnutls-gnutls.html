@@ -7554,10 +7554,12 @@ gnutls_handshake_set_max_packet_length
 <p>This function will set the maximum size of all handshake messages.
 Handshakes over this size are rejected with
 <a class="link" href="gnutls-gnutls.html#GNUTLS-E-HANDSHAKE-TOO-LARGE:CAPS" title="GNUTLS_E_HANDSHAKE_TOO_LARGE"><code class="literal">GNUTLS_E_HANDSHAKE_TOO_LARGE</code></a> error code.  The default value is
-48kb which is typically large enough.  Set this to 0 if you do not
+128kb which is typically large enough.  Set this to 0 if you do not
 want to set an upper limit.</p>
 <p>The reason for restricting the handshake message sizes are to
 limit Denial of Service attacks.</p>
+<p>Note that the maximum handshake size was increased to 128kb
+from 48kb in GnuTLS 3.3.25.</p>
 <div class="refsect3">
 <a name="gnutls-handshake-set-max-packet-length.parameters"></a><h4>Parameters</h4>
 <div class="informaltable"><table class="informaltable" width="100%" border="0">
@@ -15105,7 +15107,7 @@ or a negative error value on other errors.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-VERSION:CAPS"></a><h3>GNUTLS_VERSION</h3>
-<pre class="programlisting">#define GNUTLS_VERSION "3.3.24"
+<pre class="programlisting">#define GNUTLS_VERSION "3.3.26"
 </pre>
 <p>
 </p>
@@ -15129,7 +15131,7 @@ or a negative error value on other errors.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-VERSION-NUMBER:CAPS"></a><h3>GNUTLS_VERSION_NUMBER</h3>
-<pre class="programlisting">#define GNUTLS_VERSION_NUMBER 0x030318
+<pre class="programlisting">#define GNUTLS_VERSION_NUMBER 0x03031a
 </pre>
 <p>
 </p>
@@ -15137,7 +15139,7 @@ or a negative error value on other errors.</p>
 <hr>
 <div class="refsect2">
 <a name="GNUTLS-VERSION-PATCH:CAPS"></a><h3>GNUTLS_VERSION_PATCH</h3>
-<pre class="programlisting">#define GNUTLS_VERSION_PATCH 24
+<pre class="programlisting">#define GNUTLS_VERSION_PATCH 26
 </pre>
 <p>
 </p>

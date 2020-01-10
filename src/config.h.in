@@ -1850,6 +1850,9 @@
 /* Define to 1 if your <sys/time.h> declares `struct tm'. */
 #undef TM_IN_SYS_TIME
 
+/* the location of the trousers library */
+#undef TROUSERS_LIB
+
 /* The DNSSEC root key file */
 #undef UNBOUND_ROOT_KEY_FILE
 

@@ -24,11 +24,12 @@ EXTRA_DIST = README key-ca.pem key-user.pem \
 	key-ca-1234.p8 key-ca-empty.p8 key-ca-null.p8 \
 	openssl-key-ecc.p8 key-ecc.p8 key-ecc.pem
 
-dist_check_SCRIPTS = key-id pkcs8
+dist_check_SCRIPTS = key-id pkcs8 pkcs8-invalid
 
-TESTS = key-id pkcs8
+TESTS = key-id pkcs8 pkcs8-invalid
 
 TESTS_ENVIRONMENT = EXEEXT=$(EXEEXT) \
+	ASAN_OPTIONS="detect_leaks=0:exitcode=6" \
 	LC_ALL="C"						\
 	top_builddir="$(top_builddir)"				\
 	srcdir="$(srcdir)"
