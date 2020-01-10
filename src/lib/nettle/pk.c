@@ -53,7 +53,11 @@
 
 static inline const struct ecc_curve *get_supported_curve(int curve);
 
+#ifdef USE_NETTLE3
+static void rnd_func(void *_ctx, size_t length, uint8_t * data)
+#else
 static void rnd_func(void *_ctx, unsigned length, uint8_t * data)
+#endif
 {
 	if (_gnutls_rnd(GNUTLS_RND_RANDOM, data, length) < 0) {
 #ifdef ENABLE_FIPS140
@@ -78,7 +82,18 @@ ecc_point_zclear (struct ecc_point *p)
         ecc_point_clear(p);
 }
   
+#ifdef USE_NETTLE3
+static void
+_dsa_params_get(const gnutls_pk_params_st * pk_params,
+		struct dsa_params *pub)
+{
+	memcpy(pub->p, pk_params->params[DSA_P], SIZEOF_MPZT);
 
+	if (pk_params->params[DSA_Q])
+		memcpy(&pub->q, pk_params->params[DSA_Q], sizeof(mpz_t));
+	memcpy(pub->g, pk_params->params[DSA_G], SIZEOF_MPZT);
+}
+#else
 static void
 _dsa_params_to_pubkey(const gnutls_pk_params_st * pk_params,
 		      struct dsa_public_key *pub)
@@ -99,6 +114,7 @@ _dsa_params_to_privkey(const gnutls_pk_params_st * pk_params,
 {
 	memcpy(pub->x, pk_params->params[4], SIZEOF_MPZT);
 }
+#endif
 
 static void
 _rsa_params_to_privkey(const gnutls_pk_params_st * pk_params,
@@ -204,23 +220,17 @@ static int _wrap_nettle_pk_derive(gnutls_pk_algorithm_t algo,
 		if (ret < 0)
 			return gnutls_assert_val(ret);
 
-		ret = _gnutls_mpi_modm(ff, f, prime);
+		ret = _gnutls_mpi_add_ui(ff, f, 1);
 		if (ret < 0) {
 			gnutls_assert();
 			goto dh_cleanup;
 		}
 
-		ret = _gnutls_mpi_add_ui(ff, ff, 1);
-		if (ret < 0) {
-			gnutls_assert();
-			goto dh_cleanup;
-		}
-
-		/* check if f==0,1,p-1. 
-		 * or (ff=f+1) equivalently ff==1,2,p */
+		/* check if f==0,1, or f >= p-1. 
+		 * or (ff=f+1) equivalently ff==1,2, ff >= p */
 		if ((_gnutls_mpi_cmp_ui(ff, 2) == 0)
 		    || (_gnutls_mpi_cmp_ui(ff, 1) == 0)
-		    || (_gnutls_mpi_cmp(ff, prime) == 0)) {
+		    || (_gnutls_mpi_cmp(ff, prime) >= 0)) {
 			gnutls_assert();
 			ret = GNUTLS_E_RECEIVED_ILLEGAL_PARAMETER;
 			goto dh_cleanup;
@@ -384,7 +394,11 @@ _wrap_nettle_pk_decrypt(gnutls_pk_algorithm_t algo,
 		{
 			struct rsa_private_key priv;
 			struct rsa_public_key pub;
+#ifdef USE_NETTLE3
+			size_t length;
+#else
 			unsigned length;
+#endif
 			bigint_t c;
 
 			_rsa_params_to_privkey(pk_params, &priv);
@@ -507,6 +521,55 @@ _wrap_nettle_pk_sign(gnutls_pk_algorithm_t algo,
 			break;
 		}
 	case GNUTLS_PK_DSA:
+#ifdef USE_NETTLE3
+		{
+			struct dsa_params pub;
+			bigint_t priv;
+			struct dsa_signature sig;
+
+			memset(&priv, 0, sizeof(priv));
+			memset(&pub, 0, sizeof(pub));
+			_dsa_params_get(pk_params, &pub);
+
+			priv = pk_params->params[DSA_X];
+
+			dsa_signature_init(&sig);
+
+			me = _gnutls_dsa_q_to_hash(algo, pk_params,
+						   &hash_len);
+
+			if (hash_len > vdata->size) {
+				gnutls_assert();
+				_gnutls_debug_log
+				    ("Security level of algorithm requires hash %s(%d) or better (have: %d)\n",
+				     _gnutls_mac_get_name(me), hash_len, (int)vdata->size);
+				hash_len = vdata->size;
+			}
+
+			ret =
+			    dsa_sign(&pub, TOMPZ(priv), NULL, rnd_func,
+				      hash_len, vdata->data, &sig);
+			if (ret == 0) {
+				gnutls_assert();
+				ret = GNUTLS_E_PK_SIGN_FAILED;
+				goto dsa_fail;
+			}
+
+			ret =
+			    _gnutls_encode_ber_rs(signature, &sig.r,
+						  &sig.s);
+
+		      dsa_fail:
+			dsa_signature_clear(&sig);
+
+			if (ret < 0) {
+				gnutls_assert();
+				goto cleanup;
+			}
+			break;
+		}
+
+#else
 		{
 			struct dsa_public_key pub;
 			struct dsa_private_key priv;
@@ -552,6 +615,7 @@ _wrap_nettle_pk_sign(gnutls_pk_algorithm_t algo,
 			}
 			break;
 		}
+#endif
 	case GNUTLS_PK_RSA:
 		{
 			struct rsa_private_key priv;
@@ -658,6 +722,43 @@ _wrap_nettle_pk_verify(gnutls_pk_algorithm_t algo,
 			break;
 		}
 	case GNUTLS_PK_DSA:
+#ifdef USE_NETTLE3
+		{
+			struct dsa_params pub;
+			struct dsa_signature sig;
+			bigint_t y;
+
+			ret =
+			    _gnutls_decode_ber_rs(signature, &tmp[0],
+						  &tmp[1]);
+			if (ret < 0) {
+				gnutls_assert();
+				goto cleanup;
+			}
+			memset(&pub, 0, sizeof(pub));
+			_dsa_params_get(pk_params, &pub);
+			y = pk_params->params[DSA_Y];
+
+			memcpy(sig.r, tmp[0], SIZEOF_MPZT);
+			memcpy(sig.s, tmp[1], SIZEOF_MPZT);
+
+			_gnutls_dsa_q_to_hash(algo, pk_params, &hash_len);
+
+			if (hash_len > vdata->size)
+				hash_len = vdata->size;
+
+			ret =
+			    dsa_verify(&pub, TOMPZ(y), hash_len, vdata->data, &sig);
+			if (ret == 0) {
+				gnutls_assert();
+				ret = GNUTLS_E_PK_SIG_VERIFY_FAILED;
+			} else
+				ret = 0;
+
+			break;
+		}
+
+#else
 		{
 			struct dsa_public_key pub;
 			struct dsa_signature sig;
@@ -689,6 +790,7 @@ _wrap_nettle_pk_verify(gnutls_pk_algorithm_t algo,
 
 			break;
 		}
+#endif
 	case GNUTLS_PK_RSA:
 		{
 			struct rsa_public_key pub;
@@ -777,15 +879,24 @@ wrap_nettle_pk_generate_params(gnutls_pk_algorithm_t algo,
 	case GNUTLS_PK_DSA:
 	case GNUTLS_PK_DH:
 		{
+#ifdef USE_NETTLE3
+			struct dsa_params pub;
+#else
 			struct dsa_public_key pub;
 			struct dsa_private_key priv;
+#endif
+
 #ifdef ENABLE_FIPS140
 			struct dss_params_validation_seeds cert;
 			unsigned index;
 #endif
 
+#ifdef USE_NETTLE3
+			dsa_params_init(&pub);
+#else
 			dsa_public_key_init(&pub);
 			dsa_private_key_init(&priv);
+#endif
 
 			if (GNUTLS_BITS_HAVE_SUBGROUP(level)) {
 				q_bits = GNUTLS_BITS_TO_SUBGROUP(level);
@@ -798,53 +909,63 @@ wrap_nettle_pk_generate_params(gnutls_pk_algorithm_t algo,
 				return gnutls_assert_val(GNUTLS_E_ILLEGAL_PARAMETER);
 
 #ifdef ENABLE_FIPS140
-			if (algo==GNUTLS_PK_DSA)
-				index = 1;
-			else
-				index = 2;
+			if (_gnutls_fips_mode_enabled() != 0) {
+				if (algo==GNUTLS_PK_DSA)
+					index = 1;
+				else
+					index = 2;
 
-			ret =
-			    dsa_generate_dss_pqg(&pub, &cert,
+				ret =
+				    dsa_generate_dss_pqg(&pub, &cert,
 			    			 index,
 						 NULL, rnd_func, 
 						 NULL, NULL,
 						 level, q_bits);
-			if (ret != 1) {
-				gnutls_assert();
-				ret = GNUTLS_E_PK_GENERATION_ERROR;
-				goto dsa_fail;
-			}
+				if (ret != 1) {
+					gnutls_assert();
+					ret = GNUTLS_E_PK_GENERATION_ERROR;
+					goto dsa_fail;
+				}
 
-			/* verify the generated parameters */
-			ret = dsa_validate_dss_pqg(&pub, &cert, index);
-			if (ret != 1) {
-				gnutls_assert();
-				ret = GNUTLS_E_PK_GENERATION_ERROR;
-				goto dsa_fail;
-			}
+				/* verify the generated parameters */
+				ret = dsa_validate_dss_pqg(&pub, &cert, index);
+				if (ret != 1) {
+					gnutls_assert();
+					ret = GNUTLS_E_PK_GENERATION_ERROR;
+					goto dsa_fail;
+				}
+			} else 
+#endif
+			{
+#ifdef USE_NETTLE3
+ 				if (q_bits < 160)
+ 					q_bits = 160;
+				ret = dsa_generate_params(&pub, NULL, rnd_func,
+							  NULL, NULL, level, q_bits);
 #else
-			/* unfortunately nettle only accepts 160 or 256
-			 * q_bits size. The check below makes sure we handle
-			 * cases in between by rounding up, but fail when
-			 * larger numbers are requested. */
-			if (q_bits < 160)
-				q_bits = 160;
-			else if (q_bits > 160 && q_bits <= 256)
-				q_bits = 256;
-			ret =
-			    dsa_generate_keypair(&pub, &priv,
+				/* unfortunately nettle only accepts 160 or 256
+				 * q_bits size. The check below makes sure we handle
+				 * cases in between by rounding up, but fail when
+				 * larger numbers are requested. */
+				if (q_bits < 160)
+					q_bits = 160;
+				else if (q_bits > 160 && q_bits <= 256)
+					q_bits = 256;
+				ret =
+				    dsa_generate_keypair(&pub, &priv,
 						 NULL, rnd_func, 
 						 NULL, NULL,
 						 level, q_bits);
-			if (ret != 1) {
-				gnutls_assert();
-				ret = GNUTLS_E_PK_GENERATION_ERROR;
-				goto dsa_fail;
-			}
 #endif
+				if (ret != 1) {
+					gnutls_assert();
+					ret = GNUTLS_E_PK_GENERATION_ERROR;
+					goto dsa_fail;
+				}
+			}
 
 			params->params_nr = 0;
-			
+
 			ret = _gnutls_mpi_init_multi(&params->params[DSA_P], &params->params[DSA_Q],
 					&params->params[DSA_G], NULL);
 			if (ret < 0) {
@@ -860,9 +981,12 @@ wrap_nettle_pk_generate_params(gnutls_pk_algorithm_t algo,
 			ret = 0;
 
 		      dsa_fail:
+#ifdef USE_NETTLE3
+			dsa_params_clear(&pub);
+#else
 			dsa_private_key_clear(&priv);
 			dsa_public_key_clear(&pub);
-
+#endif
 			if (ret < 0)
 				goto fail;
 
@@ -891,6 +1015,249 @@ wrap_nettle_pk_generate_params(gnutls_pk_algorithm_t algo,
 	return ret;
 }
 
+#ifdef ENABLE_FIPS140
+int _gnutls_dh_generate_key(gnutls_dh_params_t dh_params,
+			    gnutls_datum_t *priv_key, gnutls_datum_t *pub_key);
+
+int _gnutls_dh_compute_key(gnutls_dh_params_t dh_params,
+			   const gnutls_datum_t *priv_key, const gnutls_datum_t *pub_key,
+			   const gnutls_datum_t *peer_key, gnutls_datum_t *Z);
+
+int _gnutls_ecdh_compute_key(gnutls_ecc_curve_t curve,
+			   const gnutls_datum_t *x, const gnutls_datum_t *y,
+			   const gnutls_datum_t *k,
+			   const gnutls_datum_t *peer_x, const gnutls_datum_t *peer_y,
+			   gnutls_datum_t *Z);
+
+int _gnutls_ecdh_generate_key(gnutls_ecc_curve_t curve,
+			      gnutls_datum_t *x, gnutls_datum_t *y,
+			      gnutls_datum_t *k);
+
+
+int _gnutls_dh_generate_key(gnutls_dh_params_t dh_params,
+			    gnutls_datum_t *priv_key, gnutls_datum_t *pub_key)
+{
+	gnutls_pk_params_st params;
+	int ret;
+
+	gnutls_pk_params_init(&params);
+	params.params[DH_P] = _gnutls_mpi_copy(dh_params->params[0]);
+	params.params[DH_G] = _gnutls_mpi_copy(dh_params->params[1]);
+
+	params.params_nr = 3; /* include empty q */
+	params.algo = GNUTLS_PK_DH;
+
+	priv_key->data = NULL;
+	pub_key->data = NULL;
+
+	ret = _gnutls_pk_generate_keys(GNUTLS_PK_DH, dh_params->q_bits, &params);
+	if (ret < 0) {
+		return gnutls_assert_val(ret);
+	}
+
+	ret =
+	    _gnutls_mpi_dprint_lz(params.params[DH_X], priv_key);
+	if (ret < 0) {
+		gnutls_assert();
+		goto fail;
+	}
+
+	ret =
+	    _gnutls_mpi_dprint_lz(params.params[DH_Y], pub_key);
+	if (ret < 0) {
+		gnutls_assert();
+		goto fail;
+	}
+
+	ret = 0;
+	goto cleanup;
+ fail:
+ 	gnutls_free(pub_key->data);
+ 	gnutls_free(priv_key->data);
+ cleanup:
+ 	gnutls_pk_params_clear(&params);
+ 	return ret;
+}
+
+int _gnutls_dh_compute_key(gnutls_dh_params_t dh_params,
+			   const gnutls_datum_t *priv_key, const gnutls_datum_t *pub_key,
+			   const gnutls_datum_t *peer_key, gnutls_datum_t *Z)
+{
+	gnutls_pk_params_st pub, priv;
+	int ret;
+
+	gnutls_pk_params_init(&pub);
+	gnutls_pk_params_init(&priv);
+	pub.algo = GNUTLS_PK_DH;
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&pub.params[DH_Y], peer_key->data,
+		     peer_key->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	priv.params[DH_P] = _gnutls_mpi_copy(dh_params->params[0]);
+	priv.params[DH_G] = _gnutls_mpi_copy(dh_params->params[1]);
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&priv.params[DH_X], priv_key->data,
+		     priv_key->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	priv.params_nr = 3; /* include empty q */
+	priv.algo = GNUTLS_PK_DH;
+
+	Z->data = NULL;
+
+	ret = _gnutls_pk_derive(GNUTLS_PK_DH, Z, &priv, &pub);
+	if (ret < 0) {
+		gnutls_assert();
+		goto cleanup;
+	}
+
+	ret = 0;
+ cleanup:
+ 	gnutls_pk_params_clear(&pub);
+ 	gnutls_pk_params_clear(&priv);
+ 	return ret;
+}
+
+int _gnutls_ecdh_generate_key(gnutls_ecc_curve_t curve,
+			      gnutls_datum_t *x, gnutls_datum_t *y,
+			      gnutls_datum_t *k)
+{
+	gnutls_pk_params_st params;
+	int ret;
+
+	gnutls_pk_params_init(&params);
+	params.flags = curve;
+	params.algo = GNUTLS_PK_EC;
+
+	x->data = NULL;
+	y->data = NULL;
+	k->data = NULL;
+
+	ret = _gnutls_pk_generate_keys(GNUTLS_PK_EC, curve, &params);
+	if (ret < 0) {
+		return gnutls_assert_val(ret);
+	}
+
+	ret =
+	    _gnutls_mpi_dprint_lz(params.params[ECC_X], x);
+	if (ret < 0) {
+		gnutls_assert();
+		goto fail;
+	}
+
+	ret =
+	    _gnutls_mpi_dprint_lz(params.params[ECC_Y], y);
+	if (ret < 0) {
+		gnutls_assert();
+		goto fail;
+	}
+
+	ret =
+	    _gnutls_mpi_dprint_lz(params.params[ECC_K], k);
+	if (ret < 0) {
+		gnutls_assert();
+		goto fail;
+	}
+
+	ret = 0;
+	goto cleanup;
+ fail:
+ 	gnutls_free(y->data);
+ 	gnutls_free(x->data);
+ 	gnutls_free(k->data);
+ cleanup:
+ 	gnutls_pk_params_clear(&params);
+ 	return ret;
+}
+
+int _gnutls_ecdh_compute_key(gnutls_ecc_curve_t curve,
+			   const gnutls_datum_t *x, const gnutls_datum_t *y,
+			   const gnutls_datum_t *k,
+			   const gnutls_datum_t *peer_x, const gnutls_datum_t *peer_y,
+			   gnutls_datum_t *Z)
+{
+	gnutls_pk_params_st pub, priv;
+	int ret;
+
+	gnutls_pk_params_init(&pub);
+	gnutls_pk_params_init(&priv);
+
+	pub.algo = GNUTLS_PK_EC;
+	pub.flags = curve;
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&pub.params[ECC_Y], peer_y->data,
+		     peer_y->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&pub.params[ECC_X], peer_x->data,
+		     peer_x->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	pub.params_nr = 2;
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&priv.params[ECC_Y], y->data,
+		     y->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&priv.params[ECC_X], x->data,
+		     x->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+	if (_gnutls_mpi_init_scan_nz
+		    (&priv.params[ECC_K], k->data,
+		     k->size) != 0) {
+		ret =
+		    gnutls_assert_val(GNUTLS_E_MPI_SCAN_FAILED);
+		goto cleanup;
+	}
+
+
+	priv.params_nr = 3;
+	priv.algo = GNUTLS_PK_EC;
+	priv.flags = curve;
+
+	Z->data = NULL;
+
+	ret = _gnutls_pk_derive(GNUTLS_PK_EC, Z, &priv, &pub);
+	if (ret < 0) {
+		gnutls_assert();
+		goto cleanup;
+	}
+
+	ret = 0;
+ cleanup:
+ 	gnutls_pk_params_clear(&pub);
+ 	gnutls_pk_params_clear(&priv);
+ 	return ret;
+}
+#endif
+
+
 /* To generate a DH key either q must be set in the params or
  * level should be set to the number of required bits.
  */
@@ -905,15 +1272,28 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 	switch (algo) {
 	case GNUTLS_PK_DSA:
 #ifdef ENABLE_FIPS140
-		{
+		if (_gnutls_fips_mode_enabled() != 0) {
+#ifdef USE_NETTLE3
+			struct dsa_params pub;
+			mpz_t x, y;
+#else
 			struct dsa_public_key pub;
 			struct dsa_private_key priv;
+#endif
 
 			if (params->params[DSA_Q] == NULL)
 				return gnutls_assert_val(GNUTLS_E_INVALID_REQUEST);
 
-			_dsa_params_to_pubkey(params, &pub);
+#ifdef USE_NETTLE3
+			_dsa_params_get(params, &pub);
+			mpz_init(x);
+			mpz_init(y);
 
+			ret = dsa_generate_dss_keypair(&pub, y, x,
+ 						 NULL, rnd_func, 
+ 						 NULL, NULL);
+#else
+			_dsa_params_to_pubkey(params, &pub);
 			dsa_private_key_init(&priv);
 			mpz_init(pub.y);
 
@@ -921,6 +1301,7 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 			    dsa_generate_dss_keypair(&pub, &priv, 
 						 NULL, rnd_func, 
 						 NULL, NULL);
+#endif
 			if (ret != 1) {
 				gnutls_assert();
 				ret = GNUTLS_E_PK_GENERATION_ERROR;
@@ -933,13 +1314,23 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 				goto dsa_fail;
 			}
 
+#ifdef USE_NETTLE3
+			mpz_set(TOMPZ(params->params[DSA_Y]), y);
+			mpz_set(TOMPZ(params->params[DSA_X]), x);
+#else
 			mpz_set(TOMPZ(params->params[DSA_Y]), pub.y);
 			mpz_set(TOMPZ(params->params[DSA_X]), priv.x);
+#endif
 			params->params_nr += 2;
 
 		      dsa_fail:
+#ifdef USE_NETTLE3
+			mpz_clear(x);
+			mpz_clear(y);
+#else
 			dsa_private_key_clear(&priv);
 			mpz_clear(pub.y);
+#endif
 
 			if (ret < 0)
 				goto fail;
@@ -949,7 +1340,11 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 #endif
 	case GNUTLS_PK_DH:
 		{
+#ifdef USE_NETTLE3
+			struct dsa_params pub;
+#else
 			struct dsa_public_key pub;
+#endif
 			mpz_t r;
 			mpz_t x, y;
 			int max_tries;
@@ -958,7 +1353,11 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 			if (algo != params->algo)
 				return gnutls_assert_val(GNUTLS_E_INVALID_REQUEST);
 
+#ifdef USE_NETTLE3
+			_dsa_params_get(params, &pub);
+#else
 			_dsa_params_to_pubkey(params, &pub);
+#endif
 
 			if (params->params[DSA_Q] != NULL)
 				have_q = 1;
@@ -1029,17 +1428,21 @@ wrap_nettle_pk_generate_keys(gnutls_pk_algorithm_t algo,
 			rsa_private_key_init(&priv);
 
 			mpz_set_ui(pub.e, 65537);
+
 #ifdef ENABLE_FIPS140
-			ret =
-			    rsa_generate_fips186_4_keypair(&pub, &priv, NULL,
+			if (_gnutls_fips_mode_enabled() != 0) {
+				ret =
+				    rsa_generate_fips186_4_keypair(&pub, &priv, NULL,
 						 rnd_func, NULL, NULL,
 						 level);
-#else
-			ret =
-			    rsa_generate_keypair(&pub, &priv, NULL,
+			} else
+#endif
+			{
+				ret =
+				    rsa_generate_keypair(&pub, &priv, NULL,
 						 rnd_func, NULL, NULL,
 						 level, 0);
-#endif
+			}
 			if (ret != 1) {
 				gnutls_assert();
 				ret = GNUTLS_E_PK_GENERATION_ERROR;
@@ -1328,6 +1731,11 @@ wrap_nettle_pk_verify_priv_params(gnutls_pk_algorithm_t algo,
 		      ecc_cleanup:
 			ecc_scalar_zclear(&priv);
 			ecc_point_clear(&pub);
+
+			mpz_clear(x1);
+			mpz_clear(y1);
+			mpz_clear(x2);
+			mpz_clear(y2);
 		}
 		break;
 	default:
@@ -1398,12 +1806,12 @@ static int calc_rsa_exp(gnutls_pk_params_st * params)
 {
 	bigint_t tmp;
 	int ret;
-	
+
 	if (params->params_nr < RSA_PRIVATE_PARAMS - 2) {
 		gnutls_assert();
 		return GNUTLS_E_INTERNAL_ERROR;
 	}
-	
+
 	params->params[6] = params->params[7] = NULL;
 
 	ret = _gnutls_mpi_init_multi(&tmp, &params->params[6], &params->params[7], NULL);
@@ -1566,7 +1974,8 @@ static int wrap_nettle_hash_algorithm(gnutls_pk_algorithm_t pk,
 		if (sig == NULL) {	/* return a sensible algorithm */
 			if (hash_algo)
 				*hash_algo = GNUTLS_DIG_SHA256;
-			return 0;
+			ret = 0;
+			break;
 		}
 
 		_rsa_params_to_pubkey(issuer_params, &pub);

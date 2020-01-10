@@ -52,13 +52,15 @@ gnutls_pkcs11_copy_x509_crt(const char *token_url,
 	int ret;
 	struct p11_kit_uri *info = NULL;
 	ck_rv_t rv;
-	size_t der_size, id_size;
+	size_t der_size, id_size, serial_size;
 	uint8_t *der = NULL;
+	uint8_t serial[128];
 	uint8_t id[20];
-	struct ck_attribute a[16];
+	struct ck_attribute a[24];
 	ck_object_class_t class = CKO_CERTIFICATE;
 	ck_certificate_type_t type = CKC_X_509;
 	ck_object_handle_t obj;
+	gnutls_datum_t serial_der = {NULL, 0};
 	int a_val;
 	unsigned long category;
 	struct pkcs11_session_info sinfo;
@@ -67,7 +69,7 @@ gnutls_pkcs11_copy_x509_crt(const char *token_url,
 
 	memset(&sinfo, 0, sizeof(sinfo));
 
-	ret = pkcs11_url_to_info(token_url, &info);
+	ret = pkcs11_url_to_info(token_url, &info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -144,6 +146,22 @@ gnutls_pkcs11_copy_x509_crt(const char *token_url,
 	a[a_val].value_len = crt->raw_dn.size;
 	a_val++;
 
+	a[a_val].type = CKA_ISSUER;
+	a[a_val].value = crt->raw_issuer_dn.data;
+	a[a_val].value_len = crt->raw_issuer_dn.size;
+	a_val++;
+
+	serial_size = sizeof(serial);
+	if (gnutls_x509_crt_get_serial(crt, serial, &serial_size) >= 0) {
+		ret = _gnutls_x509_ext_gen_number(serial, serial_size, &serial_der);
+		if (ret >= 0) {
+			a[a_val].type = CKA_SERIAL_NUMBER;
+			a[a_val].value = (void *) serial_der.data;
+			a[a_val].value_len = serial_der.size;
+			a_val++;
+		}
+	}
+
 	if (label) {
 		a[a_val].type = CKA_LABEL;
 		a[a_val].value = (void *) label;
@@ -198,6 +216,7 @@ gnutls_pkcs11_copy_x509_crt(const char *token_url,
 
       cleanup:
 	gnutls_free(der);
+	gnutls_free(serial_der.data);
 	pkcs11_close_session(&sinfo);
 	return ret;
 
@@ -231,7 +250,7 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 	ck_rv_t rv;
 	size_t id_size;
 	uint8_t id[20];
-	struct ck_attribute a[16];
+	struct ck_attribute a[32];
 	ck_object_class_t class = CKO_PRIVATE_KEY;
 	ck_object_handle_t obj;
 	ck_key_type_t type;
@@ -257,7 +276,7 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 	memset(&exp1, 0, sizeof(exp1));
 	memset(&exp2, 0, sizeof(exp2));
 
-	ret = pkcs11_url_to_info(token_url, &info);
+	ret = pkcs11_url_to_info(token_url, &info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -282,6 +301,8 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 		return ret;
 	}
 
+	pk = gnutls_x509_privkey_get_pk_algorithm(key);
+
 	/* FIXME: copy key usage flags */
 	a_val = 0;
 	a[a_val].type = CKA_CLASS;
@@ -294,10 +315,17 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 	a[a_val].value_len = id_size;
 	a_val++;
 
-	a[a_val].type = CKA_KEY_TYPE;
-	a[a_val].value = &type;
-	a[a_val].value_len = sizeof(type);
+	a[a_val].type = CKA_SIGN;
+	a[a_val].value = (void*)&tval;
+	a[a_val].value_len = sizeof(tval);
 	a_val++;
+
+	if (pk == GNUTLS_PK_RSA) {
+		a[a_val].type = CKA_DECRYPT;
+		a[a_val].value = (void*)&tval;
+		a[a_val].value_len = sizeof(tval);
+		a_val++;
+	}
 
 	a[a_val].type = CKA_TOKEN;
 	a[a_val].value = (void *) &tval;
@@ -338,7 +366,6 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 		a_val++;
 	}
 
-	pk = gnutls_x509_privkey_get_pk_algorithm(key);
 	switch (pk) {
 	case GNUTLS_PK_RSA:
 		{
@@ -443,7 +470,7 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 			}
 
 			ret =
-			    _gnutls_mpi_dprint_lz(&key->params.
+			    _gnutls_mpi_dprint_lz(key->params.
 						  params[ECC_K], &x);
 			if (ret < 0) {
 				gnutls_assert();
@@ -469,6 +496,11 @@ gnutls_pkcs11_copy_x509_privkey(const char *token_url,
 		ret = GNUTLS_E_INVALID_REQUEST;
 		goto cleanup;
 	}
+
+	a[a_val].type = CKA_KEY_TYPE;
+	a[a_val].value = &type;
+	a[a_val].value_len = sizeof(type);
+	a_val++;
 
 	rv = pkcs11_create_object(sinfo.module, sinfo.pks, a, a_val, &obj);
 	if (rv != CKR_OK) {
@@ -652,7 +684,7 @@ int gnutls_pkcs11_delete_url(const char *object_url, unsigned int flags)
 
 	memset(&find_data, 0, sizeof(find_data));
 
-	ret = pkcs11_url_to_info(object_url, &find_data.info);
+	ret = pkcs11_url_to_info(object_url, &find_data.info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -700,7 +732,7 @@ gnutls_pkcs11_token_init(const char *token_url,
 
 	PKCS11_CHECK_INIT;
 
-	ret = pkcs11_url_to_info(token_url, &info);
+	ret = pkcs11_url_to_info(token_url, &info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -760,7 +792,7 @@ gnutls_pkcs11_token_set_pin(const char *token_url,
 
 	memset(&sinfo, 0, sizeof(sinfo));
 
-	ret = pkcs11_url_to_info(token_url, &info);
+	ret = pkcs11_url_to_info(token_url, &info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;
@@ -837,7 +869,7 @@ gnutls_pkcs11_token_get_random(const char *token_url,
 
 	memset(&sinfo, 0, sizeof(sinfo));
 
-	ret = pkcs11_url_to_info(token_url, &info);
+	ret = pkcs11_url_to_info(token_url, &info, 0);
 	if (ret < 0) {
 		gnutls_assert();
 		return ret;

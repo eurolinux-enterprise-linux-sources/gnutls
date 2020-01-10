@@ -74,18 +74,40 @@ unsigned int _gnutls_x86_cpuid_s[3];
 
 static void capabilities_to_intel_cpuid(unsigned capabilities)
 {
+	unsigned a,b,c,t;
+
 	memset(_gnutls_x86_cpuid_s, 0, sizeof(_gnutls_x86_cpuid_s));
+
 	if (capabilities & EMPTY_SET) {
 		return;
 	}
+
+	gnutls_cpuid(1, &t, &a, &b, &c);
+
 	if (capabilities & INTEL_AES_NI) {
-		_gnutls_x86_cpuid_s[1] |= bit_AES;
+		if (b & bit_AES) {
+			_gnutls_x86_cpuid_s[1] |= bit_AES;
+		} else {
+			_gnutls_debug_log
+			    ("AESNI acceleration requested but not available\n");
+		}
 	}
+
 	if (capabilities & INTEL_SSSE3) {
-		_gnutls_x86_cpuid_s[1] |= bit_SSSE3;
+		if (b & bit_SSSE3) {
+			_gnutls_x86_cpuid_s[1] |= bit_SSSE3;
+		} else {
+			_gnutls_debug_log
+			    ("SSSE3 acceleration requested but not available\n");
+		}
 	}
-	if (capabilities & INTEL_PCLMUL) { /* ecx */
-		_gnutls_x86_cpuid_s[1] |= bit_PCLMUL;
+	if (capabilities & INTEL_PCLMUL) {
+		if (b & bit_PCLMUL) {
+			_gnutls_x86_cpuid_s[1] |= bit_PCLMUL;
+		} else {
+			_gnutls_debug_log
+			    ("PCLMUL acceleration requested but not available\n");
+		}
 	}
 }
 
@@ -109,19 +131,43 @@ static unsigned check_pclmul(void)
 #ifdef ENABLE_PADLOCK
 static unsigned capabilities_to_via_edx(unsigned capabilities)
 {
+	unsigned a,b,c,t;
+
 	memset(_gnutls_x86_cpuid_s, 0, sizeof(_gnutls_x86_cpuid_s));
+
 	if (capabilities & EMPTY_SET) {
 		return 0;
 	}
-	if (capabilities & VIA_PADLOCK) { /* edx */
-		_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK;
+
+	gnutls_cpuid(1, &t, &a, &b, &c);
+
+	if (capabilities & VIA_PADLOCK) {
+		if (c & via_bit_PADLOCK) {
+			_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK;
+		} else {
+			_gnutls_debug_log
+			    ("Padlock acceleration requested but not available\n");
+		}
 	}
-	if (capabilities & VIA_PADLOCK_PHE) { /* edx */
-		_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK_PHE;
+
+	if (capabilities & VIA_PADLOCK_PHE) {
+		if (c & via_bit_PADLOCK_PHE) {
+			_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK_PHE;
+		} else {
+			_gnutls_debug_log
+			    ("Padlock-PHE acceleration requested but not available\n");
+		}
 	}
-	if (capabilities & VIA_PADLOCK_PHE_SHA512) { /* edx */
-		_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK_PHE_SHA512;
+
+	if (capabilities & VIA_PADLOCK_PHE_SHA512) {
+		if (c & via_bit_PADLOCK_PHE_SHA512) {
+			_gnutls_x86_cpuid_s[2] |= via_bit_PADLOCK_PHE_SHA512;
+		} else {
+			_gnutls_debug_log
+			    ("Padlock-PHE-SHA512 acceleration requested but not available\n");
+		}
 	}
+
 	return _gnutls_x86_cpuid_s[2];
 }
 
@@ -544,7 +590,9 @@ void register_x86_intel_crypto(unsigned capabilities)
 			if (ret < 0) {
 				gnutls_assert();
 			}
-		} else {
+		} else
+#endif
+		{
 			ret =
 			    gnutls_crypto_single_cipher_register
 			    (GNUTLS_CIPHER_AES_128_GCM, 80,
@@ -563,7 +611,6 @@ void register_x86_intel_crypto(unsigned capabilities)
 
 
 		}
-#endif
 	}
 
 	return;
@@ -574,7 +621,7 @@ void register_x86_crypto(void)
 {
 	unsigned capabilities = 0;
 	char *p;
-	p = getenv("GNUTLS_CPUID_OVERRIDE");
+	p = secure_getenv("GNUTLS_CPUID_OVERRIDE");
 	if (p) {
 		capabilities = strtol(p, NULL, 0);
 	}

@@ -124,6 +124,11 @@ gnutls_x509_trust_list_deinit(gnutls_x509_trust_list_t list,
 	}
 	gnutls_free(list->blacklisted);
 
+	for (j = 0; j < list->keep_certs_size; j++) {
+		gnutls_x509_crt_deinit(list->keep_certs[j]);
+	}
+	gnutls_free(list->keep_certs);
+
 	for (i = 0; i < list->size; i++) {
 		if (all) {
 			for (j = 0; j < list->node[i].trusted_ca_size; j++) {
@@ -205,6 +210,32 @@ add_new_ca_to_rdn_seq(gnutls_x509_trust_list_t list,
 
 	return 0;
 }
+
+#ifdef ENABLE_PKCS11
+/* Keeps the provided certificate in a structure that will be
+ * deallocated on deinit. This is to handle get_issuer() with 
+ * pkcs11 trust modules when the GNUTLS_TL_GET_COPY flag isn't
+ * given. It is not thread safe. */
+static int
+trust_list_add_compat(gnutls_x509_trust_list_t list,
+			       gnutls_x509_crt_t cert)
+{
+	list->keep_certs =
+		    gnutls_realloc_fast(list->keep_certs,
+					(list->keep_certs_size +
+					 1) *
+					sizeof(list->keep_certs[0]));
+	if (list->keep_certs == NULL) {
+		gnutls_assert();
+		return GNUTLS_E_MEMORY_ERROR;
+	}
+
+	list->keep_certs[list->keep_certs_size] = cert;
+	list->keep_certs_size++;
+
+	return 0;
+}
+#endif
 
 /**
  * gnutls_x509_trust_list_add_cas:
@@ -302,6 +333,7 @@ int ret;
 
 	ret = _gnutls_x509_crt_cpy(dst, src);
 	if (ret < 0) {
+		gnutls_x509_crt_deinit(dst);
 		gnutls_assert();
 		return NULL;
 	}
@@ -457,7 +489,10 @@ gnutls_x509_trust_list_add_named_crt(gnutls_x509_trust_list_t list,
  * during this structure's lifetime.
  *
  * This function must be called after gnutls_x509_trust_list_add_cas()
- * to allow verifying the CRLs for validity.
+ * to allow verifying the CRLs for validity. If the flag %GNUTLS_TL_NO_DUPLICATES
+ * is given, then any provided CRLs that are a duplicate, will be deinitialized
+ * and not added to the list (that assumes that gnutls_x509_trust_list_deinit()
+ * will be called with all=1).
  *
  * Returns: The number of added elements is returned.
  *
@@ -470,6 +505,7 @@ gnutls_x509_trust_list_add_crls(gnutls_x509_trust_list_t list,
 				unsigned int verification_flags)
 {
 	int ret, i, j = 0;
+	unsigned x;
 	unsigned int vret = 0;
 	uint32_t hash;
 
@@ -495,8 +531,31 @@ gnutls_x509_trust_list_add_crls(gnutls_x509_trust_list_t list,
 						   trusted_ca_size,
 						   verification_flags,
 						   &vret);
-			if (ret < 0 || vret != 0)
+			if (ret < 0 || vret != 0) {
+				_gnutls_debug_log("CRL verification failed, not adding it\n");
 				continue;
+			}
+		}
+
+		/* If the CRL added overrides a previous one, then overwrite
+		 * the old one */
+		if (flags & GNUTLS_TL_NO_DUPLICATES) {
+			for (x=0;x<list->node[hash].crl_size;x++) {
+				if (crl_list[i]->raw_issuer_dn.size == list->node[hash].crls[x]->raw_issuer_dn.size &&
+				    memcmp(crl_list[i]->raw_issuer_dn.data, list->node[hash].crls[x]->raw_issuer_dn.data, crl_list[i]->raw_issuer_dn.size) == 0) {
+					if (gnutls_x509_crl_get_this_update(crl_list[i]) >=
+					    gnutls_x509_crl_get_this_update(list->node[hash].crls[x])) {
+
+					    	gnutls_x509_crl_deinit(list->node[hash].crls[x]);
+					    	list->node[hash].crls[x] = crl_list[i];
+					    	goto next;
+					} else {
+						/* The new is older, discard it */
+						gnutls_x509_crl_deinit(crl_list[i]);
+						continue;
+					}
+				}
+			}
 		}
 
 		list->node[hash].crls =
@@ -513,6 +572,8 @@ gnutls_x509_trust_list_add_crls(gnutls_x509_trust_list_t list,
 		list->node[hash].crls[list->node[hash].crl_size] =
 		    crl_list[i];
 		list->node[hash].crl_size++;
+
+ next:
 		j++;
 	}
 
@@ -655,7 +716,11 @@ int trust_list_get_issuer(gnutls_x509_trust_list_t list,
 						 list->node[hash].
 						 trusted_cas[i]);
 		if (ret != 0) {
-			*issuer = list->node[hash].trusted_cas[i];
+			if (flags & GNUTLS_TL_GET_COPY) {
+				*issuer = crt_cpy(list->node[hash].trusted_cas[i]);
+			} else {
+				*issuer = list->node[hash].trusted_cas[i];
+			}
 			return 0;
 		}
 	}
@@ -668,10 +733,13 @@ int trust_list_get_issuer(gnutls_x509_trust_list_t list,
  * @list: The structure of the list
  * @cert: is the certificate to find issuer for
  * @issuer: Will hold the issuer if any. Should be treated as constant.
- * @flags: Use zero.
+ * @flags: Use zero or %GNUTLS_TL_GET_COPY
  *
- * This function will attempt to find the issuer of the
- * given certificate.
+ * This function will find the issuer of the given certificate.
+ * If the flag %GNUTLS_TL_GET_COPY is specified a copy of the issuer
+ * will be returned which must be freed using gnutls_x509_crt_deinit().
+ * Note that the flag %GNUTLS_TL_GET_COPY is required for this function
+ * to work with PKCS #11 trust lists in a thread-safe way.
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise a
  *   negative error value.
@@ -683,30 +751,56 @@ int gnutls_x509_trust_list_get_issuer(gnutls_x509_trust_list_t list,
 				      gnutls_x509_crt_t * issuer,
 				      unsigned int flags)
 {
-#ifdef ENABLE_PKCS11
 	int ret;
 
-	if (list->pkcs11_token) {
+	ret = trust_list_get_issuer(list, cert, issuer, flags);
+	if (ret == 0) {
+		return 0;
+	}
+
+#ifdef ENABLE_PKCS11
+	if (ret < 0 && list->pkcs11_token) {
+		gnutls_x509_crt_t crt;
 		gnutls_datum_t der = {NULL, 0};
 		/* use the token for verification */
 		ret = gnutls_pkcs11_get_raw_issuer(list->pkcs11_token, cert, &der,
 			GNUTLS_X509_FMT_DER, 0);
-		if (ret < 0)
-			return gnutls_assert_val(ret);
+		if (ret < 0) {
+			gnutls_assert();
+			return ret;
+		}
 
-		/* we add this CA to the trusted list in order to make it
-		 * persistent. It will be deallocated when the trust list is.
-		 */
-		ret = gnutls_x509_trust_list_add_trust_mem(list, &der, NULL,
-			GNUTLS_X509_FMT_DER, GNUTLS_TL_NO_DUPLICATE_KEY, 0);
-		if (ret < 0)
+		ret = gnutls_x509_crt_init(&crt);
+		if (ret < 0) {
+			gnutls_free(der.data);
 			return gnutls_assert_val(ret);
+		}
 
+		ret = gnutls_x509_crt_import(crt, &der, GNUTLS_X509_FMT_DER);
 		gnutls_free(der.data);
+		if (ret < 0) {
+			gnutls_x509_crt_deinit(crt);
+			return gnutls_assert_val(ret);
+		}
+
+		if (flags & GNUTLS_TL_GET_COPY) {
+			*issuer = crt;
+			return 0;
+		} else {
+			/* we add this CA to the keep_cert list in order to make it
+			 * persistent. It will be deallocated when the trust list is.
+			 */
+			ret = trust_list_add_compat(list, crt);
+			if (ret < 0) {
+				gnutls_x509_crt_deinit(crt);
+				return gnutls_assert_val(ret);
+			}
+			*issuer = crt;
+			return ret;
+		}
 	}
 #endif
-
-	return trust_list_get_issuer(list, cert, issuer, flags);
+	return ret;
 }
 
 static
@@ -850,47 +944,49 @@ gnutls_x509_trust_list_verify_crt2(gnutls_x509_trust_list_t list,
 		return 0;
 	}
 
+	*voutput =
+	    _gnutls_verify_crt_status(cert_list, cert_list_size,
+					    list->node[hash].trusted_cas,
+					    list->
+					    node[hash].trusted_ca_size,
+					    flags, func);
+
+#define LAST_DN cert_list[cert_list_size-1]->raw_dn
+#define LAST_IDN cert_list[cert_list_size-1]->raw_issuer_dn
+
+	if ((*voutput) & GNUTLS_CERT_SIGNER_NOT_FOUND &&
+		(LAST_DN.size != LAST_IDN.size ||
+		 memcmp(LAST_DN.data, LAST_IDN.data, LAST_IDN.size) != 0)) {
+
+		/* if we couldn't find the issuer, try to see if the last
+		 * certificate is in the trusted list and try to verify against
+		 * (if it is not self signed) */
+		hash =
+		    hash_pjw_bare(cert_list[cert_list_size - 1]->raw_dn.
+			  data, cert_list[cert_list_size - 1]->raw_dn.size);
+		hash %= list->size;
+
+		*voutput =
+		    _gnutls_verify_crt_status(cert_list, cert_list_size,
+					    list->node[hash].trusted_cas,
+					    list->
+					    node[hash].trusted_ca_size,
+					    flags, func);
+	}
+
 #ifdef ENABLE_PKCS11
-	if (list->pkcs11_token) {
+	if ((*voutput & GNUTLS_CERT_SIGNER_NOT_FOUND) && list->pkcs11_token) {
 		/* use the token for verification */
 
 		*voutput = _gnutls_pkcs11_verify_crt_status(list->pkcs11_token,
 								cert_list, cert_list_size,
 								purpose!=NULL?purpose:GNUTLS_KP_TLS_WWW_SERVER,
 								flags, func);
-	} else
-#endif
-	{
-		*voutput =
-		    _gnutls_verify_crt_status(cert_list, cert_list_size,
-						    list->node[hash].trusted_cas,
-						    list->
-						    node[hash].trusted_ca_size,
-						    flags, func);
-
-#define LAST_DN cert_list[cert_list_size-1]->raw_dn
-#define LAST_IDN cert_list[cert_list_size-1]->raw_issuer_dn
-
-		if ((*voutput) & GNUTLS_CERT_SIGNER_NOT_FOUND &&
-			(LAST_DN.size != LAST_IDN.size ||
-			 memcmp(LAST_DN.data, LAST_IDN.data, LAST_IDN.size) != 0)) {
-
-			/* if we couldn't find the issuer, try to see if the last
-			 * certificate is in the trusted list and try to verify against
-			 * (if it is not self signed) */
-			hash =
-			    hash_pjw_bare(cert_list[cert_list_size - 1]->raw_dn.
-				  data, cert_list[cert_list_size - 1]->raw_dn.size);
-			hash %= list->size;
-
-			*voutput =
-			    _gnutls_verify_crt_status(cert_list, cert_list_size,
-						    list->node[hash].trusted_cas,
-						    list->
-						    node[hash].trusted_ca_size,
-						    flags, func);
+		if (*voutput != 0) {
+			gnutls_assert();
 		}
 	}
+#endif
 
 	/* End-certificate, key purpose and hostname checks. */
 	if (purpose) {

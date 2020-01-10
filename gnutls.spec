@@ -2,8 +2,8 @@
 %bcond_with guile
 Summary: A TLS protocol implementation
 Name: gnutls
-Version: 3.3.8
-Release: 14%{?dist}
+Version: 3.3.24
+Release: 1%{?dist}
 # The libraries are LGPLv2.1+, utilities are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
@@ -16,6 +16,7 @@ BuildRequires: trousers-devel >= 0.3.11.2
 BuildRequires: libidn-devel
 BuildRequires: gperf
 BuildRequires: fipscheck
+BuildRequires: softhsm, net-tools
 Requires: p11-kit-trust
 # The automatic dependency on libtasn1 and p11-kit is insufficient,
 Requires: libtasn1 >= 3.8
@@ -37,29 +38,11 @@ Patch1: gnutls-3.2.7-rpath.patch
 Patch2: gnutls-3.1.11-nosrp.patch
 Patch3: gnutls-3.3.8-no-libtasn1-check.patch
 Patch4: gnutls-3.3.8-fips-key.patch
-Patch5: gnutls-3.3.8-mem-issue.patch
-Patch6: gnutls-3.3.8-testdsa-rndport.patch
-Patch7: gnutls-3.3.8-padlock-disable.patch
-Patch8: gnutls-3.3.8-dh-fips-tests.patch
-Patch9: gnutls-3.3.8-drbg-fips-symbol.patch
-Patch10: gnutls-3.3.8-lcm-fips.patch
-Patch11: gnutls-3.3.8-sha224-fix.patch
-Patch12: gnutls-3.3.8-fips140-rsa.patch
-Patch13: gnutls-3.3.8-fips140-dsa1024.patch
-Patch14: gnutls-3.3.8-handshake-reset.patch
-Patch15: gnutls-3.3.8-handshake-reset2.patch
-Patch16: gnutls-3.3.8-keygen-fix.patch
-Patch17: gnutls-3.3.8-dh-fips-tests2.patch
-Patch18: gnutls-3.3.8-cve-2014-8564.patch
-Patch19: gnutls-3.3.8-zombie-fips.patch
-Patch20: gnutls-3.3.8-urandom-fd.patch
-Patch21: gnutls-3.3.8-fips-rnd-regr.patch
-Patch22: gnutls-3.3.8-urandom-fd-fips.patch
-Patch23: gnutls-3.3.8-rnd-reregister.patch
-Patch24: gnutls-3.3.8-handshake-reset3.patch
-Patch25: gnutls-3.3.8-fips-reseed.patch
-Patch26: gnutls-3.3.8-md5-downgrade.patch
-
+Patch5: gnutls-3.3.8-padlock-disable.patch
+# In 3.3.8 we were shipping an early backport of a fix in GNUTLS_E_APPLICATION_DATA
+# behavior, which was using 3.4.0 semantics. We continue shipping to support
+# any applications depending on that.
+Patch6: gnutls-3.3.22-eapp-data.patch
 # Wildcard bundling exception https://fedorahosted.org/fpc/ticket/174
 Provides: bundled(gnulib) = 20130424
 
@@ -163,28 +146,9 @@ This package contains Guile bindings for the library.
 %patch2 -p1 -b .nosrp
 %patch3 -p1 -b .libtasn1
 %patch4 -p1 -b .fips-key
-%patch5 -p1 -b .mem-issue
-%patch6 -p1 -b .testdsa
-%patch7 -p1 -b .padlock-disable
-%patch8 -p1 -b .fips-dh
-%patch9 -p1 -b .fips-drbg
-%patch10 -p1 -b .fips-lcm
-%patch11 -p1 -b .sha224-fix
-%patch12 -p1 -b .fips-rsa-fix
-%patch13 -p1 -b .fips-dsa1024-fix
-%patch14 -p1 -b .handshake-reset
-%patch15 -p1 -b .handshake-reset2
-%patch16 -p1 -b .keygen-fix
-%patch17 -p1 -b .fips-dh2
-%patch18 -p1 -b .cve-2014-8564
-%patch19 -p1 -b .zombie-fips
-%patch20 -p1 -b .init-fd
-%patch21 -p1 -b .fips-regression
-%patch22 -p1 -b .init-fd-fips
-%patch23 -p1 -b .reregister
-%patch24 -p1 -b .handshake-reset3
-%patch25 -p1 -b .fips-reseed
-%patch26 -p1 -b .md5-downgrade
+%patch5 -p1 -b .padlock-disable
+%patch6 -p1 -b .eapp-data
+
 sed 's/gnutls_srp.c//g' -i lib/Makefile.in
 sed 's/gnutls_srp.lo//g' -i lib/Makefile.in
 rm -f lib/minitasn1/*.c lib/minitasn1/*.h
@@ -196,9 +160,11 @@ autoreconf -if
 %build
 export LDFLAGS="-Wl,--no-add-needed"
 
-#	   --with-default-trust-store-pkcs11="pkcs11:model=p11-kit-trust;manufacturer=PKCS%2311%20Kit"
 %configure --with-libtasn1-prefix=%{_prefix} \
+	   --with-default-trust-store-pkcs11="pkcs11:model=p11-kit-trust;manufacturer=PKCS%2311%20Kit" \
            --with-included-libcfg \
+	   --with-arcfour128 \
+	   --with-ssl3 \
            --disable-static \
            --disable-openssl-compatibility \
            --disable-srp-authentication \
@@ -330,8 +296,20 @@ fi
 %endif
 
 %changelog
-* Wed Dec  9 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.8-14
-- Prevent downgrade attack to RSA-MD5 in server key exchange.
+* Tue Jul 12 2016 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.24-1
+- Addressed issue with DSA public keys smaller than 2^1024 (#1238279)
+- Addressed two-byte buffer overflow in the DTLS-0.9 protocol (#1209365)
+- When writing certificates to smart cards write the CKA_ISSUER and
+  CKA_SERIAL_NUMBER fields to allow NSS reading them (#1272179)
+- Use the shared system certificate store (#1110750)
+- Address MD5 transcript collision attacks in TLS key exchange (#1289888, 
+  CVE-2015-7575)
+- Allow hashing data over 2^32 bytes (#1306953)
+- Ensure written PKCS#11 public keys are not marked as private (#1339453)
+- Ensure secure_getenv() is called on all uses of environment variables
+  (#1344591).
+- Fix issues related to PKCS #11 private key listing on certain HSMs
+  (#1351389)
 
 * Fri Jun  5 2015 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.8-13
 - Corrected reseed and respect of max_number_of_bits_per_request in 

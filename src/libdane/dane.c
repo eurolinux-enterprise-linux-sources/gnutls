@@ -563,28 +563,48 @@ verify_ca(const gnutls_datum_t * raw_crt, unsigned raw_crt_size,
 	  unsigned int *verify)
 {
 	gnutls_datum_t pubkey = { NULL, 0 };
-	int ret;
-	unsigned int vstatus;
+	int ret, i;
+	unsigned int vstatus = 0;
 	gnutls_x509_crt_t crt = NULL, ca = NULL;
+	unsigned is_ok = 0;
 
-	if (raw_crt_size < 2)
-		return gnutls_assert_val(DANE_E_INVALID_REQUEST);
+	if (raw_crt_size < 2) /* we cannot verify the CA */
+		return gnutls_assert_val(DANE_E_UNKNOWN_DANE_DATA);
 
 	if (ctype == DANE_CERT_X509 && crt_type == GNUTLS_CRT_X509) {
+		is_ok = 0;
+		for (i=raw_crt_size-1;i>=1;i--) {
+			if (matches(&raw_crt[i], data, match)) {
+				is_ok = 1;
+				break;
+			}
+		}
 
-		if (!matches(&raw_crt[1], data, match)) {
+		if (is_ok == 0) {
 			gnutls_assert();
 			*verify |= DANE_VERIFY_CA_CONSTRAINTS_VIOLATED;
 		}
 
 	} else if (ctype == DANE_CERT_PK && crt_type == GNUTLS_CRT_X509) {
-		ret = crt_to_pubkey(&raw_crt[1], &pubkey);
-		if (ret < 0) {
-			gnutls_assert();
-			goto cleanup;
+		is_ok = 0;
+
+		for (i=raw_crt_size-1;i>=1;i--) {
+			ret = crt_to_pubkey(&raw_crt[i], &pubkey);
+			if (ret < 0) {
+				gnutls_assert();
+				goto cleanup;
+			}
+
+			if (matches(&pubkey, data, match)) {
+				is_ok = 1;
+				break;
+			}
+
+			free(pubkey.data);
+			pubkey.data = NULL;
 		}
 
-		if (!matches(&pubkey, data, match)) {
+		if (is_ok == 0) {
 			gnutls_assert();
 			*verify |= DANE_VERIFY_CA_CONSTRAINTS_VIOLATED;
 		}
@@ -600,12 +620,6 @@ verify_ca(const gnutls_datum_t * raw_crt, unsigned raw_crt_size,
 		goto cleanup;
 	}
 
-	ret = gnutls_x509_crt_init(&ca);
-	if (ret < 0) {
-		ret = gnutls_assert_val(DANE_E_CERT_ERROR);
-		goto cleanup;
-	}
-
 	ret =
 	    gnutls_x509_crt_import(crt, &raw_crt[0], GNUTLS_X509_FMT_DER);
 	if (ret < 0) {
@@ -613,25 +627,40 @@ verify_ca(const gnutls_datum_t * raw_crt, unsigned raw_crt_size,
 		goto cleanup;
 	}
 
-	ret = gnutls_x509_crt_import(ca, &raw_crt[1], GNUTLS_X509_FMT_DER);
-	if (ret < 0) {
-		ret = gnutls_assert_val(DANE_E_CERT_ERROR);
-		goto cleanup;
+	for (i=raw_crt_size-1;i>=1;i--) {
+		ret = gnutls_x509_crt_init(&ca);
+		if (ret < 0) {
+			ret = gnutls_assert_val(DANE_E_CERT_ERROR);
+			goto cleanup;
+		}
+
+		ret = gnutls_x509_crt_import(ca, &raw_crt[i], GNUTLS_X509_FMT_DER);
+		if (ret < 0) {
+			ret = gnutls_assert_val(DANE_E_CERT_ERROR);
+			goto cleanup;
+		}
+
+		ret = gnutls_x509_crt_check_issuer(crt, ca);
+		if (ret != 0)
+			break;
+
+		gnutls_x509_crt_deinit(ca);
+		ca = NULL;
 	}
 
-	ret = gnutls_x509_crt_check_issuer(crt, ca);
-	if (ret == 0) {
+	if (ca == NULL) {
 		gnutls_assert();
 		*verify |= DANE_VERIFY_CA_CONSTRAINTS_VIOLATED;
-	}
+	} else {
+		ret = gnutls_x509_crt_verify(crt, &ca, 1, 0, &vstatus);
+		if (ret < 0) {
+			ret = gnutls_assert_val(DANE_E_CERT_ERROR);
+			goto cleanup;
+		}
 
-	ret = gnutls_x509_crt_verify(crt, &ca, 1, 0, &vstatus);
-	if (ret < 0) {
-		ret = gnutls_assert_val(DANE_E_CERT_ERROR);
-		goto cleanup;
+		if (vstatus != 0)
+			*verify |= DANE_VERIFY_CA_CONSTRAINTS_VIOLATED;
 	}
-	if (vstatus != 0)
-		*verify |= DANE_VERIFY_CA_CONSTRAINTS_VIOLATED;
 
 	ret = 0;
       cleanup:
@@ -715,18 +744,24 @@ verify_ee(const gnutls_datum_t * raw_crt,
  * is set. If a DNSSEC signature is not available for the DANE
  * record then the verify flag %DANE_VERIFY_NO_DNSSEC_DATA is set.
  *
- * Note that the CA constraint only applies for the directly certifying CA
- * and does not account for long CA chains.
- *
  * Due to the many possible options of DANE, there is no single threat
  * model countered. When notifying the user about DANE verification results
  * it may be better to mention: DANE verification did not reject the certificate,
  * rather than mentioning a successful DANE verication.
  *
+ * Note that this function is designed to be run in addition to
+ * PKIX - certificate chain - verification. To be run independently
+ * the %DANE_VFLAG_ONLY_CHECK_EE_USAGE flag should be specified; 
+ * then the function will check whether the key of the peer matches the
+ * key advertized in the DANE entry.
+ *
  * If the @q parameter is provided it will be used for caching entries.
  *
- * Returns: On success, %DANE_E_SUCCESS (0) is returned, otherwise a
- *   negative error value.
+ * Returns: a negative error code on error and %DANE_E_SUCCESS (0)
+ * when the DANE entries were successfully parsed, irrespective of
+ * whether they were verified (see @verify for that information). If
+ * no usable entries were encountered %DANE_E_REQUESTED_DATA_NOT_AVAILABLE
+ * will be returned.
  *
  **/
 int
@@ -816,19 +851,22 @@ dane_verify_crt_raw(dane_state_t s,
  * is set. If a DNSSEC signature is not available for the DANE
  * record then the verify flag %DANE_VERIFY_NO_DNSSEC_DATA is set.
  *
- * Note that the CA constraint only applies for the directly certifying CA
- * and does not account for long CA chains. Moreover this function does not
- * validate the provided chain.
- *
  * Due to the many possible options of DANE, there is no single threat
  * model countered. When notifying the user about DANE verification results
  * it may be better to mention: DANE verification did not reject the certificate,
  * rather than mentioning a successful DANE verication.
  *
- * If the @q parameter is provided it will be used for caching entries.
+ * Note that this function is designed to be run in addition to
+ * PKIX - certificate chain - verification. To be run independently
+ * the %DANE_VFLAG_ONLY_CHECK_EE_USAGE flag should be specified; 
+ * then the function will check whether the key of the peer matches the
+ * key advertized in the DANE entry.
  *
- * Returns: On success, %DANE_E_SUCCESS (0) is returned, otherwise a
- *   negative error value.
+ * Returns: a negative error code on error and %DANE_E_SUCCESS (0)
+ * when the DANE entries were successfully parsed, irrespective of
+ * whether they were verified (see @verify for that information). If
+ * no usable entries were encountered %DANE_E_REQUESTED_DATA_NOT_AVAILABLE
+ * will be returned.
  *
  **/
 int
@@ -884,11 +922,14 @@ dane_verify_crt(dane_state_t s,
  * See dane_verify_crt() for more information.
  *
  * This will not verify the chain for validity; unless the DANE
- * verification is restricted to end certificates, this has to
+ * verification is restricted to end certificates, this must be
  * be performed separately using gnutls_certificate_verify_peers3().
  *
- * Returns: On success, %DANE_E_SUCCESS (0) is returned, otherwise a
- *   negative error value.
+ * Returns: a negative error code on error and %DANE_E_SUCCESS (0)
+ * when the DANE entries were successfully parsed, irrespective of
+ * whether they were verified (see @verify for that information). If
+ * no usable entries were encountered %DANE_E_REQUESTED_DATA_NOT_AVAILABLE
+ * will be returned.
  *
  **/
 int

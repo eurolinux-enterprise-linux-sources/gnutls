@@ -183,6 +183,17 @@ void doit(void)
 
 	/* test for gnutls_certificate_get_issuer() */
 
+	/* check whether gnutls_x509_crt_list_import will fail if given a single
+	 * certificate */
+	list_size = LIST_SIZE;
+	ret =
+	    gnutls_x509_crt_list_import(list, &list_size, &ca,
+					GNUTLS_X509_FMT_PEM,
+					GNUTLS_X509_CRT_LIST_FAIL_IF_UNSORTED);
+	if (ret < 0)
+		fail("gnutls_x509_crt_list_import (failed with a single cert)");
+	gnutls_x509_crt_deinit(list[0]);
+
 	list_size = LIST_SIZE;
 	ret =
 	    gnutls_x509_crt_list_import(list, &list_size, &cert,
@@ -196,10 +207,16 @@ void doit(void)
 	if (ret < 0)
 		fail("gnutls_certificate_get_isser");
 
+	ret =
+	    gnutls_certificate_get_issuer(x509_cred, list[0], &issuer, GNUTLS_TL_GET_COPY);
+	if (ret < 0)
+		fail("gnutls_certificate_get_isser");
+
 	dn_size = sizeof(dn);
 	ret = gnutls_x509_crt_get_dn(issuer, dn, &dn_size);
 	if (ret < 0)
 		fail("gnutls_certificate_get_isser");
+	gnutls_x509_crt_deinit(issuer);
 
 	if (debug)
 		fprintf(stderr, "Issuer's DN: %s\n", dn);

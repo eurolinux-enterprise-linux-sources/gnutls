@@ -49,6 +49,12 @@
 # define _DESTRUCTOR __attribute__((destructor))
 #endif
 
+int __attribute__((weak)) _gnutls_global_init_skip(void);
+int _gnutls_global_init_skip(void)
+{
+	return 0;
+}
+
 /* created by asn1c */
 extern const ASN1_ARRAY_TYPE gnutls_asn1_tab[];
 extern const ASN1_ARRAY_TYPE pkix_asn1_tab[];
@@ -207,19 +213,29 @@ int gnutls_global_init(void)
 
 	_gnutls_init++;
 	if (_gnutls_init > 1) {
+		if (_gnutls_init == 2 && _gnutls_init_ret == 0) {
+			/* some applications may close the urandom fd 
+			 * before calling gnutls_global_init(). in that
+			 * case reopen it */
+			ret = _gnutls_rnd_check();
+			if (ret < 0) {
+				gnutls_assert();
+				goto out;
+			}
+		}
 		ret = _gnutls_init_ret;
 		goto out;
 	}
 
 	_gnutls_switch_lib_state(LIB_STATE_INIT);
 
-	e = getenv("GNUTLS_DEBUG_LEVEL");
+	e = secure_getenv("GNUTLS_DEBUG_LEVEL");
 	if (e != NULL) {
 		level = atoi(e);
 		gnutls_global_set_log_level(level);
 		if (_gnutls_log_func == NULL)
 			gnutls_global_set_log_function(default_log_func);
-		_gnutls_debug_log("Enabled GnuTLS logging...\n");
+		_gnutls_debug_log("Enabled GnuTLS "VERSION" logging...\n");
 	}
 
 	bindtextdomain(PACKAGE, LOCALEDIR);
@@ -297,6 +313,7 @@ int gnutls_global_init(void)
 	 * res == not in fips140 mode
 	 */
 	if (res != 0) {
+		_gnutls_debug_log("FIPS140-2 mode: %d\n", res);
 		_gnutls_priority_update_fips();
 
 		/* first round of self checks, these are done on the
@@ -326,6 +343,7 @@ int gnutls_global_init(void)
 				goto out;
 			}
 		}
+		_gnutls_fips_mode_reset_zombie();
 	}
 #endif
 	_gnutls_switch_lib_state(LIB_STATE_OPERATIONAL);
@@ -418,6 +436,17 @@ const char *gnutls_check_version(const char *req_version)
 static void _CONSTRUCTOR lib_init(void)
 {
 int ret;
+const char *e;
+
+	if (_gnutls_global_init_skip() != 0)
+		return;
+
+	e = secure_getenv("GNUTLS_NO_EXPLICIT_INIT");
+	if (e != NULL) {
+		ret = atoi(e);
+		if (ret == 1)
+			return;
+	}
 
 	ret = gnutls_global_init();
 	if (ret < 0) {
@@ -428,5 +457,17 @@ int ret;
 
 static void _DESTRUCTOR lib_deinit(void)
 {
+	const char *e;
+
+	if (_gnutls_global_init_skip() != 0)
+		return;
+
+	e = secure_getenv("GNUTLS_NO_EXPLICIT_INIT");
+	if (e != NULL) {
+		int ret = atoi(e);
+		if (ret == 1)
+			return;
+	}
+
 	_gnutls_global_deinit(1);
 }

@@ -7,7 +7,7 @@
  *
  * libdane is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License
- * as published by the Free Software Foundation; either version 3 of
+ * as published by the Free Software Foundation; either version 2.1 of
  * the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful, but
@@ -56,9 +56,9 @@ static const error_entry error_algorithms[] = {
 		    DANE_E_INVALID_DNSSEC_SIG),
 	ERROR_ENTRY(N_("There was a memory error."),
 		    DANE_E_MEMORY_ERROR),
-	ERROR_ENTRY(N_("There requested data are not available."),
+	ERROR_ENTRY(N_("The requested data are not available."),
 		    DANE_E_REQUESTED_DATA_NOT_AVAILABLE),
-	ERROR_ENTRY(N_("There request is invalid."),
+	ERROR_ENTRY(N_("The request is invalid."),
 		    DANE_E_INVALID_REQUEST),
 	ERROR_ENTRY(N_("There was an error in the certificate."),
 		    DANE_E_CERT_ERROR),

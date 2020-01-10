@@ -159,6 +159,9 @@ web:
 	sed 's/\@VERSION\@/$(VERSION)/g' -i $(htmldir)/manual/html_node/*.html $(htmldir)/manual/gnutls.html
 	-cd doc && make gnutls.epub && cp gnutls.epub ../$(htmldir)/manual/
 	cd doc/latex && make gnutls.pdf && cp gnutls.pdf ../../$(htmldir)/manual/
+	make -C doc gnutls-guile.html gnutls-guile.pdf
+	cd doc && makeinfo --html --split=node -o ../$(htmldir)/manual/gnutls-guile/ --css-include=./texinfo.css gnutls-guile.texi
+	cd doc && cp gnutls-guile.pdf gnutls-guile.html ../$(htmldir)/manual/
 	#cd doc/doxygen && doxygen && cd ../.. && cp -v doc/doxygen/html/* $(htmldir)/devel/doxygen/ && cd doc/doxygen/latex && make refman.pdf && cd ../../../ && cp doc/doxygen/latex/refman.pdf $(htmldir)/devel/doxygen/$(PACKAGE).pdf
 	-cp -v doc/reference/html/*.html doc/reference/html/*.png doc/reference/html/*.devhelp doc/reference/html/*.css $(htmldir)/reference/
 	#cp -v doc/cyclo/cyclo-$(PACKAGE).html $(htmldir)/cyclo/
@@ -223,7 +226,7 @@ lib/accelerated/x86/files.mk: $(ASM_SOURCES_ELF)
 	echo X86_64_FILES_ELF=$(X86_64_FILES_ELF) >> $@.tmp
 	echo X86_64_FILES_COFF=$(X86_64_FILES_COFF) >> $@.tmp
 	echo X86_64_FILES_MACOSX=$(X86_64_FILES_MACOSX) >> $@.tmp
-	echo X86_PADLOCK_FILES_ELF=$(X86_PADLOCK_FILES_ELF) > $@.tmp
+	echo X86_PADLOCK_FILES_ELF=$(X86_PADLOCK_FILES_ELF) >> $@.tmp
 	echo X86_PADLOCK_FILES_COFF=$(X86_PADLOCK_FILES_COFF) >> $@.tmp
 	echo X86_PADLOCK_FILES_MACOSX=$(X86_PADLOCK_FILES_MACOSX) >> $@.tmp
 	echo X86_64_PADLOCK_FILES_ELF=$(X86_64_PADLOCK_FILES_ELF) >> $@.tmp

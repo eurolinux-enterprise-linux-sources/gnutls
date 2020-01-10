@@ -99,9 +99,12 @@ void gnutls_certificate_free_cas(gnutls_certificate_credentials_t sc)
  * @sc: is a #gnutls_certificate_credentials_t structure.
  * @cert: is the certificate to find issuer for
  * @issuer: Will hold the issuer if any. Should be treated as constant.
- * @flags: Use zero.
+ * @flags: Use zero or %GNUTLS_TL_GET_COPY
  *
  * This function will return the issuer of a given certificate.
+ * As with gnutls_x509_trust_list_get_issuer() this function requires
+ * the %GNUTLS_TL_GET_COPY flag in order to operate with PKCS #11 trust
+ * lists. In that case the issuer must be freed using gnutls_x509_crt_deinit().
  *
  * Returns: On success, %GNUTLS_E_SUCCESS (0) is returned, otherwise a
  *   negative error value.
@@ -388,7 +391,7 @@ void gnutls_certificate_server_set_retrieve_function
  * int (*callback)(gnutls_session_t, const gnutls_datum_t* req_ca_dn, int nreqs,
  * const gnutls_pk_algorithm_t* pk_algos, int pk_algos_length, gnutls_retr2_st* st);
  *
- * @req_ca_cert is only used in X.509 certificates.
+ * @req_ca_dn is only used in X.509 certificates.
  * Contains a list with the CA names that the server considers trusted.
  * Normally we should send a certificate that is signed
  * by one of these CAs. These names are DER encoded. To get a more
@@ -430,7 +433,7 @@ void gnutls_certificate_set_retrieve_function
  * const gnutls_pk_algorithm_t* pk_algos, int pk_algos_length, gnutls_pcert_st** pcert,
  * unsigned int *pcert_length, gnutls_privkey_t * pkey);
  *
- * @req_ca_cert is only used in X.509 certificates.
+ * @req_ca_dn is only used in X.509 certificates.
  * Contains a list with the CA names that the server considers trusted.
  * Normally we should send a certificate that is signed
  * by one of these CAs. These names are DER encoded. To get a more
@@ -439,7 +442,7 @@ void gnutls_certificate_set_retrieve_function
  * @pk_algos contains a list with server's acceptable signature algorithms.
  * The certificate returned should support the server's given algorithms.
  *
- * @pcert should contain a single certificate and public or a list of them.
+ * @pcert should contain a single certificate and public key or a list of them.
  *
  * @pcert_length is the size of the previous list.
  *
@@ -447,6 +450,8 @@ void gnutls_certificate_set_retrieve_function
  *
  * If the callback function is provided then gnutls will call it, in the
  * handshake, after the certificate request message has been received.
+ * All the provided by the callback values will not be released or
+ * modified by gnutls.
  *
  * In server side pk_algos and req_ca_dn are NULL.
  *
@@ -650,7 +655,9 @@ _gnutls_openpgp_crt_verify_peers(gnutls_session_t session,
  * the verified certificate belongs to the actual peer, see gnutls_x509_crt_check_hostname(),
  * or use gnutls_certificate_verify_peers3().
  *
- * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0) on success.
+ * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0)
+ * when the peer's certificate was successfully parsed, irrespective of whether
+ * it was verified.
  **/
 int
 gnutls_certificate_verify_peers2(gnutls_session_t session,
@@ -682,7 +689,9 @@ gnutls_certificate_verify_peers2(gnutls_session_t session,
  * In order to verify the purpose of the end-certificate (by checking the extended
  * key usage), use gnutls_certificate_verify_peers().
  *
- * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0) on success.
+ * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0)
+ * when the peer's certificate was successfully parsed, irrespective of whether
+ * it was verified.
  *
  * Since: 3.1.4
  **/
@@ -726,7 +735,9 @@ gnutls_typed_vdata_st data;
  * usage PKIX extension, it will be required to be have the provided key purpose 
  * or be marked for any purpose, otherwise verification will fail with %GNUTLS_CERT_SIGNER_CONSTRAINTS_FAILURE status.
  *
- * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0) on success.
+ * Returns: a negative error code on error and %GNUTLS_E_SUCCESS (0)
+ * when the peer's certificate was successfully parsed, irrespective of whether
+ * it was verified.
  *
  * Since: 3.3.0
  **/

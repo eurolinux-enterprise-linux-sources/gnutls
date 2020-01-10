@@ -1024,6 +1024,7 @@ GNUTLS_3_1_0 {
 	gnutls_x509_ext_deinit;
 	gnutls_x509_ext_print;
 	gnutls_x509_othername_to_virtual;
+	_gnutls_global_init_skip;
 } GNUTLS_3_0_0;
 
 GNUTLS_FIPS140 {
@@ -1032,7 +1033,7 @@ GNUTLS_FIPS140 {
 	gnutls_mac_self_test;
 	gnutls_digest_self_test;
 	#for FIPS140-2 validation
-	rbg_aes_reseed;
+	drbg_aes_reseed;
 	drbg_aes_init;
 	drbg_aes_generate;
 	_dsa_generate_dss_pq;
@@ -1043,6 +1044,10 @@ GNUTLS_FIPS140 {
 	_gnutls_prf_raw;
 	_gnutls_encode_ber_rs_raw;
 	_rsa_generate_fips186_4_keypair;
+	_gnutls_dh_compute_key;
+	_gnutls_dh_generate_key;
+	_gnutls_ecdh_generate_key;
+	_gnutls_ecdh_compute_key;
 };
 
 GNUTLS_PRIVATE {
