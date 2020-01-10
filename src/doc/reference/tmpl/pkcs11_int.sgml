@@ -328,8 +328,7 @@ pkcs11_int
 @sinfo: 
 @pin_info: 
 @info: 
-@so: 
-@reauth: 
+@flags: 
 @Returns: 
 
 

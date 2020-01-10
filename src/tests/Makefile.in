@@ -156,7 +156,8 @@ host_triplet = @host@
 @WINDOWS_TRUE@	$(am__DEPENDENCIES_1)
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@am__append_5 = pkcs11-cert-import-url-exts pkcs11-get-exts pkcs11-get-raw-issuer-exts \
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-chainverify pkcs11/pkcs11-get-issuer pkcs11/pkcs11-is-known \
-@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-combo pkcs11-import-url-privkey
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-combo pkcs11-import-url-privkey pkcs11/pkcs11-pubkey-import-rsa \
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-import-with-pin pkcs11-privkey-safenet-always-auth
 
 @ENABLE_OCSP_TRUE@am__append_6 = ocsp
 @ENABLE_DANE_TRUE@am__append_7 = dane
@@ -311,7 +312,10 @@ libutils_la_OBJECTS = $(am_libutils_la_OBJECTS)
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-get-issuer$(EXEEXT) \
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-is-known$(EXEEXT) \
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-combo$(EXEEXT) \
-@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11-import-url-privkey$(EXEEXT)
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11-import-url-privkey$(EXEEXT) \
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-pubkey-import-rsa$(EXEEXT) \
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11/pkcs11-import-with-pin$(EXEEXT) \
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@	pkcs11-privkey-safenet-always-auth$(EXEEXT)
 @ENABLE_OCSP_TRUE@am__EXEEXT_2 = ocsp$(EXEEXT)
 @ENABLE_DANE_TRUE@am__EXEEXT_3 = dane$(EXEEXT)
 @ENABLE_FIPS140_FALSE@@ENABLE_OPENSSL_TRUE@am__EXEEXT_4 =  \
@@ -363,9 +367,10 @@ am__EXEEXT_8 = mini-record-2$(EXEEXT) simple$(EXEEXT) gc$(EXEEXT) \
 	global-init-override$(EXEEXT) version-checks$(EXEEXT) \
 	mini-server-name$(EXEEXT) naked-alerts$(EXEEXT) \
 	multi-alerts$(EXEEXT) pkcs8-key-decode-encrypted$(EXEEXT) \
-	pkcs8-key-decode$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2) \
-	$(am__EXEEXT_3) $(am__EXEEXT_4) $(am__EXEEXT_5) \
-	$(am__EXEEXT_6) $(am__EXEEXT_7)
+	pkcs8-key-decode$(EXEEXT) crt_apis$(EXEEXT) \
+	tls-rehandshake-cert-3$(EXEEXT) $(am__EXEEXT_1) \
+	$(am__EXEEXT_2) $(am__EXEEXT_3) $(am__EXEEXT_4) \
+	$(am__EXEEXT_5) $(am__EXEEXT_6) $(am__EXEEXT_7)
 anonself_SOURCES = anonself.c
 anonself_OBJECTS = anonself.$(OBJEXT)
 anonself_LDADD = $(LDADD)
@@ -419,6 +424,12 @@ crq_key_id_SOURCES = crq_key_id.c
 crq_key_id_OBJECTS = crq_key_id.$(OBJEXT)
 crq_key_id_LDADD = $(LDADD)
 crq_key_id_DEPENDENCIES = ../lib/libgnutls.la ../gl/libgnu.la \
+	libutils.la $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
+crt_apis_SOURCES = crt_apis.c
+crt_apis_OBJECTS = crt_apis.$(OBJEXT)
+crt_apis_LDADD = $(LDADD)
+crt_apis_DEPENDENCIES = ../lib/libgnutls.la ../gl/libgnu.la \
 	libutils.la $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
 cve_2008_4989_SOURCES = cve-2008-4989.c
@@ -797,6 +808,11 @@ am__pkcs11_import_url_privkey_SOURCES_DIST =  \
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@am_pkcs11_import_url_privkey_OBJECTS = pkcs11/pkcs11-import-url-privkey.$(OBJEXT)
 pkcs11_import_url_privkey_OBJECTS =  \
 	$(am_pkcs11_import_url_privkey_OBJECTS)
+am__pkcs11_privkey_safenet_always_auth_SOURCES_DIST =  \
+	pkcs11/pkcs11-privkey-safenet-always-auth.c
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@am_pkcs11_privkey_safenet_always_auth_OBJECTS = pkcs11/pkcs11-privkey-safenet-always-auth.$(OBJEXT)
+pkcs11_privkey_safenet_always_auth_OBJECTS =  \
+	$(am_pkcs11_privkey_safenet_always_auth_OBJECTS)
 pkcs11_pkcs11_chainverify_SOURCES = pkcs11/pkcs11-chainverify.c
 pkcs11_pkcs11_chainverify_OBJECTS =  \
 	pkcs11/pkcs11-chainverify.$(OBJEXT)
@@ -816,10 +832,26 @@ pkcs11_pkcs11_get_issuer_LDADD = $(LDADD)
 pkcs11_pkcs11_get_issuer_DEPENDENCIES = ../lib/libgnutls.la \
 	../gl/libgnu.la libutils.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+pkcs11_pkcs11_import_with_pin_SOURCES =  \
+	pkcs11/pkcs11-import-with-pin.c
+pkcs11_pkcs11_import_with_pin_OBJECTS =  \
+	pkcs11/pkcs11-import-with-pin.$(OBJEXT)
+pkcs11_pkcs11_import_with_pin_LDADD = $(LDADD)
+pkcs11_pkcs11_import_with_pin_DEPENDENCIES = ../lib/libgnutls.la \
+	../gl/libgnu.la libutils.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 pkcs11_pkcs11_is_known_SOURCES = pkcs11/pkcs11-is-known.c
 pkcs11_pkcs11_is_known_OBJECTS = pkcs11/pkcs11-is-known.$(OBJEXT)
 pkcs11_pkcs11_is_known_LDADD = $(LDADD)
 pkcs11_pkcs11_is_known_DEPENDENCIES = ../lib/libgnutls.la \
+	../gl/libgnu.la libutils.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+pkcs11_pkcs11_pubkey_import_rsa_SOURCES =  \
+	pkcs11/pkcs11-pubkey-import-rsa.c
+pkcs11_pkcs11_pubkey_import_rsa_OBJECTS =  \
+	pkcs11/pkcs11-pubkey-import-rsa.$(OBJEXT)
+pkcs11_pkcs11_pubkey_import_rsa_LDADD = $(LDADD)
+pkcs11_pkcs11_pubkey_import_rsa_DEPENDENCIES = ../lib/libgnutls.la \
 	../gl/libgnu.la libutils.la $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 pkcs12_encode_SOURCES = pkcs12_encode.c
@@ -937,6 +969,12 @@ simple_LDADD = $(LDADD)
 simple_DEPENDENCIES = ../lib/libgnutls.la ../gl/libgnu.la libutils.la \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1)
+tls_rehandshake_cert_3_SOURCES = tls-rehandshake-cert-3.c
+tls_rehandshake_cert_3_OBJECTS = tls-rehandshake-cert-3.$(OBJEXT)
+tls_rehandshake_cert_3_LDADD = $(LDADD)
+tls_rehandshake_cert_3_DEPENDENCIES = ../lib/libgnutls.la \
+	../gl/libgnu.la libutils.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 version_checks_SOURCES = version-checks.c
 version_checks_OBJECTS = version-checks.$(OBJEXT)
 version_checks_LDADD = $(LDADD)
@@ -1022,14 +1060,15 @@ am__v_CCLD_1 =
 SOURCES = $(libpkcs11mock1_la_SOURCES) $(libutils_la_SOURCES) \
 	anonself.c certder.c certificate_set_x509_crl.c certuniqueid.c \
 	chainverify.c chainverify-unsorted.c crlverify.c crq_apis.c \
-	crq_key_id.c cve-2008-4989.c cve-2009-1415.c cve-2009-1416.c \
-	dane.c dhepskself.c dn.c dn2.c fips-test.c gc.c global-init.c \
-	global-init-override.c hostname-check.c infoaccess.c \
-	init_fds.c init_roundtrip.c key-openssl.c long-session-id.c \
-	mini-alpn.c mini-cert-status.c mini-dtls-heartbeat.c \
-	mini-dtls-hello-verify.c mini-dtls-large.c mini-dtls-record.c \
-	mini-dtls-rehandshake.c mini-dtls-srtp.c mini-eagain.c \
-	mini-eagain-dtls.c mini-emsgsize-dtls.c mini-global-load.c \
+	crq_key_id.c crt_apis.c cve-2008-4989.c cve-2009-1415.c \
+	cve-2009-1416.c dane.c dhepskself.c dn.c dn2.c fips-test.c \
+	gc.c global-init.c global-init-override.c hostname-check.c \
+	infoaccess.c init_fds.c init_roundtrip.c key-openssl.c \
+	long-session-id.c mini-alpn.c mini-cert-status.c \
+	mini-dtls-heartbeat.c mini-dtls-hello-verify.c \
+	mini-dtls-large.c mini-dtls-record.c mini-dtls-rehandshake.c \
+	mini-dtls-srtp.c mini-eagain.c mini-eagain-dtls.c \
+	mini-emsgsize-dtls.c mini-global-load.c \
 	mini-handshake-timeout.c mini-loss-time.c mini-overhead.c \
 	mini-record.c mini-record-2.c mini-record-range.c \
 	mini-rehandshake.c mini-rehandshake-2.c mini-rsa-psk.c \
@@ -1042,21 +1081,24 @@ SOURCES = $(libpkcs11mock1_la_SOURCES) $(libutils_la_SOURCES) \
 	$(pkcs11_get_exts_SOURCES) \
 	$(pkcs11_get_raw_issuer_exts_SOURCES) \
 	$(pkcs11_import_url_privkey_SOURCES) \
+	$(pkcs11_privkey_safenet_always_auth_SOURCES) \
 	pkcs11/pkcs11-chainverify.c pkcs11/pkcs11-combo.c \
-	pkcs11/pkcs11-get-issuer.c pkcs11/pkcs11-is-known.c \
+	pkcs11/pkcs11-get-issuer.c pkcs11/pkcs11-import-with-pin.c \
+	pkcs11/pkcs11-is-known.c pkcs11/pkcs11-pubkey-import-rsa.c \
 	pkcs12_encode.c pkcs12_s2k.c pkcs12_s2k_pem.c pkcs12_simple.c \
 	pkcs8-key-decode.c pkcs8-key-decode-encrypted.c priorities.c \
 	pskself.c record-sizes.c record-sizes-range.c resume.c \
 	resume-dtls.c rng-fork.c rsa-encrypt-decrypt.c sec-params.c \
 	set_pkcs12_cred.c setcredcrash.c sign-md5-rep.c simple.c \
-	version-checks.c x509-extensions.c x509_altname.c x509cert.c \
-	x509cert-tl.c x509dn.c x509self.c x509sign-verify.c
+	tls-rehandshake-cert-3.c version-checks.c x509-extensions.c \
+	x509_altname.c x509cert.c x509cert-tl.c x509dn.c x509self.c \
+	x509sign-verify.c
 DIST_SOURCES = $(am__libpkcs11mock1_la_SOURCES_DIST) \
 	$(libutils_la_SOURCES) anonself.c certder.c \
 	certificate_set_x509_crl.c certuniqueid.c chainverify.c \
 	chainverify-unsorted.c crlverify.c crq_apis.c crq_key_id.c \
-	cve-2008-4989.c cve-2009-1415.c cve-2009-1416.c dane.c \
-	dhepskself.c dn.c dn2.c fips-test.c gc.c global-init.c \
+	crt_apis.c cve-2008-4989.c cve-2009-1415.c cve-2009-1416.c \
+	dane.c dhepskself.c dn.c dn2.c fips-test.c gc.c global-init.c \
 	global-init-override.c hostname-check.c infoaccess.c \
 	init_fds.c init_roundtrip.c key-openssl.c long-session-id.c \
 	mini-alpn.c mini-cert-status.c mini-dtls-heartbeat.c \
@@ -1076,15 +1118,18 @@ DIST_SOURCES = $(am__libpkcs11mock1_la_SOURCES_DIST) \
 	$(am__pkcs11_get_exts_SOURCES_DIST) \
 	$(am__pkcs11_get_raw_issuer_exts_SOURCES_DIST) \
 	$(am__pkcs11_import_url_privkey_SOURCES_DIST) \
+	$(am__pkcs11_privkey_safenet_always_auth_SOURCES_DIST) \
 	pkcs11/pkcs11-chainverify.c pkcs11/pkcs11-combo.c \
-	pkcs11/pkcs11-get-issuer.c pkcs11/pkcs11-is-known.c \
+	pkcs11/pkcs11-get-issuer.c pkcs11/pkcs11-import-with-pin.c \
+	pkcs11/pkcs11-is-known.c pkcs11/pkcs11-pubkey-import-rsa.c \
 	pkcs12_encode.c pkcs12_s2k.c pkcs12_s2k_pem.c pkcs12_simple.c \
 	pkcs8-key-decode.c pkcs8-key-decode-encrypted.c priorities.c \
 	pskself.c record-sizes.c record-sizes-range.c resume.c \
 	resume-dtls.c rng-fork.c rsa-encrypt-decrypt.c sec-params.c \
 	set_pkcs12_cred.c setcredcrash.c sign-md5-rep.c simple.c \
-	version-checks.c x509-extensions.c x509_altname.c x509cert.c \
-	x509cert-tl.c x509dn.c x509self.c x509sign-verify.c
+	tls-rehandshake-cert-3.c version-checks.c x509-extensions.c \
+	x509_altname.c x509cert.c x509cert-tl.c x509dn.c x509self.c \
+	x509sign-verify.c
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -2335,7 +2380,7 @@ EXTRA_DIST = suppressions.valgrind eagain-common.h test-chains.h \
 	certs/cert-rsa-2432.pem certs/ecc384.pem certs/ecc.pem \
 	certs/ca-ecc.pem certs/cert-ecc384.pem certs/cert-ecc.pem certs/ecc256.pem \
 	certs/ecc521.pem certs/rsa-2432.pem x509cert-dir/ca.pem \
-	cert-common.h pkcs11/softhsm.h
+	cert-common.h pkcs11/softhsm.h pkcs11/pkcs11-pubkey-import.c
 
 AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
 AM_CPPFLAGS = -I$(top_srcdir)/gl -I$(top_builddir)/gl \
@@ -2376,9 +2421,10 @@ ctests = mini-record-2 simple gc set_pkcs12_cred certder certuniqueid \
 	long-session-id mini-x509-callbacks-intr crlverify init_fds \
 	mini-rehandshake-2 sign-md5-rep global-init-override \
 	version-checks mini-server-name naked-alerts multi-alerts \
-	pkcs8-key-decode-encrypted pkcs8-key-decode $(am__append_5) \
-	$(am__append_6) $(am__append_7) $(am__append_8) \
-	$(am__append_9) $(am__append_10) $(am__append_11)
+	pkcs8-key-decode-encrypted pkcs8-key-decode crt_apis \
+	tls-rehandshake-cert-3 $(am__append_5) $(am__append_6) \
+	$(am__append_7) $(am__append_8) $(am__append_9) \
+	$(am__append_10) $(am__append_11)
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@libpkcs11mock1_la_SOURCES = pkcs11/pkcs11-mock.c pkcs11/pkcs11-mock.h pkcs11/pkcs11-mock-ext.h
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@libpkcs11mock1_la_LDFLAGS = -shared -rpath $(pkglibdir) -module -no-undefined -avoid-version
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@libpkcs11mock1_la_LIBADD = ../gl/libgnu.la
@@ -2391,6 +2437,9 @@ ctests = mini-record-2 simple gc set_pkcs12_cred certder certuniqueid \
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_import_url_privkey_SOURCES = pkcs11/pkcs11-import-url-privkey.c
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_import_url_privkey_DEPENDENCIES = libpkcs11mock1.la libutils.la
 @ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_import_url_privkey_LDADD = $(LDADD) $(LIBDL)
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_privkey_safenet_always_auth_SOURCES = pkcs11/pkcs11-privkey-safenet-always-auth.c
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_privkey_safenet_always_auth_DEPENDENCIES = libpkcs11mock1.la libutils.la
+@ENABLE_PKCS11_TRUE@@HAVE_BUGGY_P11_KIT_FALSE@@WINDOWS_FALSE@pkcs11_privkey_safenet_always_auth_LDADD = $(LDADD) $(LIBDL)
 gc_LDADD = $(LDADD) -lnettle
 @ENABLE_FIPS140_FALSE@@ENABLE_OPENSSL_TRUE@openssl_LDADD = ../extra/libgnutls-openssl.la $(LDADD)
 dist_check_SCRIPTS = rfc2253-escape-test
@@ -2514,6 +2563,10 @@ crq_apis$(EXEEXT): $(crq_apis_OBJECTS) $(crq_apis_DEPENDENCIES) $(EXTRA_crq_apis
 crq_key_id$(EXEEXT): $(crq_key_id_OBJECTS) $(crq_key_id_DEPENDENCIES) $(EXTRA_crq_key_id_DEPENDENCIES) 
 	@rm -f crq_key_id$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(crq_key_id_OBJECTS) $(crq_key_id_LDADD) $(LIBS)
+
+crt_apis$(EXEEXT): $(crt_apis_OBJECTS) $(crt_apis_DEPENDENCIES) $(EXTRA_crt_apis_DEPENDENCIES) 
+	@rm -f crt_apis$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(crt_apis_OBJECTS) $(crt_apis_LDADD) $(LIBS)
 
 cve-2008-4989$(EXEEXT): $(cve_2008_4989_OBJECTS) $(cve_2008_4989_DEPENDENCIES) $(EXTRA_cve_2008_4989_DEPENDENCIES) 
 	@rm -f cve-2008-4989$(EXEEXT)
@@ -2778,6 +2831,12 @@ pkcs11/pkcs11-import-url-privkey.$(OBJEXT): pkcs11/$(am__dirstamp) \
 pkcs11-import-url-privkey$(EXEEXT): $(pkcs11_import_url_privkey_OBJECTS) $(pkcs11_import_url_privkey_DEPENDENCIES) $(EXTRA_pkcs11_import_url_privkey_DEPENDENCIES) 
 	@rm -f pkcs11-import-url-privkey$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pkcs11_import_url_privkey_OBJECTS) $(pkcs11_import_url_privkey_LDADD) $(LIBS)
+pkcs11/pkcs11-privkey-safenet-always-auth.$(OBJEXT):  \
+	pkcs11/$(am__dirstamp) pkcs11/$(DEPDIR)/$(am__dirstamp)
+
+pkcs11-privkey-safenet-always-auth$(EXEEXT): $(pkcs11_privkey_safenet_always_auth_OBJECTS) $(pkcs11_privkey_safenet_always_auth_DEPENDENCIES) $(EXTRA_pkcs11_privkey_safenet_always_auth_DEPENDENCIES) 
+	@rm -f pkcs11-privkey-safenet-always-auth$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pkcs11_privkey_safenet_always_auth_OBJECTS) $(pkcs11_privkey_safenet_always_auth_LDADD) $(LIBS)
 pkcs11/pkcs11-chainverify.$(OBJEXT): pkcs11/$(am__dirstamp) \
 	pkcs11/$(DEPDIR)/$(am__dirstamp)
 
@@ -2796,12 +2855,24 @@ pkcs11/pkcs11-get-issuer.$(OBJEXT): pkcs11/$(am__dirstamp) \
 pkcs11/pkcs11-get-issuer$(EXEEXT): $(pkcs11_pkcs11_get_issuer_OBJECTS) $(pkcs11_pkcs11_get_issuer_DEPENDENCIES) $(EXTRA_pkcs11_pkcs11_get_issuer_DEPENDENCIES) pkcs11/$(am__dirstamp)
 	@rm -f pkcs11/pkcs11-get-issuer$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pkcs11_pkcs11_get_issuer_OBJECTS) $(pkcs11_pkcs11_get_issuer_LDADD) $(LIBS)
+pkcs11/pkcs11-import-with-pin.$(OBJEXT): pkcs11/$(am__dirstamp) \
+	pkcs11/$(DEPDIR)/$(am__dirstamp)
+
+pkcs11/pkcs11-import-with-pin$(EXEEXT): $(pkcs11_pkcs11_import_with_pin_OBJECTS) $(pkcs11_pkcs11_import_with_pin_DEPENDENCIES) $(EXTRA_pkcs11_pkcs11_import_with_pin_DEPENDENCIES) pkcs11/$(am__dirstamp)
+	@rm -f pkcs11/pkcs11-import-with-pin$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pkcs11_pkcs11_import_with_pin_OBJECTS) $(pkcs11_pkcs11_import_with_pin_LDADD) $(LIBS)
 pkcs11/pkcs11-is-known.$(OBJEXT): pkcs11/$(am__dirstamp) \
 	pkcs11/$(DEPDIR)/$(am__dirstamp)
 
 pkcs11/pkcs11-is-known$(EXEEXT): $(pkcs11_pkcs11_is_known_OBJECTS) $(pkcs11_pkcs11_is_known_DEPENDENCIES) $(EXTRA_pkcs11_pkcs11_is_known_DEPENDENCIES) pkcs11/$(am__dirstamp)
 	@rm -f pkcs11/pkcs11-is-known$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pkcs11_pkcs11_is_known_OBJECTS) $(pkcs11_pkcs11_is_known_LDADD) $(LIBS)
+pkcs11/pkcs11-pubkey-import-rsa.$(OBJEXT): pkcs11/$(am__dirstamp) \
+	pkcs11/$(DEPDIR)/$(am__dirstamp)
+
+pkcs11/pkcs11-pubkey-import-rsa$(EXEEXT): $(pkcs11_pkcs11_pubkey_import_rsa_OBJECTS) $(pkcs11_pkcs11_pubkey_import_rsa_DEPENDENCIES) $(EXTRA_pkcs11_pkcs11_pubkey_import_rsa_DEPENDENCIES) pkcs11/$(am__dirstamp)
+	@rm -f pkcs11/pkcs11-pubkey-import-rsa$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pkcs11_pkcs11_pubkey_import_rsa_OBJECTS) $(pkcs11_pkcs11_pubkey_import_rsa_LDADD) $(LIBS)
 
 pkcs12_encode$(EXEEXT): $(pkcs12_encode_OBJECTS) $(pkcs12_encode_DEPENDENCIES) $(EXTRA_pkcs12_encode_DEPENDENCIES) 
 	@rm -f pkcs12_encode$(EXEEXT)
@@ -2879,6 +2950,10 @@ simple$(EXEEXT): $(simple_OBJECTS) $(simple_DEPENDENCIES) $(EXTRA_simple_DEPENDE
 	@rm -f simple$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(simple_OBJECTS) $(simple_LDADD) $(LIBS)
 
+tls-rehandshake-cert-3$(EXEEXT): $(tls_rehandshake_cert_3_OBJECTS) $(tls_rehandshake_cert_3_DEPENDENCIES) $(EXTRA_tls_rehandshake_cert_3_DEPENDENCIES) 
+	@rm -f tls-rehandshake-cert-3$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tls_rehandshake_cert_3_OBJECTS) $(tls_rehandshake_cert_3_LDADD) $(LIBS)
+
 version-checks$(EXEEXT): $(version_checks_OBJECTS) $(version_checks_DEPENDENCIES) $(EXTRA_version_checks_DEPENDENCIES) 
 	@rm -f version-checks$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(version_checks_OBJECTS) $(version_checks_LDADD) $(LIBS)
@@ -2928,6 +3003,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crlverify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crq_apis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crq_key_id.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crt_apis.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cve-2008-4989.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cve-2009-1415.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cve-2009-1416.Po@am__quote@
@@ -3007,6 +3083,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/setcredcrash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sign-md5-rep.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls-rehandshake-cert-3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version-checks.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x509-extensions.Po@am__quote@
@@ -3023,8 +3100,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-get-issuer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-get-raw-issuer-exts.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-import-url-privkey.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-import-with-pin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-is-known.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-mock.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-privkey-safenet-always-auth.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@pkcs11/$(DEPDIR)/pkcs11-pubkey-import-rsa.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -3864,6 +3944,20 @@ pkcs8-key-decode.log: pkcs8-key-decode$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+crt_apis.log: crt_apis$(EXEEXT)
+	@p='crt_apis$(EXEEXT)'; \
+	b='crt_apis'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tls-rehandshake-cert-3.log: tls-rehandshake-cert-3$(EXEEXT)
+	@p='tls-rehandshake-cert-3$(EXEEXT)'; \
+	b='tls-rehandshake-cert-3'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 pkcs11-cert-import-url-exts.log: pkcs11-cert-import-url-exts$(EXEEXT)
 	@p='pkcs11-cert-import-url-exts$(EXEEXT)'; \
 	b='pkcs11-cert-import-url-exts'; \
@@ -3916,6 +4010,27 @@ pkcs11/pkcs11-combo.log: pkcs11/pkcs11-combo$(EXEEXT)
 pkcs11-import-url-privkey.log: pkcs11-import-url-privkey$(EXEEXT)
 	@p='pkcs11-import-url-privkey$(EXEEXT)'; \
 	b='pkcs11-import-url-privkey'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pkcs11/pkcs11-pubkey-import-rsa.log: pkcs11/pkcs11-pubkey-import-rsa$(EXEEXT)
+	@p='pkcs11/pkcs11-pubkey-import-rsa$(EXEEXT)'; \
+	b='pkcs11/pkcs11-pubkey-import-rsa'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pkcs11/pkcs11-import-with-pin.log: pkcs11/pkcs11-import-with-pin$(EXEEXT)
+	@p='pkcs11/pkcs11-import-with-pin$(EXEEXT)'; \
+	b='pkcs11/pkcs11-import-with-pin'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pkcs11-privkey-safenet-always-auth.log: pkcs11-privkey-safenet-always-auth$(EXEEXT)
+	@p='pkcs11-privkey-safenet-always-auth$(EXEEXT)'; \
+	b='pkcs11-privkey-safenet-always-auth'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

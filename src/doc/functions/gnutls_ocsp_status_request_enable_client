@@ -13,8 +13,14 @@
 
 This function is to be used by clients to request OCSP response
 from the server, using the "status_request" TLS extension.  Only
-OCSP status type is supported. A typical server has a single
-OCSP response cached, so  @code{responder_id} and  @code{extensions} should be null.
+OCSP status type is supported.
+
+The  @code{responder_id} array, its containing elements as well as
+the data of  @code{extensions} , must be allocated using @code{gnutls_malloc()} . They
+will be deinitialized on session cleanup.
+
+Due to the difficult semantics of the  @code{responder_id} and  @code{extensions} parameters, it is recommended to only call this function with these
+parameters set to @code{NULL} .
 
 @strong{Returns:} On success, @code{GNUTLS_E_SUCCESS}  (0) is returned,
 otherwise a negative error code is returned.

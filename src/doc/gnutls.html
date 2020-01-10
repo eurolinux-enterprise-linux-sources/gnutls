@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <!-- This manual is last updated 23 March 2015 for version
-3.3.26 of GnuTLS.
+3.3.29 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\
 Copyright (C) 2001-2013 Nikos Mavrogiannopoulos
@@ -14,10 +14,10 @@ copy of the license is included in the section entitled "GNU Free
 Documentation License". -->
 <!-- Created by GNU Texinfo 6.3, http://www.gnu.org/software/texinfo/ -->
 <head>
-<title>GnuTLS 3.3.26</title>
+<title>GnuTLS 3.3.29</title>
 
-<meta name="description" content="GnuTLS 3.3.26">
-<meta name="keywords" content="GnuTLS 3.3.26">
+<meta name="description" content="GnuTLS 3.3.29">
+<meta name="keywords" content="GnuTLS 3.3.29">
 <meta name="resource-type" content="document">
 <meta name="distribution" content="global">
 <meta name="Generator" content="makeinfo">
@@ -153,7 +153,7 @@ dl {
 </head>
 
 <body lang="en">
-<h1 class="settitle" align="center">GnuTLS 3.3.26</h1>
+<h1 class="settitle" align="center">GnuTLS 3.3.29</h1>
 
 
 
@@ -508,7 +508,7 @@ Next: <a href="#Preface" accesskey="n" rel="next">Preface</a>, Up: <a href="dir.
 <h1 class="top">GnuTLS</h1>
 
 <p>This manual is last updated 23 March 2015 for version
-3.3.26 of GnuTLS.
+3.3.29 of GnuTLS.
 </p>
 <p>Copyright &copy; 2001-2013 Free Software Foundation, Inc.\\
 Copyright &copy; 2001-2013 Nikos Mavrogiannopoulos
@@ -5141,7 +5141,58 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">danetool is unavailable - no --help
+<pre class="example">danetool - GnuTLS DANE tool
+Usage:  danetool [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -V, --verbose              More verbose output
+                                - may appear multiple times
+       --infile=file          Input file
+                                - file must pre-exist
+       --outfile=str          Output file
+       --load-pubkey=str      Loads a public key file
+       --load-certificate=str Loads a certificate file
+       --dlv=str              Sets a DLV file
+       --hash=str             Hash algorithm to use for signing
+       --check=str            Check a host's DANE TLSA entry
+       --check-ee             Check only the end-entity's certificate
+       --check-ca             Check only the CA's certificate
+       --tlsa-rr              Print the DANE RR data on a certificate or public key
+                                - requires the option 'host'
+       --host=str             Specify the hostname to be used in the DANE RR
+       --proto=str            The protocol set for DANE data (tcp, udp etc.)
+       --port=str             The port or service to connect to, for DANE data
+       --app-proto=str        an alias for the 'starttls-proto' option
+       --starttls-proto=str   The application protocol to be used to obtain the server's certificate
+(https, ftp, smtp, imap, ldap, xmpp)
+       --ca                   Whether the provided certificate or public key is a Certificate
+Authority
+       --x509                 Use the hash of the X.509 certificate, rather than the public key
+       --local                an alias for the 'domain' option
+                                - enabled by default
+       --domain               The provided certificate or public key is issued by the local domain
+                                - disabled as '--no-domain'
+                                - enabled by default
+       --local-dns            Use the local DNS server for DNSSEC resolving
+                                - disabled as '--no-local-dns'
+       --insecure             Do not verify any DNSSEC signature
+       --inder                Use DER format for input certificates and private keys
+                                - disabled as '--no-inder'
+       --inraw                an alias for the 'inder' option
+       --print-raw            Print the received DANE data in raw format
+                                - disabled as '--no-print-raw'
+       --quiet                Suppress several informational messages
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Tool to generate and check DNS resource records for the DANE protocol.
+
 </pre></div>
 
 <a name="danetool-debug"></a><a name="debug-option-_0028_002dd_0029-4"></a>
@@ -6962,6 +7013,8 @@ Tokens:
        --list-token-urls      List the URLs available tokens
        --list-mechanisms      List all available mechanisms in a token
        --initialize           Initializes a PKCS #11 token
+       --initialize-pin       Initializes/Resets a PKCS #11 token user PIN
+       --initialize-so-pin    Initializes/Resets a PKCS #11 token security officer PIN
        --set-pin=str          Specify the PIN to use on token initialization
        --set-so-pin=str       Specify the Security Officer's PIN to use on token initialization
 
@@ -8558,7 +8611,7 @@ the server.  For clients that wants to send more than its own end
 entity certificate (e.g., also an intermediate CA cert) then put
 the certificate chain in  <code>pcert_list</code> . 
 </p>
-<p>Note that the  <code>pcert_list</code> and  <code>key</code> will become part of the credentials 
+<p>Note that the  <code>key</code> and the elements of  <code>pcert_list</code> will become part of the credentials 
 structure and must not be deallocated. They will be automatically deallocated 
 when the  <code>res</code> structure is deinitialized.
 </p>
@@ -15067,7 +15120,101 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">gnutls-cli is unavailable - no --help
+<pre class="example">gnutls-cli - GnuTLS client
+Usage:  gnutls-cli [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]... [hostname]
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -V, --verbose              More verbose output
+                                - may appear multiple times
+       --tofu                 Enable trust on first use authentication
+                                - disabled as '--no-tofu'
+       --strict-tofu          Fail to connect if a known certificate has changed
+                                - disabled as '--no-strict-tofu'
+       --dane                 Enable DANE certificate verification (DNSSEC)
+                                - disabled as '--no-dane'
+       --local-dns            Use the local DNS server for DNSSEC resolving
+                                - disabled as '--no-local-dns'
+       --ca-verification      Enable CA certificate verification
+                                - disabled as '--no-ca-verification'
+                                - enabled by default
+       --ocsp                 Enable OCSP certificate verification
+                                - disabled as '--no-ocsp'
+   -r, --resume               Establish a session and resume
+   -e, --rehandshake          Establish a session and rehandshake
+   -s, --starttls             Connect, establish a plain session and start TLS
+       --app-proto=str        an alias for the 'starttls-proto' option
+       --starttls-proto=str   The application protocol to be used to obtain the server's certificate
+(https, ftp, smtp, imap, ldap, xmpp)
+                                - prohibits the option 'starttls'
+   -u, --udp                  Use DTLS (datagram TLS) over UDP
+       --mtu=num              Set MTU for datagram TLS
+                                - it must be in the range:
+                                  0 to 17000
+       --crlf                 Send CR LF instead of LF
+       --fastopen             Enable TCP Fast Open
+       --x509fmtder           Use DER format for certificates to read from
+   -f, --fingerprint          Send the openpgp fingerprint, instead of the key
+       --print-cert           Print peer's certificate in PEM format
+       --save-cert=str        Save the peer's certificate chain in the specified file in PEM format
+       --save-ocsp=str        Save the peer's OCSP status response in the provided file
+       --dh-bits=num          The minimum number of bits allowed for DH
+       --priority=str         Priorities string
+       --x509cafile=str       Certificate file or PKCS #11 URL to use
+       --x509crlfile=file     CRL file to use
+                                - file must pre-exist
+       --pgpkeyfile=file      PGP Key file to use
+                                - file must pre-exist
+       --pgpkeyring=file      PGP Key ring file to use
+                                - file must pre-exist
+       --pgpcertfile=file     PGP Public Key (certificate) file to use
+                                - requires the option 'pgpkeyfile'
+                                - file must pre-exist
+       --x509keyfile=str      X.509 key file or PKCS #11 URL to use
+       --x509certfile=str     X.509 Certificate file or PKCS #11 URL to use
+                                - requires the option 'x509keyfile'
+       --pgpsubkey=str        PGP subkey to use (hex or auto)
+       --srpusername=str      SRP username to use
+       --srppasswd=str        SRP password to use
+       --pskusername=str      PSK username to use
+       --pskkey=str           PSK key (in hex) to use
+   -p, --port=str             The port or service to connect to
+       --insecure             Don't abort program if server certificate can't be validated
+       --ranges               Use length-hiding padding to prevent traffic analysis
+       --benchmark-ciphers    Benchmark individual ciphers
+       --benchmark-tls-kx     Benchmark TLS key exchange methods
+       --benchmark-tls-ciphers  Benchmark TLS ciphers
+   -l, --list                 Print a list of the supported algorithms and modes
+                                - prohibits the option 'port'
+       --priority-list        Print a list of the supported priority strings
+       --noticket             Don't allow session tickets
+       --srtp-profiles=str    Offer SRTP profiles
+       --alpn=str             Application layer protocol
+                                - may appear multiple times
+   -b, --heartbeat            Activate heartbeat support
+       --recordsize=num       The maximum record size to advertize
+                                - it must be in the range:
+                                  0 to 4096
+       --disable-sni          Do not send a Server Name Indication (SNI)
+       --disable-extensions   Disable all the TLS extensions
+       --inline-commands      Inline commands of the form ^&lt;cmd&gt;^
+       --inline-commands-prefix=str Change the default delimiter for inline commands.
+       --provider=file        Specify the PKCS #11 provider library
+                                - file must pre-exist
+       --fips140-mode         Reports the status of the FIPS140-2 mode in gnutls library
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+Operands and options may be intermixed.  They will be reordered.
+
+Simple client program to set up a TLS connection to some other computer.  It
+sets up a TLS connection and forwards data from the standard input to the
+secured socket and vice versa.
+
 </pre></div>
 
 <a name="gnutls_002dcli-debug"></a><a name="debug-option-_0028_002dd_0029-7"></a>
@@ -15373,7 +15520,71 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">gnutls-serv is unavailable - no --help
+<pre class="example">gnutls-serv - GnuTLS server
+Usage:  gnutls-serv [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]...
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+       --sni-hostname=str     Server's hostname for server name extension
+       --sni-hostname-fatal   Send fatal alert on sni-hostname mismatch
+       --noticket             Don't accept session tickets
+   -g, --generate             Generate Diffie-Hellman parameters
+   -q, --quiet                Suppress some messages
+       --nodb                 Do not use a resumption database
+       --http                 Act as an HTTP server
+       --echo                 Act as an Echo server
+   -u, --udp                  Use DTLS (datagram TLS) over UDP
+       --mtu=num              Set MTU for datagram TLS
+                                - it must be in the range:
+                                  0 to 17000
+       --srtp-profiles=str    Offer SRTP profiles
+   -a, --disable-client-cert  Do not request a client certificate
+   -r, --require-client-cert  Require a client certificate
+       --verify-client-cert   If a client certificate is sent then verify it.
+   -b, --heartbeat            Activate heartbeat support
+       --x509fmtder           Use DER format for certificates to read from
+       --priority=str         Priorities string
+       --dhparams=file        DH params file to use
+                                - file must pre-exist
+       --x509cafile=str       Certificate file or PKCS #11 URL to use
+       --x509crlfile=file     CRL file to use
+                                - file must pre-exist
+       --pgpkeyfile=file      PGP Key file to use
+                                - file must pre-exist
+       --pgpkeyring=file      PGP Key ring file to use
+                                - file must pre-exist
+       --pgpcertfile=file     PGP Public Key (certificate) file to use
+                                - file must pre-exist
+       --x509keyfile=str      X.509 key file or PKCS #11 URL to use
+       --x509certfile=str     X.509 Certificate file or PKCS #11 URL to use
+       --x509dsakeyfile=str   Alternative X.509 key file or PKCS #11 URL to use
+       --x509dsacertfile=str  Alternative X.509 Certificate file or PKCS #11 URL to use
+       --x509ecckeyfile=str   Alternative X.509 key file or PKCS #11 URL to use
+       --x509ecccertfile=str  Alternative X.509 Certificate file or PKCS #11 URL to use
+       --pgpsubkey=str        PGP subkey to use (hex or auto)
+       --srppasswd=file       SRP password file to use
+                                - file must pre-exist
+       --srppasswdconf=file   SRP password configuration file to use
+                                - file must pre-exist
+       --pskpasswd=file       PSK password file to use
+                                - file must pre-exist
+       --pskhint=str          PSK identity hint to use
+       --ocsp-response=file   The OCSP response to send to client
+                                - file must pre-exist
+   -p, --port=num             The port to connect to
+   -l, --list                 Print a list of the supported algorithms and modes
+       --provider=file        Specify the PKCS #11 provider library
+                                - file must pre-exist
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+
+Server program that listens to incoming TLS connections.
+
 </pre></div>
 
 <a name="gnutls_002dserv-debug"></a><a name="debug-option-_0028_002dd_0029-8"></a>
@@ -15639,7 +15850,35 @@ used to select the program, defaulting to <samp>more</samp>.  Both will exit
 with a status code of 0.
 </p>
 <div class="example">
-<pre class="example">gnutls-cli-debug is unavailable - no --help
+<pre class="example">gnutls-cli-debug - GnuTLS debug client
+Usage:  gnutls-cli-debug [ -&lt;flag&gt; [&lt;val&gt;] | --&lt;name&gt;[{=| }&lt;val&gt;] ]... 
+
+   -d, --debug=num            Enable debugging
+                                - it must be in the range:
+                                  0 to 9999
+   -V, --verbose              More verbose output
+                                - may appear multiple times
+   -p, --port=num             The port to connect to
+                                - it must be in the range:
+                                  0 to 65536
+       --app-proto=str        an alias for the 'starttls-proto' option
+       --starttls-proto=str   The application protocol to be used to obtain the server's certificate
+(https, ftp, smtp, imap, ldap, xmpp)
+   -v, --version[=arg]        output version information and exit
+   -h, --help                 display extended usage information and exit
+   -!, --more-help            extended usage information passed thru pager
+
+Options are specified by doubled hyphens and their name or by a single
+hyphen and the flag character.
+Operands and options may be intermixed.  They will be reordered.
+
+TLS debug client.  It sets up multiple TLS connections to a server and
+queries its capabilities.  It was created to assist in debugging GnuTLS,
+but it might be useful to extract a TLS server's capabilities.  It connects
+to a TLS server, performs tests and print the server's capabilities.  If
+called with the `-v' parameter more checks will be performed.  Can be used
+to check for servers with special needs or bugs.
+
 </pre></div>
 
 <a name="gnutls_002dcli_002ddebug-debug"></a><a name="debug-option-_0028_002dd_0029-9"></a>
@@ -20056,8 +20295,14 @@ integers indicating the available MACs.
 </p>
 <p>This function is to be used by clients to request OCSP response
 from the server, using the &quot;status_request&quot; TLS extension.  Only
-OCSP status type is supported. A typical server has a single
-OCSP response cached, so  <code>responder_id</code> and  <code>extensions</code> should be null.
+OCSP status type is supported.
+</p>
+<p>The  <code>responder_id</code> array, its containing elements as well as
+the data of  <code>extensions</code> , must be allocated using <code>gnutls_malloc()</code> . They
+will be deinitialized on session cleanup.
+</p>
+<p>Due to the difficult semantics of the  <code>responder_id</code> and  <code>extensions</code> parameters, it is recommended to only call this function with these
+parameters set to <code>NULL</code> .
 </p>
 <p><strong>Returns:</strong> On success, <code>GNUTLS_E_SUCCESS</code>  (0) is returned,
 otherwise a negative error code is returned.
@@ -33561,7 +33806,7 @@ the server.  For clients that wants to send more than its own end
 entity certificate (e.g., also an intermediate CA cert) then put
 the certificate chain in  <code>pcert_list</code> . 
 </p>
-<p>Note that the  <code>pcert_list</code> and  <code>key</code> will become part of the credentials 
+<p>Note that the  <code>key</code> and the elements of  <code>pcert_list</code> will become part of the credentials 
 structure and must not be deallocated. They will be automatically deallocated 
 when the  <code>res</code> structure is deinitialized.
 </p>

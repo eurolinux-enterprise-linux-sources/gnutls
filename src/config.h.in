@@ -1734,6 +1734,9 @@
 /* no ssize_t type was found */
 #undef NO_SSIZE_T
 
+/* p11-kit supports p11_kit_uri_get_pin_value() */
+#undef P11_KIT_HAS_PIN_VALUE
+
 /* Name of package */
 #undef PACKAGE
 

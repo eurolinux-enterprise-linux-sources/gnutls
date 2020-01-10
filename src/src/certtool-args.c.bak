@@ -19,7 +19,7 @@
  * The certtool program is copyrighted and licensed
  * under the following terms:
  *
- *  Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.
+ *  Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.
  *  This is free software. It is licensed for use, modification and
  *  redistribution under the terms of the GNU General Public License,
  *  version 3 or later <http://gnu.org/licenses/gpl.html>
@@ -64,8 +64,8 @@ extern FILE * option_usage_fp;
  *  static const strings for certtool options
  */
 static char const certtool_opt_strs[5437] =
-/*     0 */ "certtool 3.3.26\n"
-            "Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.\n"
+/*     0 */ "certtool 3.3.29\n"
+            "Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.\n"
             "This is free software. It is licensed for use, modification and\n"
             "redistribution under the terms of the GNU General Public License,\n"
             "version 3 or later <http://gnu.org/licenses/gpl.html>\n\0"
@@ -286,7 +286,7 @@ static char const certtool_opt_strs[5437] =
             "The tool accepts files or URLs supported by GnuTLS.  In case PIN is\n"
             "required for the URL access you can provide it using the environment\n"
             "variables GNUTLS_PIN and GNUTLS_SO_PIN.\n\0"
-/*  5361 */ "certtool 3.3.26\0"
+/*  5361 */ "certtool 3.3.29\0"
 /*  5377 */ "certtool [options]\n"
             "certtool --help for usage instructions.\n";
 
@@ -2303,8 +2303,8 @@ static void bogus_function(void) {
      translate option names.
    */
   /* referenced via certtoolOptions.pzCopyright */
-  puts(_("certtool 3.3.26\n\
-Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.\n\
+  puts(_("certtool 3.3.29\n\
+Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.\n\
 This is free software. It is licensed for use, modification and\n\
 redistribution under the terms of the GNU General Public License,\n\
 version 3 or later <http://gnu.org/licenses/gpl.html>\n"));
@@ -2538,7 +2538,7 @@ required for the URL access you can provide it using the environment\n\
 variables GNUTLS_PIN and GNUTLS_SO_PIN.\n"));
 
   /* referenced via certtoolOptions.pzFullVersion */
-  puts(_("certtool 3.3.26"));
+  puts(_("certtool 3.3.29"));
 
   /* referenced via certtoolOptions.pzFullUsage */
   puts(_("<<<NOT-FOUND>>>"));

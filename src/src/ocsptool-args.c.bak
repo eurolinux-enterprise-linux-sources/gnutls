@@ -19,7 +19,7 @@
  * The ocsptool program is copyrighted and licensed
  * under the following terms:
  *
- *  Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.
+ *  Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.
  *  This is free software. It is licensed for use, modification and
  *  redistribution under the terms of the GNU General Public License,
  *  version 3 or later <http://gnu.org/licenses/gpl.html>
@@ -64,8 +64,8 @@ extern FILE * option_usage_fp;
  *  static const strings for ocsptool options
  */
 static char const ocsptool_opt_strs[2257] =
-/*     0 */ "ocsptool 3.3.26\n"
-            "Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.\n"
+/*     0 */ "ocsptool 3.3.29\n"
+            "Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.\n"
             "This is free software. It is licensed for use, modification and\n"
             "redistribution under the terms of the GNU General Public License,\n"
             "version 3 or later <http://gnu.org/licenses/gpl.html>\n\0"
@@ -144,7 +144,7 @@ static char const ocsptool_opt_strs[2257] =
 /*  2048 */ "\n\0"
 /*  2050 */ "Ocsptool is a program that can parse and print information about OCSP\n"
             "requests/responses, generate requests and verify responses.\n\0"
-/*  2181 */ "ocsptool 3.3.26\0"
+/*  2181 */ "ocsptool 3.3.29\0"
 /*  2197 */ "ocsptool [options]\n"
             "ocsptool --help for usage instructions.\n";
 
@@ -1126,8 +1126,8 @@ static void bogus_function(void) {
      translate option names.
    */
   /* referenced via ocsptoolOptions.pzCopyright */
-  puts(_("ocsptool 3.3.26\n\
-Copyright (C) 2000-2017 Free Software Foundation, and others, all rights reserved.\n\
+  puts(_("ocsptool 3.3.29\n\
+Copyright (C) 2000-2018 Free Software Foundation, and others, all rights reserved.\n\
 This is free software. It is licensed for use, modification and\n\
 redistribution under the terms of the GNU General Public License,\n\
 version 3 or later <http://gnu.org/licenses/gpl.html>\n"));
@@ -1216,7 +1216,7 @@ Usage:  %s [ -<flag> [<val>] | --<name>[{=| }<val>] ]...\n"));
 requests/responses, generate requests and verify responses.\n"));
 
   /* referenced via ocsptoolOptions.pzFullVersion */
-  puts(_("ocsptool 3.3.26"));
+  puts(_("ocsptool 3.3.29"));
 
   /* referenced via ocsptoolOptions.pzFullUsage */
   puts(_("<<<NOT-FOUND>>>"));

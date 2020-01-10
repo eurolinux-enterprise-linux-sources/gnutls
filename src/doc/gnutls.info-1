@@ -1,6 +1,6 @@
 This is gnutls.info, produced by makeinfo version 6.3 from gnutls.texi.
 
-This manual is last updated 23 March 2015 for version 3.3.26 of GnuTLS.
+This manual is last updated 23 March 2015 for version 3.3.29 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -32,7 +32,7 @@ File: gnutls.info,  Node: Top,  Next: Preface,  Up: (dir)
 GnuTLS
 ******
 
-This manual is last updated 23 March 2015 for version 3.3.26 of GnuTLS.
+This manual is last updated 23 March 2015 for version 3.3.29 of GnuTLS.
 
 Copyright (C) 2001-2013 Free Software Foundation, Inc.\\ Copyright (C)
 2001-2013 Nikos Mavrogiannopoulos
@@ -4275,7 +4275,58 @@ is disabled on platforms without a working 'fork(2)' function.  The
 'PAGER' environment variable is used to select the program, defaulting
 to 'more'.  Both will exit with a status code of 0.
 
-     danetool is unavailable - no --help
+     danetool - GnuTLS DANE tool
+     Usage:  danetool [ -<flag> [<val>] | --<name>[{=| }<val>] ]...
+
+        -d, --debug=num            Enable debugging
+                                     - it must be in the range:
+                                       0 to 9999
+        -V, --verbose              More verbose output
+                                     - may appear multiple times
+            --infile=file          Input file
+                                     - file must pre-exist
+            --outfile=str          Output file
+            --load-pubkey=str      Loads a public key file
+            --load-certificate=str Loads a certificate file
+            --dlv=str              Sets a DLV file
+            --hash=str             Hash algorithm to use for signing
+            --check=str            Check a host's DANE TLSA entry
+            --check-ee             Check only the end-entity's certificate
+            --check-ca             Check only the CA's certificate
+            --tlsa-rr              Print the DANE RR data on a certificate or public key
+                                     - requires the option 'host'
+            --host=str             Specify the hostname to be used in the DANE RR
+            --proto=str            The protocol set for DANE data (tcp, udp etc.)
+            --port=str             The port or service to connect to, for DANE data
+            --app-proto=str        an alias for the 'starttls-proto' option
+            --starttls-proto=str   The application protocol to be used to obtain the server's certificate
+     (https, ftp, smtp, imap, ldap, xmpp)
+            --ca                   Whether the provided certificate or public key is a Certificate
+     Authority
+            --x509                 Use the hash of the X.509 certificate, rather than the public key
+            --local                an alias for the 'domain' option
+                                     - enabled by default
+            --domain               The provided certificate or public key is issued by the local domain
+                                     - disabled as '--no-domain'
+                                     - enabled by default
+            --local-dns            Use the local DNS server for DNSSEC resolving
+                                     - disabled as '--no-local-dns'
+            --insecure             Do not verify any DNSSEC signature
+            --inder                Use DER format for input certificates and private keys
+                                     - disabled as '--no-inder'
+            --inraw                an alias for the 'inder' option
+            --print-raw            Print the received DANE data in raw format
+                                     - disabled as '--no-print-raw'
+            --quiet                Suppress several informational messages
+        -v, --version[=arg]        output version information and exit
+        -h, --help                 display extended usage information and exit
+        -!, --more-help            extended usage information passed thru pager
+
+     Options are specified by doubled hyphens and their name or by a single
+     hyphen and the flag character.
+
+     Tool to generate and check DNS resource records for the DANE protocol.
+
 
 debug option (-d)
 .................
@@ -5875,6 +5926,8 @@ to 'more'.  Both will exit with a status code of 0.
             --list-token-urls      List the URLs available tokens
             --list-mechanisms      List all available mechanisms in a token
             --initialize           Initializes a PKCS #11 token
+            --initialize-pin       Initializes/Resets a PKCS #11 token user PIN
+            --initialize-so-pin    Initializes/Resets a PKCS #11 token security officer PIN
             --set-pin=str          Specify the PIN to use on token initialization
             --set-so-pin=str       Specify the Security Officer's PIN to use on token initialization
 
@@ -7171,325 +7224,4 @@ gnutls_credentials_set::.
 
      *Returns:* On success, 'GNUTLS_E_SUCCESS' (0) is returned,
      otherwise a negative error code is returned.
-
-
-File: gnutls.info,  Node: Associating the credentials,  Next: Setting up the transport layer,  Prev: Session initialization,  Up: How to use GnuTLS in applications
-
-6.4 Associating the credentials
-===============================
-
-* Menu:
-
-* Certificate credentials::
-* SRP credentials::
-* PSK credentials::
-* Anonymous credentials::
-
-Each authentication method is associated with a key exchange method, and
-a credentials type.  The contents of the credentials is
-method-dependent, e.g.  certificates for certificate authentication and
-should be initialized and associated with a session (see *note
-gnutls_credentials_set::).  A mapping of the key exchange methods with
-the credential types is shown in *note Table 6.2: tab:key-exchange-cred.
-
-Authentication     Key exchange       Client         Server
-method                                credentials    credentials
-                                                     
---------------------------------------------------------------------
-Certificate        'KX_RSA',          'CRD_CERTIFICATE''CRD_CERTIFICATE'
-                   'KX_DHE_RSA',                     
-                   'KX_DHE_DSS',
-                   'KX_ECDHE_RSA',
-                   'KX_ECDHE_ECDSA',
-                   'KX_RSA_EXPORT'
-Password and       'KX_SRP_RSA',      'CRD_SRP'      'CRD_CERTIFICATE',
-certificate        'KX_SRP_DSS'                      'CRD_SRP'
-                                                     
-Password           'KX_SRP'           'CRD_SRP'      'CRD_SRP'
-                                                     
-Anonymous          'KX_ANON_DH',      'CRD_ANON'     'CRD_ANON'
-                   'KX_ANON_ECDH'                    
-Pre-shared key     'KX_PSK',          'CRD_PSK'      'CRD_PSK'
-                   'KX_DHE_PSK',                     
-                   'KX_ECDHE_PSK'
-
-Table 6.2: Key exchange algorithms and the corresponding credential
-types.
-
-
-File: gnutls.info,  Node: Certificate credentials,  Next: SRP credentials,  Up: Associating the credentials
-
-6.4.1 Certificates
-------------------
-
-Server certificate authentication
-.................................
-
-When using certificates the server is required to have at least one
-certificate and private key pair.  Clients may not hold such a pair, but
-a server could require it.  In this section we discuss general issues
-applying to both client and server certificates.  The next section will
-elaborate on issues arising from client authentication only.
-
-'INT *note gnutls_certificate_allocate_credentials:: (gnutls_certificate_credentials_t * RES)'
-'VOID *note gnutls_certificate_free_credentials:: (gnutls_certificate_credentials_t SC)'
-
-After the credentials structures are initialized, the certificate and
-key pair must be loaded.  This occurs before any TLS session is
-initialized, and the same structures are reused for multiple sessions.
-Depending on the certificate type different loading functions are
-available, as shown below.  For X.509 certificates, the functions will
-accept and use a certificate chain that leads to a trusted authority.
-The certificate chain must be ordered in such way that every certificate
-certifies the one before it.  The trusted authority's certificate need
-not to be included since the peer should possess it already.
-
-'INT *note gnutls_certificate_set_x509_key_mem2:: (gnutls_certificate_credentials_t RES, const gnutls_datum_t * CERT, const gnutls_datum_t * KEY, gnutls_x509_crt_fmt_t TYPE, const char * PASS, unsigned int FLAGS)'
-'INT *note gnutls_certificate_set_x509_key:: (gnutls_certificate_credentials_t RES, gnutls_x509_crt_t * CERT_LIST, int CERT_LIST_SIZE, gnutls_x509_privkey_t KEY)'
-'INT *note gnutls_certificate_set_x509_key_file2:: (gnutls_certificate_credentials_t RES, const char * CERTFILE, const char * KEYFILE, gnutls_x509_crt_fmt_t TYPE, const char * PASS, unsigned int FLAGS)'
-
-'INT *note gnutls_certificate_set_openpgp_key_mem:: (gnutls_certificate_credentials_t RES, const gnutls_datum_t * CERT, const gnutls_datum_t * KEY, gnutls_openpgp_crt_fmt_t FORMAT)'
-'INT *note gnutls_certificate_set_openpgp_key:: (gnutls_certificate_credentials_t RES, gnutls_openpgp_crt_t CRT, gnutls_openpgp_privkey_t PKEY)'
-'INT *note gnutls_certificate_set_openpgp_key_file:: (gnutls_certificate_credentials_t RES, const char * CERTFILE, const char * KEYFILE, gnutls_openpgp_crt_fmt_t FORMAT)'
-
-Note however, that since functions like *note
-gnutls_certificate_set_x509_key_file2:: may accept URLs that specify
-objects stored in token, another important function is *note
-gnutls_certificate_set_pin_function::.  That allows setting a callback
-function to retrieve a PIN if the input keys are protected by PIN by the
-token.
-
- -- Function: void gnutls_certificate_set_pin_function
-          (gnutls_certificate_credentials_t CRED, gnutls_pin_callback_t
-          FN, void * USERDATA)
-     CRED: is a 'gnutls_certificate_credentials_t' structure.
-
-     FN: A PIN callback
-
-     USERDATA: Data to be passed in the callback
-
-     This function will set a callback function to be used when required
-     to access a protected object.  This function overrides any other
-     global PIN functions.
-
-     Note that this function must be called right after initialization
-     to have effect.
-
-     *Since:* 3.1.0
-
-If the imported keys and certificates need to be accessed before any TLS
-session is established, it is convenient to use *note
-gnutls_certificate_set_key:: in combination with *note
-gnutls_pcert_import_x509_raw:: and *note
-gnutls_privkey_import_x509_raw::.
-
- -- Function: int gnutls_certificate_set_key
-          (gnutls_certificate_credentials_t RES, const char ** NAMES,
-          int NAMES_SIZE, gnutls_pcert_st * PCERT_LIST, int
-          PCERT_LIST_SIZE, gnutls_privkey_t KEY)
-     RES: is a 'gnutls_certificate_credentials_t' structure.
-
-     NAMES: is an array of DNS name of the certificate (NULL if none)
-
-     NAMES_SIZE: holds the size of the names list
-
-     PCERT_LIST: contains a certificate list (path) for the specified
-     private key
-
-     PCERT_LIST_SIZE: holds the size of the certificate list
-
-     KEY: is a 'gnutls_privkey_t' key
-
-     This function sets a certificate/private key pair in the
-     gnutls_certificate_credentials_t structure.  This function may be
-     called more than once, in case multiple keys/certificates exist for
-     the server.  For clients that wants to send more than its own end
-     entity certificate (e.g., also an intermediate CA cert) then put
-     the certificate chain in 'pcert_list' .
-
-     Note that the 'pcert_list' and 'key' will become part of the
-     credentials structure and must not be deallocated.  They will be
-     automatically deallocated when the 'res' structure is
-     deinitialized.
-
-     If that function fails to load the 'res' structure is at an
-     undefined state, it must not be reused to load other keys or
-     certificates.
-
-     *Returns:* 'GNUTLS_E_SUCCESS' (0) on success, or a negative error
-     code.
-
-     *Since:* 3.0
-
-If multiple certificates are used with the functions above each client's
-request will be served with the certificate that matches the requested
-name (see *note Server name indication::).
-
-As an alternative to loading from files or buffers, a callback may be
-used for the server or the client to specify the certificate and the key
-at the handshake time.  In that case a certificate should be selected
-according the peer's signature algorithm preferences.  To get those
-preferences use *note gnutls_sign_algorithm_get_requested::.  Both
-functions are shown below.
-
-'VOID *note gnutls_certificate_set_retrieve_function:: (gnutls_certificate_credentials_t CRED, gnutls_certificate_retrieve_function * FUNC)'
-'VOID *note gnutls_certificate_set_retrieve_function2:: (gnutls_certificate_credentials_t CRED, gnutls_certificate_retrieve_function2 * FUNC)'
-'INT *note gnutls_sign_algorithm_get_requested:: (gnutls_session_t SESSION, size_t INDX, gnutls_sign_algorithm_t * ALGO)'
-c The functions above do not handle the requested server name
-automatically.  A server would need to check the name requested by the
-client using *note gnutls_server_name_get::, and serve the appropriate
-certificate.  Note that some of these functions require the
-'gnutls_pcert_st' structure to be filled in.  Helper functions to fill
-in the structure are listed below.
-
-typedef struct gnutls_pcert_st
-{
-  gnutls_pubkey_t pubkey;
-  gnutls_datum_t cert;
-  gnutls_certificate_type_t type;
-} gnutls_pcert_st;
-
-'INT *note gnutls_pcert_import_x509:: (gnutls_pcert_st * PCERT, gnutls_x509_crt_t CRT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_openpgp:: (gnutls_pcert_st * PCERT, gnutls_openpgp_crt_t CRT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_x509_raw:: (gnutls_pcert_st * PCERT, const gnutls_datum_t * CERT, gnutls_x509_crt_fmt_t FORMAT, unsigned int FLAGS)'
-'INT *note gnutls_pcert_import_openpgp_raw:: (gnutls_pcert_st * PCERT, const gnutls_datum_t * CERT, gnutls_openpgp_crt_fmt_t FORMAT, gnutls_openpgp_keyid_t KEYID, unsigned int FLAGS)'
-'VOID *note gnutls_pcert_deinit:: (gnutls_pcert_st * PCERT)'
-
-In a handshake, the negotiated cipher suite depends on the certificate's
-parameters, so some key exchange methods might not be available with all
-certificates.  GnuTLS will disable ciphersuites that are not compatible
-with the key, or the enabled authentication methods.  For example keys
-marked as sign-only, will not be able to access the plain RSA
-ciphersuites, that require decryption.  It is not recommended to use RSA
-keys for both signing and encryption.  If possible use a different key
-for the 'DHE-RSA' which uses signing and 'RSA' that requires decryption.
-All the key exchange methods shown in *note Table 4.1: tab:key-exchange.
-are available in certificate authentication.
-
-Client certificate authentication
-.................................
-
-If a certificate is to be requested from the client during the
-handshake, the server will send a certificate request message.  This
-behavior is controlled *note gnutls_certificate_server_set_request::.
-The request contains a list of the acceptable by the server certificate
-signers.  This list is constructed using the trusted certificate
-authorities of the server.  In cases where the server supports a large
-number of certificate authorities it makes sense not to advertise all of
-the names to save bandwidth.  That can be controlled using the function
-*note gnutls_certificate_send_x509_rdn_sequence::.  This however will
-have the side-effect of not restricting the client to certificates
-signed by server's acceptable signers.
-
- -- Function: void gnutls_certificate_server_set_request
-          (gnutls_session_t SESSION, gnutls_certificate_request_t REQ)
-     SESSION: is a 'gnutls_session_t' structure.
-
-     REQ: is one of GNUTLS_CERT_REQUEST, GNUTLS_CERT_REQUIRE
-
-     This function specifies if we (in case of a server) are going to
-     send a certificate request message to the client.  If 'req' is
-     GNUTLS_CERT_REQUIRE then the server will return an error if the
-     peer does not provide a certificate.  If you do not call this
-     function then the client will not be asked to send a certificate.
-
- -- Function: void gnutls_certificate_send_x509_rdn_sequence
-          (gnutls_session_t SESSION, int STATUS)
-     SESSION: is a pointer to a 'gnutls_session_t' structure.
-
-     STATUS: is 0 or 1
-
-     If status is non zero, this function will order gnutls not to send
-     the rdnSequence in the certificate request message.  That is the
-     server will not advertise its trusted CAs to the peer.  If status
-     is zero then the default behaviour will take effect, which is to
-     advertise the server's trusted CAs.
-
-     This function has no effect in clients, and in authentication
-     methods other than certificate with X.509 certificates.
-
-Client or server certificate verification
-.........................................
-
-Certificate verification is possible by loading the trusted authorities
-into the credentials structure by using the following functions,
-applicable to X.509 and OpenPGP certificates.
-
-'INT *note gnutls_certificate_set_x509_system_trust:: (gnutls_certificate_credentials_t CRED)'
-'INT *note gnutls_certificate_set_x509_trust_file:: (gnutls_certificate_credentials_t CRED, const char * CAFILE, gnutls_x509_crt_fmt_t TYPE)'
-'INT *note gnutls_certificate_set_openpgp_keyring_file:: (gnutls_certificate_credentials_t C, const char * FILE, gnutls_openpgp_crt_fmt_t FORMAT)'
-
-The peer's certificate is not automatically verified and one must call
-*note gnutls_certificate_verify_peers3:: after a successful handshake to
-verify the certificate's signature and the owner of the certificate.
-The verification status returned can be printed using *note
-gnutls_certificate_verification_status_print::.
-
-Alternatively the verification can occur during the handshake by using
-*note gnutls_certificate_set_verify_function::.
-
-The functions above provide a brief verification output.  If a detailed
-output is required one should call *note gnutls_certificate_get_peers::
-to obtain the raw certificate of the peer and verify it using the
-functions discussed in *note X.509 certificates::.
-
- -- Function: int gnutls_certificate_verify_peers3 (gnutls_session_t
-          SESSION, const char * HOSTNAME, unsigned int * STATUS)
-     SESSION: is a gnutls session
-
-     HOSTNAME: is the expected name of the peer; may be 'NULL'
-
-     STATUS: is the output of the verification
-
-     This function will verify the peer's certificate and store the
-     status in the 'status' variable as a bitwise or'd
-     gnutls_certificate_status_t values or zero if the certificate is
-     trusted.  Note that value in 'status' is set only when the return
-     value of this function is success (i.e, failure to trust a
-     certificate does not imply a negative return value).  The default
-     verification flags used by this function can be overridden using
-     'gnutls_certificate_set_verify_flags()' .  See the documentation of
-     'gnutls_certificate_verify_peers2()' for details in the
-     verification process.
-
-     If the 'hostname' provided is non-NULL then this function will
-     compare the hostname in the certificate against the given.  The
-     comparison will be accurate for ascii names; non-ascii names are
-     compared byte-by-byte.  If names do not match the
-     'GNUTLS_CERT_UNEXPECTED_OWNER' status flag will be set.
-
-     In order to verify the purpose of the end-certificate (by checking
-     the extended key usage), use 'gnutls_certificate_verify_peers()' .
-
-     *Returns:* a negative error code on error and 'GNUTLS_E_SUCCESS'
-     (0) when the peer's certificate was successfully parsed,
-     irrespective of whether it was verified.
-
-     *Since:* 3.1.4
-
- -- Function: void gnutls_certificate_set_verify_function
-          (gnutls_certificate_credentials_t CRED,
-          gnutls_certificate_verify_function * FUNC)
-     CRED: is a 'gnutls_certificate_credentials_t' structure.
-
-     FUNC: is the callback function
-
-     This function sets a callback to be called when peer's certificate
-     has been received in order to verify it on receipt rather than
-     doing after the handshake is completed.
-
-     The callback's function prototype is: int
-     (*callback)(gnutls_session_t);
-
-     If the callback function is provided then gnutls will call it, in
-     the handshake, just after the certificate message has been
-     received.  To verify or obtain the certificate the
-     'gnutls_certificate_verify_peers2()' ,
-     'gnutls_certificate_type_get()' , 'gnutls_certificate_get_peers()'
-     functions can be used.
-
-     The callback function should return 0 for the handshake to continue
-     or non-zero to terminate.
-
-     *Since:* 2.10.0
 

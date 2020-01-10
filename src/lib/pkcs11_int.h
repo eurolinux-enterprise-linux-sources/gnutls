@@ -103,8 +103,7 @@ int pkcs11_get_info(struct p11_kit_uri *info,
 		    size_t * output_size);
 int pkcs11_login(struct pkcs11_session_info *sinfo,
 		 struct pin_info_st *pin_info,
-		 struct p11_kit_uri *info, unsigned so,
-		 unsigned reauth);
+		 struct p11_kit_uri *info, unsigned flags);
 
 int pkcs11_call_token_func(struct p11_kit_uri *info, const unsigned retry);
 
@@ -119,6 +118,9 @@ int pkcs11_info_to_url(struct p11_kit_uri *info,
 #define SESSION_LOGIN (1<<1)
 #define SESSION_SO (1<<2)	/* security officer session */
 #define SESSION_TRUSTED (1<<3) /* session on a marked as trusted (p11-kit) module */
+#define SESSION_FORCE_LOGIN (1<<4) /* force login even when CFK_LOGIN_REQUIRED is not set */
+#define SESSION_CONTEXT_SPECIFIC (1<<5)
+
 int pkcs11_open_session(struct pkcs11_session_info *sinfo,
 			struct pin_info_st *pin_info,
 			struct p11_kit_uri *info, unsigned int flags);
@@ -189,6 +191,14 @@ static inline int pk_to_genmech(gnutls_pk_algorithm_t pk, ck_key_type_t *type)
 		return CKM_RSA_PKCS_KEY_PAIR_GEN;
 	}
 }
+
+ck_rv_t
+pkcs11_generate_key(struct ck_function_list * module,
+		    ck_session_handle_t sess,
+		    struct ck_mechanism * mechanism,
+		    struct ck_attribute * templ,
+		    unsigned long count,
+		    ck_object_handle_t * key);
 
 ck_rv_t
 pkcs11_generate_key_pair(struct ck_function_list * module,

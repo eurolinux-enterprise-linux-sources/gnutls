@@ -231,19 +231,10 @@ _gnutls_pkcs11_privkey_sign_hash(gnutls_pkcs11_privkey_t key,
 	gnutls_datum_t tmp = { NULL, 0 };
 	unsigned long siglen;
 	struct pkcs11_session_info *sinfo;
+	unsigned req_login = 0;
+	unsigned login_flags = SESSION_LOGIN|SESSION_CONTEXT_SPECIFIC;
 
 	PKCS11_CHECK_INIT_PRIVKEY(key);
-
-	if (key->reauth) {
-		ret =
-		    pkcs11_login(&key->sinfo, &key->pin,
-		    		 key->uinfo, 0, 1);
-		if (ret < 0) {
-			gnutls_assert();
-			_gnutls_debug_log("PKCS #11 login failed, trying operation anyway\n");
-			/* let's try the operation anyway */
-		}
-	}
 
 	sinfo = &key->sinfo;
 
@@ -260,9 +251,29 @@ _gnutls_pkcs11_privkey_sign_hash(gnutls_pkcs11_privkey_t key,
 		goto cleanup;
 	}
 
+ retry_login:
+	if (key->reauth || req_login) {
+		if (req_login)
+			login_flags = SESSION_LOGIN|SESSION_FORCE_LOGIN;
+
+		ret =
+		    pkcs11_login(&key->sinfo, &key->pin,
+				  key->uinfo, login_flags);
+		if (ret < 0) {
+			gnutls_assert();
+			_gnutls_debug_log("PKCS #11 login failed, trying operation anyway\n");
+			/* let's try the operation anyway */
+		}
+	}
+
 	/* Work out how long the signature must be: */
 	rv = pkcs11_sign(sinfo->module, sinfo->pks, hash->data, hash->size,
 			 NULL, &siglen);
+	if (unlikely(rv == CKR_USER_NOT_LOGGED_IN && req_login == 0)) {
+		req_login = 1;
+		goto retry_login;
+	}
+
 	if (rv != CKR_OK) {
 		gnutls_assert();
 		ret = pkcs11_rv_to_err(rv);
@@ -474,22 +485,13 @@ _gnutls_pkcs11_privkey_decrypt_data(gnutls_pkcs11_privkey_t key,
 	int ret;
 	struct ck_mechanism mech;
 	unsigned long siglen;
+	unsigned req_login = 0;
+	unsigned login_flags = SESSION_LOGIN|SESSION_CONTEXT_SPECIFIC;
 
 	PKCS11_CHECK_INIT_PRIVKEY(key);
 
 	if (key->pk_algorithm != GNUTLS_PK_RSA)
 		return gnutls_assert_val(GNUTLS_E_INVALID_REQUEST);
-
-	if (key->reauth) {
-		ret =
-		    pkcs11_login(&key->sinfo, &key->pin,
-		    		 key->uinfo, 0, 1);
-		if (ret < 0) {
-			gnutls_assert();
-			_gnutls_debug_log("PKCS #11 login failed, trying operation anyway\n");
-			/* let's try the operation anyway */
-		}
-	}
 
 	mech.mechanism = CKM_RSA_PKCS;
 	mech.parameter = NULL;
@@ -504,9 +506,29 @@ _gnutls_pkcs11_privkey_decrypt_data(gnutls_pkcs11_privkey_t key,
 		goto cleanup;
 	}
 
+ retry_login:
+	if (key->reauth || req_login) {
+		if (req_login)
+			login_flags = SESSION_LOGIN|SESSION_FORCE_LOGIN;
+
+		ret =
+		    pkcs11_login(&key->sinfo, &key->pin,
+				  key->uinfo, login_flags);
+		if (ret < 0) {
+			gnutls_assert();
+			_gnutls_debug_log("PKCS #11 login failed, trying operation anyway\n");
+			/* let's try the operation anyway */
+		}
+	}
+
 	/* Work out how long the plaintext must be: */
 	rv = pkcs11_decrypt(key->sinfo.module, key->sinfo.pks, ciphertext->data,
 			    ciphertext->size, NULL, &siglen);
+	if (unlikely(rv == CKR_USER_NOT_LOGGED_IN && req_login == 0)) {
+		req_login = 1;
+		goto retry_login;
+	}
+
 	if (rv != CKR_OK) {
 		gnutls_assert();
 		ret = pkcs11_rv_to_err(rv);
@@ -620,6 +642,58 @@ gnutls_pkcs11_privkey_generate2(const char *url, gnutls_pk_algorithm_t pk,
 	return gnutls_pkcs11_privkey_generate3(url, pk, bits, label, NULL, fmt, pubkey, flags);
 }
 
+struct dsa_params {
+	/* FIPS 186-3 maximal size for L and N length pair is (3072,256). */
+	uint8_t prime[384];
+	uint8_t subprime[32];
+	uint8_t generator[384];
+};
+
+static int
+_dsa_params_generate(struct ck_function_list *module, ck_session_handle_t session,
+		     unsigned long bits, struct dsa_params *params,
+		     struct ck_attribute *a, int *a_val)
+{
+	struct ck_mechanism mech = { CKM_DSA_PARAMETER_GEN };
+	struct ck_attribute attr = { CKA_PRIME_BITS, &bits, sizeof(bits) };
+	ck_object_handle_t key;
+	ck_rv_t rv;
+
+	/* Generate DSA parameters from prime length. */
+
+	rv = pkcs11_generate_key(module, session, &mech, &attr, 1, &key);
+	if (rv != CKR_OK) {
+		gnutls_assert();
+		_gnutls_debug_log("p11: %s\n", pkcs11_strerror(rv));
+		return pkcs11_rv_to_err(rv);
+	}
+
+	/* Retrieve generated parameters to be used with the new key pair. */
+
+	a[*a_val + 0].type = CKA_PRIME;
+	a[*a_val + 0].value = params->prime;
+	a[*a_val + 0].value_len = sizeof(params->prime);
+
+	a[*a_val + 1].type = CKA_SUBPRIME;
+	a[*a_val + 1].value = params->subprime;
+	a[*a_val + 1].value_len = sizeof(params->subprime);
+
+	a[*a_val + 2].type = CKA_BASE;
+	a[*a_val + 2].value = params->generator;
+	a[*a_val + 2].value_len = sizeof(params->generator);
+
+	rv = pkcs11_get_attribute_value(module, session, key, &a[*a_val], 3);
+	if (rv != CKR_OK) {
+		gnutls_assert();
+		_gnutls_debug_log("p11: %s\n", pkcs11_strerror(rv));
+		return pkcs11_rv_to_err(rv);
+	}
+
+	*a_val += 3;
+
+	return 0;
+}
+
 /**
  * gnutls_pkcs11_privkey_generate3:
  * @url: a token URL
@@ -671,6 +745,7 @@ gnutls_pkcs11_privkey_generate3(const char *url, gnutls_pk_algorithm_t pk,
 	ck_key_type_t key_type;
 	char pubEx[3] = { 1,0,1 }; // 65537 = 0x10001
 	uint8_t id[20];
+	struct dsa_params dsa_params;
 
 	PKCS11_CHECK_INIT;
 
@@ -777,10 +852,12 @@ gnutls_pkcs11_privkey_generate3(const char *url, gnutls_pk_algorithm_t pk,
 		a[a_val].value_len = sizeof(tval);
 		a_val++;
 
-		a[a_val].type = CKA_MODULUS_BITS;
-		a[a_val].value = &_bits;
-		a[a_val].value_len = sizeof(_bits);
-		a_val++;
+		ret = _dsa_params_generate(sinfo.module, sinfo.pks, _bits,
+					   &dsa_params, a, &a_val);
+		if (ret < 0) {
+			goto cleanup;
+		}
+
 		break;
 	case GNUTLS_PK_EC:
 		p[p_val].type = CKA_SIGN;

@@ -5,12 +5,12 @@ gnu-usage;
 disable-save;
 long-opts;
 no-xlate        = opt;
-version         = "3.3.26";
+version         = "3.3.29";
 no-misuse-usage;
 export          = '#include <gettext.h>';
 
 copyright = {
-    date  = "2000-2017";
+    date  = "2000-2018";
     owner = "Free Software Foundation, and others";
     author = "Nikos Mavrogiannopoulos, Simon Josefsson and others; "
              "see /usr/share/doc/gnutls/AUTHORS for a complete list.";

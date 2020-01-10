@@ -55,6 +55,8 @@ Tokens:
        --list-token-urls      List the URLs available tokens
        --list-mechanisms      List all available mechanisms in a token
        --initialize           Initializes a PKCS #11 token
+       --initialize-pin       Initializes/Resets a PKCS #11 token user PIN
+       --initialize-so-pin    Initializes/Resets a PKCS #11 token security officer PIN
        --set-pin=str          Specify the PIN to use on token initialization
        --set-so-pin=str       Specify the Security Officer's PIN to use on token initialization
 

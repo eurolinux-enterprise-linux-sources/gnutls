@@ -1,3 +1,424 @@
+2018-02-16  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS, configure.ac, m4/hooks.m4: bumped version to 3.3.29 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-02-12  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update [ci skip] Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-02-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2018-02-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/accelerated/cryptodev-gcm.c, lib/accelerated/cryptodev.c,
+	lib/accelerated/x86/aes-cbc-x86-aesni.c,
+	lib/accelerated/x86/aes-cbc-x86-ssse3.c,
+	lib/accelerated/x86/aes-gcm-padlock.c,
+	lib/accelerated/x86/aes-gcm-x86-aesni.c,
+	lib/accelerated/x86/aes-gcm-x86-pclmul.c,
+	lib/accelerated/x86/aes-gcm-x86-ssse3.c,
+	lib/accelerated/x86/aes-padlock.c, lib/accelerated/x86/aes-x86.h,
+	lib/accelerated/x86/x86-common.h: accelerated: make explicit key
+	size check to all accelerated ciphers That is, do not rely on checks done on asm level, as they vary and
+	may change over updates. Also handle consistently invalid key sizes
+	by returning an error, and eliminate calls to abort().  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2018-02-06  Vitezslav Cizek <vcizek@suse.com>
+
+	* lib/accelerated/x86/aes-cbc-x86-ssse3.c: accelerated: check
+	keysize in SSSE3 cipher setkey aes_ssse3_cipher_setkey() accepted any key size, which could lead to
+	invalid memory access.  Such as with the oss-fuzz corpora file
+
+	fuzz/gnutls_pkcs8_key_parser_fuzzer.in/da59d34eacdf50a0019a457fb7c4916be48c99a5Signed-off-by: Vitezslav Cizek <vcizek@suse.com>
+
+2018-02-07  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: nettle: use the nettle_get_secp API when
+	available Resolves #380 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2018-02-06  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/accelerated/x86/aes-gcm-x86-ssse3.c: accelerated: fix use of
+	SSSE3 vpaes_encrypt Previously we assumed that the nettle GCM internal functions will
+	use the provided ECB function for single block encryption.  Newer
+	versions no longer operate that way. Ensure that we are compatible
+	with them.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-02-05  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-02-05  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/accelerated/x86/aes-gcm-x86-aesni.c: accelerated: fix use of
+	aesni_ecb_encrypt() Previously we assumed that the nettle GCM internal functions will
+	use the provided ECB function for single block encryption.  Newer
+	versions no longer operate that way. Ensure that we are compatible
+	with them.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-07-01  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/Makefile.am, lib/priority_options.gperf: 
+	priority_options.gperf: modified for gperf 3.1 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-01-17  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2015-03-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/test-chains.h: tests: removed test with invalid DER encoding
+	in chainverify These certificates are now rejected earlier.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-01-21  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/x509/crl.c, lib/x509/crq.c, lib/x509/privkey.c: x509: use
+	libtasn1's strict DER decoding rules in privkey, certificate
+	requests and CRLs That is, to prevent bugs due to the complexity of the BER decoder.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-01-16  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/common.c, lib/x509/common.h, lib/x509/dn.c,
+	lib/x509/extensions.c, lib/x509/mpi.c, lib/x509/ocsp.c,
+	lib/x509/x509.c, lib/x509/x509_ext.c, m4/hooks.m4: x509: use
+	libtasn1's strict DER decoding rules in certificates and OCSP That is, to prevent bugs due to the complexity of the BER decoder.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2018-01-23  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2018-01-17  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* src/pkcs11.c: p11tool: corrected issue preventing the deletion of
+	objects in batch mode Previously initialization of PIN callbacks would only happen during
+	listing of objects, which happened only in non-batch mode.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2018-01-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/minitasn1/decoding.c, lib/minitasn1/element.c,
+	lib/minitasn1/errors.c, lib/minitasn1/libtasn1.h,
+	lib/minitasn1/parser_aux.c: libtasn1: updated to latest libtasn1
+	master branch Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-12-10  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2016-04-12  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/verify-high2.c: load_dir_certs: use readdir() in all
+	platforms According to glibc documentation readdir_r() is deprecated and the
+	use of readdir() is recommended. As such we switch to it on all
+	platforms.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-12-10  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* tests/suite/testcompat-main: tests: added reproducer for safe
+	renegotiation failure with openssl Relates #259 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-12-10  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-12-10  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/gnutls_handshake.c, lib/gnutls_handshake.h,
+	lib/gnutls_v2_compat.c: handshake: check SCSVs prior to resuming a
+	session This ensures that extensions which are also available as SCSVs are
+	parsed prior to resuming a session. This resolves an issue with
+	openssl sending SCSV instead of an extension for the safe
+	renegotiation.  Resolves #259 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-11-16  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update [ci skip] Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-09-20  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-09-15  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/gnutls_buffers.c: parse_handshake_header: allow 1-byte sized
+	fragments Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-08-25  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/pkcs11.c: p11tool: explicitly mark generated keys as sensitive Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-08-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/status_request.c: _gnutls_recv_server_certificate_status:
+	use the same type in subtracted values This ensures that there are no issues with subtracting those values.
+	Note that the second is read from an uint24_t and thus it is always
+	positive regardless its type.  Relates #245 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-08-14  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/auth/srp.c: _gnutls_proc_srp_client_kx: use same type in
+	subtracted values This ensures that there are no issues with subtracting those values.
+	Note that the second is read from an uint16_t and thus it is always
+	positive regardless its type.  Relates #244 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-07-15  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/gnutls_x509.c: parse_pem_cert_mem: fixed issue resulting to
+	accessing past the input data Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-07-04  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: mention GNUTLS-SA-2017-4 [ci skip] Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-07-04  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS, configure.ac, m4/hooks.m4: released 3.3.28 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-06-23  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/suite/testpkcs11: tests: added test for DSA private key
+	generation Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2016-02-25  Jan Vcelak <jan.vcelak@nic.cz>
+
+	* lib/pkcs11_int.c, lib/pkcs11_int.h: pkcs11: add interface for
+	C_GenerateKey Signed-off-by: Jan Vcelak <jan.vcelak@nic.cz>
+
+2016-02-25  Jan Vcelak <jan.vcelak@nic.cz>
+
+	* lib/pkcs11_privkey.c: pkcs11: implement correct DSA key pair
+	generating Signed-off-by: Jan Vcelak <jan.vcelak@nic.cz>
+
+2017-06-19  Dan Nicholson <nicholson@endlessm.com>
+
+	* NEWS: doc update
+
+2016-07-15  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/rnd-common.c: urandom: use st_ino and st_rdev to
+	determine device uniqueness
+
+2017-06-19  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/pkcs11/pkcs11-mock-ext.h,
+	tests/pkcs11/pkcs11-mock.c, tests/pkcs11/pkcs11-mock.h,
+	tests/pkcs11/pkcs11-privkey-safenet-always-auth.c: tests: backported
+	the safenet always auth PKCS#11 test This adds a unit test for safenet protectserver HSM's PKCS#11
+	support.  That is, detect whether the absence of C_Login on a token,
+	will result to C_Sign or C_Decrypt to a login using CKU_USER.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-06-17  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-06-17  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/pkcs11.c, lib/pkcs11_int.h, lib/pkcs11_privkey.c: pkcs11:
+	simplified pkcs11_login() By cleanups, as well as including the reauth flag in the flags
+	option.  That ensures that the function is close to the 3.5.x branch
+	version.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-05-29  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/pkcs11.c, lib/pkcs11_int.h, lib/pkcs11_privkey.c: pkcs11: the
+	GNUTLS_PKCS11_OBJ_FLAG_LOGIN will force a login That is, even in tokens which do not have a CKF_LOGIN_REQUIRED flag
+	a login will be forced. This allows operation on the safenet HSMs
+	which do not set that flag.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-06-19  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/pkcs11_privkey.c: pkcs11: login prior to the operation not the
+	initialization That ensures that re-authentication is performed at the appropriate
+	stage of the operation. Brings the PKCS#11 support in par with the
+	3.5.x branch.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-27  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/pkcs11.c, lib/pkcs11_privkey.c: Handle specially safenet HSMs
+	which request explicit authentication These HSMs return CKR_USER_NOT_LOGGED_IN on the first private key
+	operation, instead of using CKA_ALWAYS_AUTHENTICATE or similar.
+	Detect that state and retry login with CKU_USER.  See discussion in https://github.com/OpenSC/libp11/issues/160 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-06-15  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/x509/ocsp.c: ocsp: added sanity check in returned length This addresses:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=1492 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-06-09  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/pkcs11_write.c: pkcs11: do not set leading zeros when writing
+	integers Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-06-08  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool-common.c: certtool: improved error message when
+	public key cannot be figured [ci skip] Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/status_request.c: 
+	gnutls_ocsp_status_request_enable_client: documented requirements
+	for parameters That is, the fact that extensions and responder_id parameters must
+	be allocated, and are assigned to the session.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/status_request.c: ext/status_request: Removed the parsing
+	of responder IDs from client extension These values were never used by gnutls, nor were accessible to
+	applications, and as such there is not reason to parse them.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/ext/status_request.c: ext/status_request: ensure response IDs
+	are properly deinitialized That is, do not attempt to loop through the array if there is no
+	array allocated.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-05-14  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update
+
+2017-04-28  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* lib/auth/rsa_psk.c: rsa-psk: Use the correct username datum In rsa-psk we properly request username for the case the application
+	uses a callback, but later we use the username cached in the
+	credentials structure. This will lead to empty username issues.  Signed-off-by: Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+2017-04-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/int/rsa-keygen-fips186.c: Added explicit check for the
+	bounds of the generated 'd'.  This is according to FIPS186-4 sec. B.3.1.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-04-24  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/int/rsa-keygen-fips186.c: fips140-2: enhanced check of
+	generated parameters That is, replaced all assert() calls with if statements to allow
+	gracefull fail.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-03-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-03-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/tls-rehandshake-cert-3.c, tests/utils.h: 
+	tests: backported rehandshake tests Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-03-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/auth/cert.c, lib/gnutls_handshake.c, lib/gnutls_int.h,
+	lib/gnutls_kx.c, lib/gnutls_ui.c: handshake: reset cert request
+	state on handshake init That addresses a bug which on client side on case of an initial
+	handshake with a client certificate, we continue to send this
+	certificate even if on rehandshake we were not requested with on.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-03-06  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS, configure.ac, m4/hooks.m4: bumped version
+
+2017-03-05  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-03-05  Alex Gaynor <alex.gaynor@gmail.com>
+
+	* lib/opencdk/read-packet.c: Enforce the max packet length for
+	OpenPGP subpackets as well This addresses:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=392 Signed-off-by: Alex Gaynor <alex.gaynor@gmail.com>
+
+2017-03-01  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2017-03-01  Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+	* lib/opencdk/kbnode.c, lib/opencdk/keydb.c, lib/opencdk/literal.c,
+	lib/opencdk/opencdk.h, lib/opencdk/read-packet.c,
+	lib/openpgp/gnutls_openpgp.c, lib/openpgp/pgp.c,
+	lib/openpgp/privkey.c: opencdk: do not parse any secret keys in
+	packet when reading a certificate This reduces the attack surface on the parsers, and prevents any
+	bugs in the secret key parser to be exploitable by inserting secret
+	key sub-packets into an openpgp certificate.  This addresses:   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=354   https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=360 Signed-off-by: Nikos Mavrogiannopoulos <nmav@gnutls.org>
+
+2017-02-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/crt_apis.c: tests: backported crt_apis
+	from master branch In addition to other APIs, this explicitly tests
+	gnutls_x509_crt_set_subject_unique_id() and
+	gnutls_x509_crt_set_issuer_unique_id().  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-28  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* src/certtool-cfg.c: certtool: increased buffer for reading from
+	user This allows reading longer than 128-byte fields interactively.  The
+	new limit is 512-bytes.  Relates #179 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/pkcs11/pkcs11-import-with-pin.c: tests:
+	added PKCS#11 test for pin input This introduces a test on PIN input to retrieve an object using
+	pin-value and pin-source (file).  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/utils.c, tests/utils.h: tests: utils: added ability to use
+	tmpfiles Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* tests/Makefile.am, tests/pkcs11/pkcs11-pubkey-import-rsa.c,
+	tests/pkcs11/pkcs11-pubkey-import.c: tests: backported PKCS#11 test In addition to public key import checks, this test ensures that the
+	pin-value attribute is functional.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* configure.ac, lib/pkcs11.c: Use p11_kit_uri_get_pin_value() if
+	available in p11-kit This allows parsing the pin-value attribute of the PKCS#11 URI.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-22  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: nettle/pk: added error checking in
+	_rsa_params_to_pubkey Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/nettle/pk.c: nettle/pk: corrected memcpy of Q in DSA params Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-21  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* NEWS: doc update
+
+2017-02-20  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/read-packet.c: opencdk/read-packet.c: corrected typo
+	in type cast Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-20  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/read-packet.c: cdk_pkt_read: enforce packet limits That ensures that there are no overflows in the subsequent
+	calculations.  Resolves the oss-fuzz found bug:
+	https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=420 Relates: #159 Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-02-03  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/pkcs11.c: gnutls_pkcs11_obj_list_import_url2: Always return an
+	initialized pointer When returning success, but no elements,
+	gnutls_pkcs11_obj_list_import_url4, could have returned zero number
+	of elements with a pointer that was uninitialized.  Ensure that an
+	initialized (i.e., null in that case), pointer is always returned.
+	Reported by Jeremy Harris.  Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+2017-01-17  Nikos Mavrogiannopoulos <nmav@redhat.com>
+
+	* lib/opencdk/read-packet.c: opencdk: improved error code checking
+	in the stream reading functions This ammends 49be4f7b82eba2363bb8d4090950dad976a77a3a Signed-off-by: Nikos Mavrogiannopoulos <nmav@redhat.com>
+
 2017-01-09  Nikos Mavrogiannopoulos <nmav@gnutls.org>
 
 	* tests/cert-tests/Makefile.am, tests/key-tests/Makefile.am: tests:

@@ -40,7 +40,7 @@ AC_DEFUN([LIBGNUTLS_HOOKS],
   # Interfaces added:                             AGE++
   # Interfaces removed:                           AGE=0 (+bump all symbol versions in .map)
   AC_SUBST(LT_CURRENT, 71)
-  AC_SUBST(LT_REVISION, 0)
+  AC_SUBST(LT_REVISION, 3)
   AC_SUBST(LT_AGE, 43)
 
   AC_SUBST(LT_SSL_CURRENT, 27)
@@ -113,7 +113,7 @@ AC_MSG_ERROR([[
       included_libtasn1=$withval,
       included_libtasn1=no)
   if test "$included_libtasn1" = "no"; then
-    PKG_CHECK_MODULES(LIBTASN1, [libtasn1 >= 3.9], [], [included_libtasn1=yes])
+    PKG_CHECK_MODULES(LIBTASN1, [libtasn1 >= 4.0], [], [included_libtasn1=yes])
     if test "$included_libtasn1" = yes; then
       AC_MSG_WARN([[
   *** 

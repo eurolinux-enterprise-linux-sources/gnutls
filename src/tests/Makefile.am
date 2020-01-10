@@ -36,7 +36,7 @@ EXTRA_DIST = suppressions.valgrind eagain-common.h test-chains.h \
 	certs/cert-rsa-2432.pem certs/ecc384.pem certs/ecc.pem \
 	certs/ca-ecc.pem certs/cert-ecc384.pem certs/cert-ecc.pem certs/ecc256.pem \
 	certs/ecc521.pem certs/rsa-2432.pem x509cert-dir/ca.pem \
-	cert-common.h pkcs11/softhsm.h
+	cert-common.h pkcs11/softhsm.h pkcs11/pkcs11-pubkey-import.c
 
 AM_CFLAGS = $(WARN_CFLAGS) $(WERROR_CFLAGS)
 AM_CPPFLAGS = \
@@ -88,7 +88,7 @@ ctests = mini-record-2 simple gc set_pkcs12_cred certder certuniqueid	\
 	 long-session-id mini-x509-callbacks-intr \
 	 crlverify init_fds mini-rehandshake-2 sign-md5-rep global-init-override \
 	 version-checks mini-server-name naked-alerts multi-alerts \
-	 pkcs8-key-decode-encrypted pkcs8-key-decode
+	 pkcs8-key-decode-encrypted pkcs8-key-decode crt_apis tls-rehandshake-cert-3
 
 if ENABLE_PKCS11
 if !HAVE_BUGGY_P11_KIT
@@ -111,9 +111,14 @@ pkcs11_import_url_privkey_SOURCES = pkcs11/pkcs11-import-url-privkey.c
 pkcs11_import_url_privkey_DEPENDENCIES = libpkcs11mock1.la libutils.la
 pkcs11_import_url_privkey_LDADD = $(LDADD) $(LIBDL)
 
+pkcs11_privkey_safenet_always_auth_SOURCES = pkcs11/pkcs11-privkey-safenet-always-auth.c
+pkcs11_privkey_safenet_always_auth_DEPENDENCIES = libpkcs11mock1.la libutils.la
+pkcs11_privkey_safenet_always_auth_LDADD = $(LDADD) $(LIBDL)
+
 ctests += pkcs11-cert-import-url-exts pkcs11-get-exts pkcs11-get-raw-issuer-exts \
 	pkcs11/pkcs11-chainverify pkcs11/pkcs11-get-issuer pkcs11/pkcs11-is-known \
-	pkcs11/pkcs11-combo pkcs11-import-url-privkey
+	pkcs11/pkcs11-combo pkcs11-import-url-privkey pkcs11/pkcs11-pubkey-import-rsa \
+	pkcs11/pkcs11-import-with-pin pkcs11-privkey-safenet-always-auth
 
 endif
 endif

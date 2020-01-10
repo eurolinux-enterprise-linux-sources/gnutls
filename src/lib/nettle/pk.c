@@ -90,7 +90,7 @@ _dsa_params_get(const gnutls_pk_params_st * pk_params,
 	memcpy(pub->p, pk_params->params[DSA_P], SIZEOF_MPZT);
 
 	if (pk_params->params[DSA_Q])
-		memcpy(&pub->q, pk_params->params[DSA_Q], sizeof(mpz_t));
+		memcpy(&pub->q, pk_params->params[DSA_Q], SIZEOF_MPZT);
 	memcpy(pub->g, pk_params->params[DSA_G], SIZEOF_MPZT);
 }
 #else
@@ -101,7 +101,7 @@ _dsa_params_to_pubkey(const gnutls_pk_params_st * pk_params,
 	memcpy(pub->p, pk_params->params[DSA_P], SIZEOF_MPZT);
 
 	if (pk_params->params[DSA_Q])
-		memcpy(&pub->q, pk_params->params[DSA_Q], sizeof(mpz_t));
+		memcpy(&pub->q, pk_params->params[DSA_Q], SIZEOF_MPZT);
 	memcpy(pub->g, pk_params->params[DSA_G], SIZEOF_MPZT);
 
 	if (pk_params->params[DSA_Y] != NULL)
@@ -861,21 +861,31 @@ _wrap_nettle_pk_verify(gnutls_pk_algorithm_t algo,
 	return ret;
 }
 
+#if NETTLE_MAJOR_VERSION < 3 || (NETTLE_MAJOR_VERSION == 3 && NETTLE_MINOR_VERSION < 4)
+# ifdef ENABLE_NON_SUITEB_CURVES
+#  define nettle_get_secp_192r1() &nettle_secp_192r1
+#  define nettle_get_secp_224r1() &nettle_secp_224r1
+# endif
+# define nettle_get_secp_256r1() &nettle_secp_256r1
+# define nettle_get_secp_384r1() &nettle_secp_384r1
+# define nettle_get_secp_521r1() &nettle_secp_521r1
+#endif
+
 static inline const struct ecc_curve *get_supported_curve(int curve)
 {
 	switch (curve) {
 #ifdef ENABLE_NON_SUITEB_CURVES
 	case GNUTLS_ECC_CURVE_SECP192R1:
-		return &nettle_secp_192r1;
+		return nettle_get_secp_192r1();
 	case GNUTLS_ECC_CURVE_SECP224R1:
-		return &nettle_secp_224r1;
+		return nettle_get_secp_224r1();
 #endif
 	case GNUTLS_ECC_CURVE_SECP256R1:
-		return &nettle_secp_256r1;
+		return nettle_get_secp_256r1();
 	case GNUTLS_ECC_CURVE_SECP384R1:
-		return &nettle_secp_384r1;
+		return nettle_get_secp_384r1();
 	case GNUTLS_ECC_CURVE_SECP521R1:
-		return &nettle_secp_521r1;
+		return nettle_get_secp_521r1();
 	default:
 		return NULL;
 	}
@@ -2021,7 +2031,9 @@ static int wrap_nettle_hash_algorithm(gnutls_pk_algorithm_t pk,
 			break;
 		}
 
-		_rsa_params_to_pubkey(issuer_params, &pub);
+		ret = _rsa_params_to_pubkey(issuer_params, &pub);
+		if (ret < 0)
+			return gnutls_assert_val(ret);
 
 		digest_size = sizeof(digest);
 

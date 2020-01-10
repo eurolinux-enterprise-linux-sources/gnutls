@@ -1,7 +1,7 @@
 # English translations for gnutls package.
-# Copyright (C) 2017 Free Software Foundation, Inc.
+# Copyright (C) 2018 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gnutls package.
-# Automatically generated, 2017.
+# Automatically generated, 2018.
 #
 # All this catalog "translates" are quotation characters.
 # The msgids must be ASCII and therefore cannot contain real quotation
@@ -27,10 +27,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gnutls 3.3.26\n"
+"Project-Id-Version: gnutls 3.3.29\n"
 "Report-Msgid-Bugs-To: bug-gnutls@gnu.org\n"
-"POT-Creation-Date: 2017-01-09 07:46+0100\n"
-"PO-Revision-Date: 2017-01-09 07:46+0100\n"
+"POT-Creation-Date: 2018-02-16 08:16+0100\n"
+"PO-Revision-Date: 2018-02-16 08:16+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en@quot\n"

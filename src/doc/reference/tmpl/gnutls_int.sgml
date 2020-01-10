@@ -506,7 +506,6 @@ gnutls_int
 @auth_info_size: 
 @crypt_algo: 
 @cred: 
-@crt_requested: 
 
 <!-- ##### FUNCTION gnutls_protocol_get_version ##### -->
 <para>

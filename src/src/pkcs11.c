@@ -65,6 +65,8 @@ pkcs11_delete(FILE * outfile, const char *url,
 
 	if (login_flags) obj_flags = login_flags;
 
+	pkcs11_common(info);
+
 	if (info->batch == 0) {
 		pkcs11_list(outfile, url, PKCS11_TYPE_ALL, login_flags,
 			    GNUTLS_PKCS11_URL_LIB, info);
@@ -646,7 +648,7 @@ pkcs11_generate(FILE * outfile, const char *url, gnutls_pk_algorithm_t pk,
 	ret =
 	    gnutls_pkcs11_privkey_generate3(url, pk, bits, label, &cid,
 					    GNUTLS_X509_FMT_PEM, &pubkey,
-					    flags);
+					    flags|GNUTLS_PKCS11_OBJ_FLAG_MARK_SENSITIVE);
 	if (ret < 0) {
 		fprintf(stderr, "Error in %s:%d: %s\n", __func__, __LINE__,
 			gnutls_strerror(ret));

@@ -186,7 +186,7 @@ gnutls_ocsp_req_import(gnutls_ocsp_req_t req, const gnutls_datum_t * data)
 	}
 
 	if (req->init) {
-		/* Any earlier asn1_der_decoding will modify the ASN.1
+		/* Any earlier _asn1_strict_der_decode will modify the ASN.1
 		   structure, so we need to replace it with a fresh
 		   structure. */
 		asn1_delete_structure(&req->req);
@@ -200,7 +200,7 @@ gnutls_ocsp_req_import(gnutls_ocsp_req_t req, const gnutls_datum_t * data)
 	}
 	req->init = 1;
 
-	ret = asn1_der_decoding(&req->req, data->data, data->size, NULL);
+	ret = _asn1_strict_der_decode(&req->req, data->data, data->size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		return _gnutls_asn2err(ret);
@@ -233,7 +233,7 @@ gnutls_ocsp_resp_import(gnutls_ocsp_resp_t resp,
 	}
 
 	if (resp->init != 0) {
-		/* Any earlier asn1_der_decoding will modify the ASN.1
+		/* Any earlier _asn1_strict_der_decode will modify the ASN.1
 		   structure, so we need to replace it with a fresh
 		   structure. */
 		asn1_delete_structure(&resp->resp);
@@ -261,7 +261,7 @@ gnutls_ocsp_resp_import(gnutls_ocsp_resp_t resp,
 	}
 
 	resp->init = 1;
-	ret = asn1_der_decoding(&resp->resp, data->data, data->size, NULL);
+	ret = _asn1_strict_der_decode(&resp->resp, data->data, data->size, NULL);
 	if (ret != ASN1_SUCCESS) {
 		gnutls_assert();
 		return _gnutls_asn2err(ret);
@@ -294,7 +294,7 @@ gnutls_ocsp_resp_import(gnutls_ocsp_resp_t resp,
 		}
 
 		ret =
-		    asn1_der_decoding(&resp->basicresp, resp->der.data, resp->der.size,
+		    _asn1_strict_der_decode(&resp->basicresp, resp->der.data, resp->der.size,
 				      NULL);
 		if (ret != ASN1_SUCCESS) {
 			gnutls_assert();
@@ -1004,6 +1004,9 @@ int gnutls_ocsp_resp_get_status(gnutls_ocsp_resp_t resp)
 		return _gnutls_asn2err(ret);
 	}
 
+	if (len != 1)
+		return gnutls_assert_val(GNUTLS_E_UNEXPECTED_PACKET);
+
 	switch (str[0]) {
 	case GNUTLS_OCSP_RESP_SUCCESSFUL:
 	case GNUTLS_OCSP_RESP_MALFORMEDREQUEST:
@@ -1013,7 +1016,7 @@ int gnutls_ocsp_resp_get_status(gnutls_ocsp_resp_t resp)
 	case GNUTLS_OCSP_RESP_UNAUTHORIZED:
 		break;
 	default:
-		return GNUTLS_E_UNEXPECTED_PACKET;
+		return gnutls_assert_val(GNUTLS_E_UNEXPECTED_PACKET);
 	}
 
 	return (int) str[0];

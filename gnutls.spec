@@ -2,8 +2,8 @@
 %bcond_with guile
 Summary: A TLS protocol implementation
 Name: gnutls
-Version: 3.3.26
-Release: 9%{?dist}
+Version: 3.3.29
+Release: 8%{?dist}
 # The libraries are LGPLv2.1+, utilities are GPLv3+
 License: GPLv3+ and LGPLv2+
 Group: System Environment/Libraries
@@ -44,14 +44,41 @@ Patch5: gnutls-3.3.8-padlock-disable.patch
 # any applications depending on that.
 Patch6: gnutls-3.3.22-eapp-data.patch
 Patch7: gnutls-3.3.26-dh-params-1024.patch
-# Reported on the gnutls ML affecting Fedora 25 (potentially RHEL7 as well)
-Patch8: gnutls-3.3.26-fix-uninitialized.patch
-Patch9: gnutls-3.3.26-fix-coverity-issues.patch
-Patch10: gnutls-3.3.26-pin-value.patch
-Patch11: gnutls-3.3.26-set-unique-id-tests.patch
-Patch12: gnutls-3.3.26-fips-rsa-keygen.patch
-Patch13: gnutls-3.3.26-cve-2017-7869.patch
-Patch14: gnutls-3.3.26-remove-status-req-ext-parsing.patch
+# Backport serv --sni-hostname option support (rhbz#1444792)
+Patch8: gnutls-3.3.29-serv-sni-hostname.patch
+Patch9: gnutls-3.3.29-serv-unrec-name.patch
+Patch10: gnutls-3.3.29-cli-sni-hostname.patch
+Patch11: gnutls-3.3.29-tests-sni-hostname.patch
+# Do not try to retrieve PIN from URI more than once
+Patch12: gnutls-3.3.29-pkcs11-retrieve-pin-from-uri-once.patch
+# Backport of fixes to address CVE-2018-10844 CVE-2018-10845 CVE-2018-10846
+# (rhbz#1589708 rhbz#1589707 rhbz1589704)
+Patch13: gnutls-3.3.29-dummy-wait-account-len-field.patch
+Patch14: gnutls-3.3.29-dummy-wait-hash-same-amount-of-blocks.patch
+Patch15: gnutls-3.3.29-cbc-mac-verify-ssl3-min-pad.patch
+Patch16: gnutls-3.3.29-remove-hmac-sha384-sha256-from-default.patch
+# Adjustment on tests
+Patch17: gnutls-3.3.29-do-not-run-sni-hostname-windows.patch
+# Backport testpkcs11 test. This test checks rhbz#1375307
+Patch18: gnutls-3.3.29-testpkcs11.patch
+# Disable failing PKCS#11 tests brought from master branch. The reasons are:
+# - ECC key generation without login is not supported
+# - Certificates are marked as private objects
+# - "--load-pubkey" option is not supported
+# - "--test-sign" option is not supported
+# - Certificates do not inherit its ID from the private key
+Patch19: gnutls-3.3.29-disable-failing-tests.patch
+# Do not mark certificates as private objects and re-enable test for this
+Patch20: gnutls-3.3.29-do-not-mark-object-as-private.patch
+Patch21: gnutls-3.3.29-re-enable-check-cert-write.patch
+# Increase the length of the RSA keys generated in testpkcs11 to 2048 bits.
+# This allows the test to run in FIPS mode
+Patch22: gnutls-3.3.29-tests-pkcs11-increase-RSA-gen-size.patch
+# Enlarge buffer size to support resumption with large keys (rhbz#1542461)
+Patch23: gnutls-3.3.29-serv-large-key-resumption.patch
+# HMAC-SHA-256 cipher suites brought back downstream for compatibility
+# The priority was set below AEAD
+Patch24: gnutls-3.3.29-bring-back-hmac-sha256.patch
 # Wildcard bundling exception https://fedorahosted.org/fpc/ticket/174
 Provides: bundled(gnulib) = 20130424
 
@@ -157,18 +184,37 @@ This package contains Guile bindings for the library.
 %patch5 -p1 -b .padlock-disable
 %patch6 -p1 -b .eapp-data
 %patch7 -p1 -b .dh-1024
-%patch8 -p1 -b .fix-uninit
-%patch9 -p1 -b .fix-coverity
-%patch10 -p1 -b .pin-value
-%patch11 -p1 -b .unique-id
-%patch12 -p1 -b .rsa-keygen
-%patch13 -p1 -b .openpgp-fixes
-%patch14 -p1 -b .ocsp-ext-parse
+%patch8 -p1
+%patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+%patch15 -p1
+%patch16 -p1
+%patch17 -p1
+%patch18 -p1
+%patch19 -p1
+%patch20 -p1
+%patch21 -p1
+%patch22 -p1
+%patch23 -p1
+%patch24 -p1
 
 sed 's/gnutls_srp.c//g' -i lib/Makefile.in
 sed 's/gnutls_srp.lo//g' -i lib/Makefile.in
 rm -f lib/minitasn1/*.c lib/minitasn1/*.h
 rm -f src/libopts/*.c src/libopts/*.h src/libopts/compat/*.c src/libopts/compat/*.h 
+
+# Touch man pages to avoid them to be regenerated after patches which change
+# .def files
+touch doc/manpages/gnutls-serv.1
+touch doc/manpages/gnutls-cli.1
+
+# Fix permissions for files brought by patches
+chmod ugo+x %{_builddir}/%{name}-%{version}/tests/testpkcs11.sh
+chmod ugo+x %{_builddir}/%{name}-%{version}/tests/sni-hostname.sh
 
 %{SOURCE2} -e
 autoreconf -if
@@ -313,6 +359,26 @@ fi
 %endif
 
 %changelog
+* Fri Jul 20 2018 Anderson Sasaki <ansasaki@redhat.com> 3.3.29-8
+- Backported --sni-hostname option which allows overriding the hostname
+  advertised to the peer (#1444792)
+- Improved counter-measures in TLS CBC record padding for lucky13 attack
+  (CVE-2018-10844, #1589704, CVE-2018-10845, #1589707)
+- Added counter-measures for "Just in Time" PRIME + PROBE cache-based attack
+  (CVE-2018-10846, #1589708)
+- Address p11tool issue in object deletion in batch mode (#1375307)
+- Backport PKCS#11 tests from master branch. Some tests were disabled due to
+  unsupported features in 3.3.x (--load-pubkey and --test-sign options, ECC key
+  generation without login, and certificates do not inherit ID from the private
+  key)
+- p11tool explicitly marks certificates and public keys as NOT private objects
+  and private keys as private objects
+- Enlarge buffer size to support resumption with large keys (#1542461)
+- Legacy HMAC-SHA384 cipher suites were disabled by default
+- Added DSA key generation to p11tool (#1464896)
+- Address session renegotiation issue using client certificate (#1434091)
+- Address issue when importing private keys into Atos HSM (#1460125)
+
 * Fri May 26 2017 Nikos Mavrogiannopoulos <nmav@redhat.com> 3.3.26-9
 - Address crash in OCSP status request extension, by eliminating the
   unneeded parsing (CVE-2017-7507, #1455828)
